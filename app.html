@@ -834,18 +834,55 @@
     },450);
   }
 
-  // 담아두기
-  $("saveBtn").onclick = () => {
+  // 담아두기 (로그인 시 창고 저장)
+  $("saveBtn").onclick = async () => {
     if(!current) return;
-    const idx = saved.findIndex(s=>s.i===current.i);
     const sb=$("saveBtn");
-    if(idx>=0){ saved.splice(idx,1); sb.classList.remove("saved"); sb.querySelector(".heart").textContent="♡"; $("saveLabel").textContent="이 글 담아두기"; }
-    else { const now=new Date(); const d=(now.getMonth()+1)+"월 "+now.getDate()+"일"; saved.push({i:current.i, quote:current.p.quote, author:current.p.author, date:d}); sb.classList.add("saved"); sb.querySelector(".heart").textContent="♥"; $("saveLabel").textContent="담아둔 글"; }
+    const idx = saved.findIndex(s=>s.i===current.i);
+    if(idx>=0){
+      // 담기 해제
+      const removed = saved[idx];
+      saved.splice(idx,1);
+      sb.classList.remove("saved"); sb.querySelector(".heart").textContent="♡"; $("saveLabel").textContent="이 글 담아두기";
+      if(loggedIn && removed.rowId){
+        await odoDB.from("odo_saved").delete().eq("id", removed.rowId);
+      }
+    } else {
+      // 담기
+      const now=new Date(); const d=(now.getMonth()+1)+"월 "+now.getDate()+"일";
+      const item = {i:current.i, quote:current.p.quote, author:current.p.author, date:d};
+      saved.push(item);
+      sb.classList.add("saved"); sb.querySelector(".heart").textContent="♥"; $("saveLabel").textContent="담아둔 글";
+      if(loggedIn && current.p.dbId){
+        const { data, error } = await odoDB.from("odo_saved")
+          .insert({ user_id: currentUser.id, content_id: current.p.dbId }).select().maybeSingle();
+        if(!error && data) item.rowId = data.id;
+        else if(error) console.log("담기 저장 오류:", error);
+      }
+    }
   };
+
+  // 로그인 시 창고에서 담아둔 글 불러오기
+  async function loadSaved(){
+    if(!loggedIn) return;
+    try {
+      const { data, error } = await odoDB.from("odo_saved").select("id, content_id");
+      if(error || !data) return;
+      saved.length = 0;
+      data.forEach(row=>{
+        // content_id로 POOL에서 원문 찾기
+        const poolIdx = POOL.findIndex(p=>p.dbId===row.content_id);
+        if(poolIdx>=0){
+          const p = POOL[poolIdx];
+          saved.push({ i:poolIdx, quote:p.quote, author:p.author, date:"", rowId:row.id });
+        }
+      });
+    } catch(e){ console.log("담은글 불러오기 오류:", e); }
+  }
 
   function renderSaved(){
     if(!saved.length){ $("savedList").innerHTML='<div class="saved-empty">아직 담아둔 글이 없어요.<br>오늘 탭에서 마음에 드는 글을 담아보세요.</div>'; return; }
-    $("savedList").innerHTML = saved.map(s=>`<div class="saved-item"><div class="sdate">${s.date||""} 담음</div><div class="sq">${s.quote.replace(/\n/g,"<br>")}</div><div class="sa">— ${s.author}</div></div>`).join("");
+    $("savedList").innerHTML = saved.map(s=>`<div class="saved-item"><div class="sdate">${s.date?s.date+" 담음":"담아둔 글"}</div><div class="sq">${s.quote.replace(/\n/g,"<br>")}</div><div class="sa">— ${s.author}</div></div>`).join("");
   }
 
   function renderTrace(){
@@ -853,12 +890,32 @@
     $("traceList").innerHTML = trace.slice().reverse().map(t=>`<div class="trace-item"><div class="td">${t.date}</div><div class="tm">${t.mood?("<b>"+t.mood+"</b>"+(t.level?" · "+t.level:"")):""}${t.note?(t.mood?" — ":"")+t.note:""}</div></div>`).join("");
   }
 
-  function logTrace(){
+  async function logTrace(){
     const note=$("moodInput").value.trim();
     if(!selectedMood && !note) return;
     const now=new Date();
     const date=(now.getMonth()+1)+"월 "+now.getDate()+"일";
     trace.push({date, mood:selectedMood, level:selectedLevel, note});
+    if(loggedIn){
+      const { error } = await odoDB.from("odo_moods")
+        .insert({ user_id: currentUser.id, mood: selectedMood, intensity: selectedLevel, note: note });
+      if(error) console.log("기분 저장 오류:", error);
+    }
+  }
+
+  // 로그인 시 창고에서 기분 기록 불러오기
+  async function loadTrace(){
+    if(!loggedIn) return;
+    try {
+      const { data, error } = await odoDB.from("odo_moods").select("*").order("created_at", { ascending: true });
+      if(error || !data) return;
+      trace.length = 0;
+      data.forEach(row=>{
+        const dt = row.created_at ? new Date(row.created_at) : new Date();
+        const date=(dt.getMonth()+1)+"월 "+dt.getDate()+"일";
+        trace.push({ date, mood:row.mood, level:row.intensity, note:row.note });
+      });
+    } catch(e){ console.log("기분 불러오기 오류:", e); }
   }
 
   $("giveBtn").onclick=()=>{ logTrace(); show(true); };
@@ -948,6 +1005,8 @@
       '<button class="logout" id="logoutBtn">로그아웃</button>';
     $("editNameBtn").onclick = () => editSenderName();
     updateFromLine();
+    loadSaved();
+    loadTrace();
     $("logoutBtn").onclick = async () => {
       await odoDB.auth.signOut();
       loggedIn = false; currentUser = null; senderName = "";
@@ -1166,6 +1225,7 @@
       if (error || !data || !data.length) throw error || new Error("empty");
       // 창고 데이터를 화면이 쓰는 형식으로 변환
       const loaded = data.map(r => ({
+        dbId: r.id,
         quote: r.quote,
         en: r.quote_en,
         author: r.author,
@@ -1189,8 +1249,10 @@
     show(false);
   }
 
-  loadFromWarehouse();
-  checkSession();
+  (async () => {
+    await loadFromWarehouse();  // 먼저 POOL 채우기(dbId 포함)
+    await checkSession();       // 그다음 로그인 확인 + 담은글/기분 불러오기
+  })();
 </script>
 </body>
 </html>
