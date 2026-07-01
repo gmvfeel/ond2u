@@ -395,13 +395,13 @@
 </div>
 <div class="layout">
 <nav class="leftnav">
-  <a class="brand" href="index.html" style="text-decoration:none; display:block; cursor:pointer; color:inherit;">
+  <div class="brand" id="brandHome" style="cursor:pointer;" title="오늘 화면으로">
     <svg class="brand-mark" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
       <path d="M6 12 h22 a3 3 0 0 1 3 3 v12 a3 3 0 0 1 -3 3 h-22 a3 3 0 0 1 -3 -3 v-12 a3 3 0 0 1 3 -3 z" fill="none" stroke="#5a4a7a" stroke-width="2"/>
       <path d="M4 14 l13 9 l13 -9" fill="none" stroke="#5a4a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     <span class="brand-txt">오늘도 <span class="brand-en">OND2U</span></span>
-  </a>
+  </div>
   <div class="tabs">
     <button class="tab on" data-view="home">오늘</button>
     <button class="tab" data-view="saved">담아둔 글</button>
@@ -800,6 +800,12 @@
       window.scrollTo({ top: 0, behavior: "instant" });
     };
   });
+
+  // 로고 클릭 → "오늘" 탭으로 이동
+  $("brandHome").onclick = () => {
+    const homeTab = document.querySelector('.tab[data-view="home"]');
+    if (homeTab) homeTab.click();
+  };
 
   // 칩/강도/반응 렌더
   MOOD_CHIPS.forEach(m => { const b=document.createElement("button"); b.className="chip"; b.textContent=m;
