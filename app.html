@@ -923,27 +923,50 @@
 
   window.delRecipient = function(i){ recipients.splice(i,1); renderRecipients(); };
 
-  /* ── 로그인 관문 (데모: 실제 인증은 서버 붙일 때) ── */
+  /* ── 로그인 (실제 Supabase 구글 로그인) ── */
   let loggedIn = false;
-  function doLogin(who){
+  let currentUser = null;
+
+  // 로그인 성공 후 화면 전환
+  function applyLoggedIn(name){
     loggedIn = true;
     $("gate").style.display = "none";
     $("sendPanel").style.display = "block";
-    $("meBadge").textContent = who.charAt(0);
-    $("welcomeBar").innerHTML = '<span>안녕하세요, <b>'+who+'</b>님 · 이제 아끼는 사람에게 보낼 수 있어요</span><button class="logout" id="logoutBtn">로그아웃</button>';
-    $("logoutBtn").onclick = () => {
-      loggedIn = false;
+    $("meBadge").textContent = (name || "나").charAt(0);
+    $("welcomeBar").innerHTML = '<span>안녕하세요, <b>'+(name||"")+'</b>님 · 이제 아끼는 사람에게 보낼 수 있어요</span><button class="logout" id="logoutBtn">로그아웃</button>';
+    $("logoutBtn").onclick = async () => {
+      await odoDB.auth.signOut();
+      loggedIn = false; currentUser = null;
       $("gate").style.display = "block";
       $("sendPanel").style.display = "none";
     };
   }
-  $("loginBtn").onclick = () => {
-    const em = $("loginEmail").value.trim();
-    doLogin(em ? em.split("@")[0] : "윤기");
-  };
-  $("kakaoBtn").onclick = () => doLogin("카카오 사용자");
-  $("naverBtn").onclick = () => doLogin("네이버 사용자");
-  $("googleBtn").onclick = () => doLogin("구글 사용자");
+
+  // 구글 로그인 시작
+  async function loginWithGoogle(){
+    const { error } = await odoDB.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.href.split("#")[0] }
+    });
+    if (error) { alert("로그인에 문제가 생겼어요. 잠시 후 다시 시도해 주세요."); console.log("로그인 오류:", error); }
+  }
+
+  // 페이지 열릴 때 이미 로그인돼 있는지 확인 (로그인 후 돌아왔을 때 포함)
+  async function checkSession(){
+    const { data } = await odoDB.auth.getSession();
+    if (data && data.session && data.session.user) {
+      currentUser = data.session.user;
+      const meta = currentUser.user_metadata || {};
+      const name = meta.name || meta.full_name || (currentUser.email ? currentUser.email.split("@")[0] : "나");
+      applyLoggedIn(name);
+    }
+  }
+
+  // 구글 버튼 → 진짜 로그인. 카카오·네이버는 아직 준비 중 안내.
+  $("googleBtn").onclick = () => loginWithGoogle();
+  $("kakaoBtn").onclick = () => alert("카카오 로그인은 준비 중이에요. 지금은 구글 로그인을 이용해 주세요.");
+  $("naverBtn").onclick = () => alert("네이버 로그인은 준비 중이에요. 지금은 구글 로그인을 이용해 주세요.");
+  $("loginBtn").onclick = () => alert("지금은 구글 로그인을 이용해 주세요. (이메일 로그인은 준비 중이에요.)");
 
   /* ── 나에게 보내기 ── */
   const MY_TIMES = ["아침 8시","점심 1시","저녁 9시","밤 11시"];
@@ -1089,14 +1112,14 @@
 
   $("admMakeBtn").onclick = admGenerate;
 
-  /* ── 창고(Supabase)에서 콘텐츠 불러오기 ── */
+  /* ── 창고(Supabase) 연결 ── */
   const ODO_URL = "https://kulchivdrpqwdbdgqrhj.supabase.co";
   const ODO_KEY = "sb_publishable_4d7_STnlpFQZlWaOQ3RnkQ_GQ3zNKmy";
+  const odoDB = window.supabase.createClient(ODO_URL, ODO_KEY);
 
   async function loadFromWarehouse(){
     try {
-      const sb = window.supabase.createClient(ODO_URL, ODO_KEY);
-      const { data, error } = await sb.from("odo_contents").select("*");
+      const { data, error } = await odoDB.from("odo_contents").select("*");
       if (error || !data || !data.length) throw error || new Error("empty");
       // 창고 데이터를 화면이 쓰는 형식으로 변환
       const loaded = data.map(r => ({
@@ -1124,6 +1147,7 @@
   }
 
   loadFromWarehouse();
+  checkSession();
 </script>
 </body>
 </html>
