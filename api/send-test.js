@@ -68,20 +68,24 @@ async function fetchContents(url, key, kind) {
   return await r.json();
 }
 
-const CARE_ICONS = {
-  tea: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="#5a4a7a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h11v5a4 4 0 01-4 4H9a4 4 0 01-4-4z"/><path d="M16 9h2a2 2 0 010 4h-2"/><path d="M8 3c-.5 1 .5 1 0 2M11 3c-.5 1 .5 1 0 2"/></svg>',
-  breath: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="#5a4a7a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg>',
-  sun: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="#5a4a7a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M6 6l1.5 1.5M16.5 16.5L18 18M18 6l-1.5 1.5M7.5 16.5L6 18"/></svg>',
-  walk: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="#5a4a7a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="1.5"/><path d="M11 8l3 2 2 3M11 8l-1 5-2 4M14 10l-1 4 2 4"/></svg>',
-  stretch: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="#5a4a7a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="1.5"/><path d="M12 7v7M12 9l-4-2M12 9l4-2M12 14l-3 5M12 14l3 5"/></svg>'
+const CARE_EMOJI = {
+  tea: "\u2615",       // ☕
+  breath: "\uD83E\uDECB", // 🫋 (숨) → 대체 아래에서
+  sun: "\u2600\uFE0F",  // ☀️
+  walk: "\uD83D\uDEB6", // 🚶
+  stretch: "\uD83E\uDD38" // 🤸
 };
+function careEmoji(k){
+  const map = { tea:"\u2615", breath:"\uD83C\uDF2C\uFE0F", sun:"\u2600\uFE0F", walk:"\uD83D\uDEB6", stretch:"\uD83E\uDD38" };
+  return map[k] || "\uD83C\uDF43"; // 기본 🍃
+}
 
 function buildEmail({ fromName, toName, normal, bible }) {
   const nl = s => (s || "").replace(/\\n/g, "\n");
   const brQuote = nl(normal.quote).replace(/\n/g, "<br>");
   const essayParas = nl(normal.essay).split("\n\n").filter(Boolean)
     .map(p => '<p style="font-size:14px; line-height:1.95; color:#46414d; margin:0 0 13px;">' + p.replace(/\n/g,"<br>") + '</p>').join("");
-  const careIcon = CARE_ICONS[normal.care_icon] || CARE_ICONS.tea;
+  const careIc = careEmoji(normal.care_icon);
   const badge = fromName.charAt(0);
   const toLine = toName ? ("받는 사람<br>" + toName) : "받는 사람";
   const font = "'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif";
@@ -139,7 +143,7 @@ function buildEmail({ fromName, toName, normal, bible }) {
       (normal.care_title ?
       '<div style="margin-top:30px; background:#efecf4; border-radius:14px; padding:20px 22px;">' +
         '<table cellpadding="0" cellspacing="0"><tr>' +
-          '<td style="width:48px; vertical-align:middle;"><div style="width:36px; height:36px; border-radius:10px; background:#fff; text-align:center; line-height:40px;">' + careIcon + '</div></td>' +
+          '<td style="width:48px; vertical-align:middle;"><div style="width:36px; height:36px; border-radius:10px; background:#fff; text-align:center; line-height:36px; font-size:19px;">' + careIc + '</div></td>' +
           '<td style="vertical-align:middle;"><div style="font-size:10px; letter-spacing:0.1em; color:#5a4a7a;">오늘의 작은 처방</div><div style="font-size:15px; font-weight:700; color:#453961; margin-top:2px;">' + normal.care_title + '</div></td>' +
         '</tr></table>' +
         '<div style="font-size:13px; line-height:1.8; color:#46414d; margin-top:11px;">' + (normal.care_body || "") + '</div>' +
@@ -155,6 +159,19 @@ function buildEmail({ fromName, toName, normal, bible }) {
       '</div>' : "") +
 
       bibleBlock +
+
+      '<div style="margin-top:32px; padding:22px; background:#efecf4; border-radius:14px; text-align:center;">' +
+        '<div style="font-size:13px; color:#453961; margin-bottom:14px;">이 편지, ' + (toName ? toName + " 마음" : "당신 마음") + '엔 어떠셨어요?</div>' +
+        '<div>' +
+          '<a href="https://ond2u.vercel.app/app.html" style="display:inline-block; font-size:13px; color:#453961; background:#fff; border:1px solid #5a4a7a; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">위로됐어요 \u2661</a>' +
+          '<a href="https://ond2u.vercel.app/app.html" style="display:inline-block; font-size:13px; color:#453961; background:#fff; border:1px solid #5a4a7a; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">힘이 나요</a>' +
+          '<a href="https://ond2u.vercel.app/app.html" style="display:inline-block; font-size:13px; color:#453961; background:#fff; border:1px solid #5a4a7a; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">고마워요</a>' +
+        '</div>' +
+      '</div>' +
+
+      '<div style="margin-top:30px; text-align:center;">' +
+        '<a href="https://ond2u.vercel.app/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#fff; background:#2b2730; text-decoration:none; padding:13px 28px; border-radius:30px;">오늘도에서 더 보기 \u2192</a>' +
+      '</div>' +
     '</div>' +
 
     '<div style="padding:22px 32px; border-top:1px solid #eae7e3; background:#f3f1ef; text-align:center;">' +
