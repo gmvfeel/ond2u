@@ -866,7 +866,7 @@
   async function loadSaved(){
     if(!loggedIn) return;
     try {
-      const { data, error } = await odoDB.from("odo_saved").select("id, content_id");
+      const { data, error } = await odoDB.from("odo_saved").select("id, content_id, saved_at").order("saved_at", { ascending: false });
       if(error || !data) return;
       saved.length = 0;
       data.forEach(row=>{
@@ -874,7 +874,9 @@
         const poolIdx = POOL.findIndex(p=>p.dbId===row.content_id);
         if(poolIdx>=0){
           const p = POOL[poolIdx];
-          saved.push({ i:poolIdx, quote:p.quote, author:p.author, date:"", rowId:row.id });
+          let d = "";
+          if(row.saved_at){ const dt=new Date(row.saved_at); d=(dt.getMonth()+1)+"월 "+dt.getDate()+"일"; }
+          saved.push({ i:poolIdx, quote:p.quote, author:p.author, date:d, rowId:row.id });
         }
       });
     } catch(e){ console.log("담은글 불러오기 오류:", e); }
