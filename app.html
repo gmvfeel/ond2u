@@ -242,6 +242,7 @@
   .gate-hint { font-size:12px; color:var(--ink-faint); margin-top:18px; line-height:1.6; }
   .welcome-bar { background:var(--plum-soft); border-radius:14px; padding:14px 18px; font-size:13px; color:var(--plum-deep); margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; }
   .welcome-bar .logout { font-family:inherit; font-size:12px; color:var(--plum); background:transparent; border:none; cursor:pointer; text-decoration:underline; }
+  .welcome-bar .namebtn { font-family:inherit; font-size:11px; color:var(--plum); background:var(--white); border:1px solid var(--plum-line); border-radius:20px; padding:2px 10px; cursor:pointer; margin-left:6px; }
 
   /* 나에게 보내기 */
   .me-card { background:var(--white); border:1.5px solid var(--plum); border-radius:18px; padding:24px; margin-bottom:16px;
@@ -926,6 +927,14 @@
   /* ── 로그인 (실제 Supabase 구글 로그인) ── */
   let loggedIn = false;
   let currentUser = null;
+  let senderName = "";   // 편지에 찍힐 "보내는 이름"
+
+  // 오늘 탭 "보낸 사람" 표시를 senderName으로 갱신
+  function updateFromLine(){
+    const nm = senderName || "윤기";
+    const fl = $("fromLine");
+    if (fl) fl.innerHTML = '<span class="from-badge">'+nm.charAt(0)+'</span> <b>'+nm+'</b>님이 오늘도 보냅니다';
+  }
 
   // 로그인 성공 후 화면 전환
   function applyLoggedIn(name){
@@ -933,13 +942,35 @@
     $("gate").style.display = "none";
     $("sendPanel").style.display = "block";
     $("meBadge").textContent = (name || "나").charAt(0);
-    $("welcomeBar").innerHTML = '<span>안녕하세요, <b>'+(name||"")+'</b>님 · 이제 아끼는 사람에게 보낼 수 있어요</span><button class="logout" id="logoutBtn">로그아웃</button>';
+    $("welcomeBar").innerHTML =
+      '<span>안녕하세요, <b>'+(name||"")+'</b>님 · 편지는 <b>'+(senderName||name||"")+'</b> 이름으로 나가요 '+
+      '<button class="namebtn" id="editNameBtn">이름 바꾸기</button></span>'+
+      '<button class="logout" id="logoutBtn">로그아웃</button>';
+    $("editNameBtn").onclick = () => editSenderName();
+    updateFromLine();
     $("logoutBtn").onclick = async () => {
       await odoDB.auth.signOut();
-      loggedIn = false; currentUser = null;
+      loggedIn = false; currentUser = null; senderName = "";
       $("gate").style.display = "block";
       $("sendPanel").style.display = "none";
     };
+  }
+
+  // 보내는 이름 정하기/바꾸기
+  async function editSenderName(){
+    const cur = senderName || "";
+    const input = prompt("아끼는 사람에게 편지를 보낼 때, 받는 사람 화면에 표시될 이름이에요.\n(예: 윤기, 아빠, 김선생님)", cur);
+    if (input === null) return;            // 취소
+    const clean = input.trim();
+    if (!clean) { alert("이름을 한 글자 이상 적어주세요."); return; }
+    senderName = clean;
+    // 창고에 저장
+    if (currentUser) {
+      const { error } = await odoDB.from("odo_users")
+        .upsert({ id: currentUser.id, display_name: clean, email: currentUser.email }, { onConflict: "id" });
+      if (error) console.log("이름 저장 오류:", error);
+    }
+    applyLoggedIn(currentUser?.user_metadata?.name || currentUser?.email?.split("@")[0] || "나");
   }
 
   // 구글 로그인 시작
@@ -957,8 +988,20 @@
     if (data && data.session && data.session.user) {
       currentUser = data.session.user;
       const meta = currentUser.user_metadata || {};
-      const name = meta.name || meta.full_name || (currentUser.email ? currentUser.email.split("@")[0] : "나");
-      applyLoggedIn(name);
+      const googleName = meta.name || meta.full_name || (currentUser.email ? currentUser.email.split("@")[0] : "나");
+      // 창고에서 저장된 '보내는 이름' 불러오기
+      try {
+        const { data: prof } = await odoDB.from("odo_users").select("display_name").eq("id", currentUser.id).maybeSingle();
+        if (prof && prof.display_name) {
+          senderName = prof.display_name;
+        } else {
+          // 처음 로그인 — 구글 이름을 기본 보내는 이름으로 저장
+          senderName = googleName;
+          await odoDB.from("odo_users").upsert(
+            { id: currentUser.id, display_name: googleName, email: currentUser.email }, { onConflict: "id" });
+        }
+      } catch(e){ console.log("프로필 불러오기 오류:", e); senderName = googleName; }
+      applyLoggedIn(googleName);
     }
   }
 
