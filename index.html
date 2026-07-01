@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>오늘도 OND2U — 매일, 당신에게</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23efe7f4'/%3E%3Cpath d='M9 14 h22 a3 3 0 0 1 3 3 v10 a3 3 0 0 1 -3 3 h-22 a3 3 0 0 1 -3 -3 v-10 a3 3 0 0 1 3 -3 z' fill='none' stroke='%235a4a7a' stroke-width='2.2'/%3E%3Cpath d='M7 16 l13 8 l13 -8' fill='none' stroke='%235a4a7a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root {
+    --ink:#2b2730; --ink-2:#46414d; --ink-soft:#6f6a76; --ink-faint:#a8a2af;
+    --white:#ffffff; --paper:#faf9fc; --line:#eae7ef; --line-strong:#ddd6e4;
+    --plum:#5a4a7a; --plum-deep:#453961; --plum-soft:#efecf4; --plum-line:#d8d0e4;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { font-family:'Pretendard',-apple-system,sans-serif; background:var(--paper); color:var(--ink);
+    -webkit-font-smoothing:antialiased; letter-spacing:-0.01em; line-height:1.7; overflow-x:hidden; }
+  .wrap { max-width:760px; margin:0 auto; padding:0 24px; }
+  .wrap-wide { max-width:980px; margin:0 auto; padding:0 24px; }
+
+  .topbar { position:absolute; top:0; left:0; right:0; z-index:20; }
+  .topbar .inner { max-width:980px; margin:0 auto; padding:26px 24px; display:flex; align-items:center; justify-content:space-between; }
+  .logo { display:flex; align-items:center; gap:9px; font-size:17px; font-weight:800; letter-spacing:-0.03em; }
+  .logo .en { font-size:11px; font-weight:600; color:var(--plum); letter-spacing:0.08em; }
+  .start-sm { font-size:13px; font-weight:600; color:var(--plum-deep); background:var(--plum-soft); border:none;
+    border-radius:30px; padding:9px 18px; cursor:pointer; text-decoration:none; transition:all .2s; }
+  .start-sm:hover { background:var(--plum-line); }
+
+  .hero { position:relative; min-height:100vh; display:flex; align-items:center; padding:110px 0 60px; overflow:hidden; }
+  .hero-inner { max-width:980px; margin:0 auto; padding:0 24px; display:grid; grid-template-columns:1fr 340px; gap:56px; align-items:center; width:100%; }
+  .hero-copy .eyebrow { font-size:13px; letter-spacing:0.24em; color:var(--plum); margin-bottom:22px; opacity:0; animation:fadeUp .8s ease .1s forwards; }
+  .hero-copy h1 { font-size:42px; font-weight:800; letter-spacing:-0.04em; line-height:1.35; margin-bottom:26px; opacity:0; animation:fadeUp .8s ease .25s forwards; }
+  .hero-copy h1 .accent { color:var(--plum); }
+  .hero-copy .lead { font-size:17px; color:var(--ink-soft); line-height:1.9; margin-bottom:38px; opacity:0; animation:fadeUp .8s ease .4s forwards; }
+  .hero-copy .cta { display:inline-flex; align-items:center; gap:9px; font-size:16px; font-weight:600; color:#fff; background:var(--ink);
+    border:none; border-radius:34px; padding:17px 38px; cursor:pointer; text-decoration:none; transition:all .25s; opacity:0; animation:fadeUp .8s ease .55s forwards; }
+  .hero-copy .cta:hover { background:var(--plum-deep); transform:translateY(-2px); box-shadow:0 12px 30px rgba(90,74,122,.22); }
+  .hero-copy .cta-sub { font-size:13px; color:var(--ink-faint); margin-top:16px; opacity:0; animation:fadeUp .8s ease .7s forwards; }
+
+  .hero .star { position:absolute; color:var(--plum-line); opacity:0; animation:twinkle 4s ease-in-out infinite; }
+  .hero .star.s1 { top:14%; left:8%; animation-delay:.5s; }
+  .hero .star.s2 { top:24%; left:44%; animation-delay:1.6s; }
+  .hero .star.s3 { top:68%; left:6%; animation-delay:2.4s; }
+  .hero .star.s4 { top:80%; left:38%; animation-delay:3.1s; }
+
+  .letter-card { background:var(--white); border:1px solid var(--plum-line); border-radius:22px; padding:28px 26px;
+    box-shadow:0 24px 60px rgba(90,74,122,.14); opacity:0; animation:cardRise 1s cubic-bezier(.2,.7,.3,1) .5s forwards; position:relative; }
+  .letter-card .lc-from { display:flex; align-items:center; gap:9px; font-size:12px; color:var(--ink-soft); margin-bottom:18px; }
+  .lc-from .av { width:26px; height:26px; border-radius:50%; background:var(--plum); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
+  .lc-from b { color:var(--ink); font-weight:700; }
+  .letter-card .lc-quote { font-size:20px; font-weight:800; letter-spacing:-0.03em; line-height:1.5; color:var(--ink); }
+  .letter-card .lc-en { font-size:12px; font-style:italic; color:var(--ink-soft); margin-top:9px; line-height:1.5; }
+  .letter-card .lc-author { font-size:12px; color:var(--ink-faint); margin-top:12px; }
+  .letter-card .lc-care { margin-top:18px; padding:13px 15px; background:var(--plum-soft); border-radius:12px; display:flex; gap:10px; align-items:center; }
+  .lc-care .ci { width:30px; height:30px; border-radius:9px; background:var(--white); color:var(--plum); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .lc-care .ci svg { width:17px; height:17px; }
+  .lc-care .ct { font-size:11px; color:var(--plum); }
+  .lc-care .cb { font-size:13px; font-weight:700; color:var(--plum-deep); margin-top:1px; }
+  .letter-card .lc-badge { position:absolute; top:-13px; right:22px; background:var(--ink); color:#fff; font-size:11px; font-weight:600; padding:5px 13px; border-radius:20px; }
+
+  .letter-card .lc-quote, .letter-card .lc-en, .letter-card .lc-author, .letter-card .lc-care { transition:opacity .5s ease; }
+  .letter-card.swapping .lc-quote, .letter-card.swapping .lc-en, .letter-card.swapping .lc-author, .letter-card.swapping .lc-care { opacity:0; }
+
+  .quote-band { background:var(--plum-deep); padding:110px 0; text-align:center; position:relative; overflow:hidden; }
+  .quote-band .env-deco { margin:0 auto 30px; width:52px; height:52px; color:rgba(255,255,255,.55); }
+  .quote-band .q { font-size:38px; font-weight:800; letter-spacing:-0.03em; line-height:1.55; color:#fff; }
+  .quote-band .qs { font-size:15px; color:rgba(255,255,255,.65); margin-top:24px; }
+
+  .section { padding:96px 0; }
+  .section-eyebrow { text-align:center; font-size:12px; letter-spacing:0.2em; color:var(--plum); margin-bottom:16px; }
+  .section-title { text-align:center; font-size:30px; font-weight:800; letter-spacing:-0.035em; line-height:1.4; margin-bottom:20px; }
+  .section-desc { text-align:center; font-size:16px; color:var(--ink-soft); line-height:1.9; max-width:520px; margin:0 auto 56px; }
+
+  .about-row { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center; }
+  .about-illust { display:flex; align-items:center; justify-content:center; }
+  .about-illust svg { width:100%; max-width:280px; height:auto; }
+  .about-copy p { font-size:17px; color:var(--ink-2); line-height:1.95; margin-bottom:16px; }
+  .about-copy p:last-child { margin-bottom:0; }
+  .about-copy strong { color:var(--plum-deep); font-weight:700; }
+
+  .steps { display:flex; flex-direction:column; gap:18px; max-width:580px; margin:0 auto; }
+  .step { display:flex; gap:20px; align-items:center; background:var(--white); border:1px solid var(--plum-line);
+    border-radius:18px; padding:24px 26px; }
+  .step .sicon { width:52px; height:52px; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--plum); background:var(--plum-soft); border-radius:14px; }
+  .step .sicon svg { width:26px; height:26px; }
+  .step .st { font-size:17px; font-weight:700; margin-bottom:5px; }
+  .step .sd { font-size:14px; color:var(--ink-soft); line-height:1.7; }
+
+  .feats { display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:720px; margin:0 auto; }
+  .feat { background:var(--white); border:1px solid var(--line); border-radius:18px; padding:28px 26px; }
+  .feat .fic { width:44px; height:44px; border-radius:12px; background:var(--plum-soft); color:var(--plum);
+    display:flex; align-items:center; justify-content:center; margin-bottom:18px; }
+  .feat .fic svg { width:24px; height:24px; }
+  .feat .ft { font-size:16px; font-weight:700; margin-bottom:9px; }
+  .feat .fd { font-size:14px; color:var(--ink-soft); line-height:1.75; }
+
+  .final { background:var(--plum-soft); text-align:center; padding:96px 0; position:relative; overflow:hidden; }
+  .final .env-float { width:64px; height:64px; margin:0 auto 26px; color:var(--plum); animation:floaty 4s ease-in-out infinite; }
+  .final h2 { font-size:30px; font-weight:800; letter-spacing:-0.035em; line-height:1.4; color:var(--plum-deep); margin-bottom:18px; }
+  .final p { font-size:16px; color:var(--ink-2); line-height:1.9; margin-bottom:38px; }
+  .final .cta { display:inline-flex; align-items:center; gap:9px; font-size:16px; font-weight:600; color:#fff; background:var(--ink);
+    border:none; border-radius:34px; padding:17px 40px; cursor:pointer; text-decoration:none; transition:all .25s; }
+  .final .cta:hover { background:var(--plum-deep); transform:translateY(-2px); box-shadow:0 12px 30px rgba(90,74,122,.22); }
+
+  .family { padding:80px 0; border-top:1px solid var(--line); }
+  .family-label { text-align:center; font-size:12px; letter-spacing:0.16em; color:var(--ink-faint); margin-bottom:32px; }
+  .family-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; max-width:580px; margin:0 auto; }
+  .family-card { display:flex; align-items:center; gap:12px; text-decoration:none; background:var(--white);
+    border:1px solid var(--line); border-radius:14px; padding:15px 16px; transition:all .18s; }
+  .family-card:hover { border-color:var(--plum); transform:translateY(-1px); }
+  .family-card .fc-ic { width:24px; height:24px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .family-card .fc-ic svg { width:21px; height:21px; }
+  .family-card .fc-name { font-size:14px; font-weight:700; color:var(--ink); }
+  .family-card .fc-desc { font-size:12px; color:var(--ink-soft); margin-top:2px; }
+
+  .footer { text-align:center; padding:50px 0 64px; }
+  .footer .fsig { font-size:14px; color:var(--plum); margin-bottom:16px; }
+  .footer .fcopy { font-size:12px; color:var(--ink-faint); line-height:1.8; }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+  @keyframes cardRise { from { opacity:0; transform:translateY(40px) rotate(-1deg); } to { opacity:1; transform:none; } }
+  @keyframes twinkle { 0%,100% { opacity:0; transform:scale(.8); } 50% { opacity:.9; transform:scale(1); } }
+  @keyframes floaty { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+  .reveal { opacity:0; transform:translateY(22px); transition:opacity .8s ease, transform .8s ease; }
+  .reveal.in { opacity:1; transform:none; }
+  @media (prefers-reduced-motion:reduce) {
+    * { animation:none !important; }
+    .reveal { opacity:1; transform:none; transition:none; }
+    html { scroll-behavior:auto; }
+  }
+
+  @media (max-width:820px) {
+    .hero { min-height:auto; padding:120px 0 72px; }
+    .hero-inner { grid-template-columns:1fr; gap:40px; text-align:center; }
+    .hero-copy .cta { margin:0 auto; }
+    .hero-copy h1 br { display:none; }
+    .letter-card { max-width:400px; margin:0 auto; width:100%; }
+    .about-row { grid-template-columns:1fr; gap:32px; text-align:center; }
+    .about-illust { order:-1; }
+    .about-illust svg { max-width:200px; }
+    .about-copy .section-eyebrow, .about-copy h2 { text-align:center !important; }
+  }
+  @media (max-width:600px) {
+    .hero { padding:104px 0 60px; }
+    .topbar .inner { padding:20px 20px; }
+    .hero-copy h1 { font-size:29px; line-height:1.4; }
+    .hero-copy .lead { font-size:15px; }
+    .hero-copy .lead br { display:none; }
+    .letter-card { padding:24px 22px; }
+    .letter-card .lc-quote { font-size:19px; }
+    .hero .star { display:none; }
+    .section { padding:64px 0; }
+    .section-title, .final h2, .about-copy h2 { font-size:24px !important; }
+    .quote-band { padding:80px 0; }
+    .quote-band .q { font-size:27px; }
+    .feats { grid-template-columns:1fr; }
+    .family-grid { grid-template-columns:1fr; }
+    .step { padding:20px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="inner">
+      <div class="logo">
+        <svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true">
+          <path d="M6 12 h22 a3 3 0 0 1 3 3 v12 a3 3 0 0 1 -3 3 h-22 a3 3 0 0 1 -3 -3 v-12 a3 3 0 0 1 3 -3 z" fill="none" stroke="#5a4a7a" stroke-width="2"/>
+          <path d="M4 14 l13 9 l13 -9" fill="none" stroke="#5a4a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        오늘도 <span class="en">OND2U</span>
+      </div>
+      <a href="app.html" class="start-sm">시작하기</a>
+    </div>
+  </div>
+
+  <div class="hero">
+    <svg class="star s1" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+    <svg class="star s2" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+    <svg class="star s3" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+    <svg class="star s4" width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <div class="eyebrow">매일, 당신에게</div>
+        <h1>오늘 하루가 버거운 당신에게<br><span class="accent">한 편의 위로</span>를 보냅니다</h1>
+        <p class="lead">좋은 명언과 짧은 에세이, 마음을 어루만지는 음악.<br>매일 정해진 시각, 당신의 하루에 조용히 도착해요.</p>
+        <a href="app.html" class="cta">오늘도 시작하기 →</a>
+        <div class="cta-sub">받는 건 무료예요. 지금 바로 한 편을 만나보세요.</div>
+      </div>
+      <div class="letter-card" id="letterCard">
+        <div class="lc-badge">오늘의 편지</div>
+        <div class="lc-from"><span class="av">윤</span> <b>윤기</b>님이 오늘도 보냅니다</div>
+        <div class="lc-quote" id="lcQuote">가장 어두운 밤도<br>결국 끝나고 해는 떠오른다.</div>
+        <div class="lc-en" id="lcEn">Even the darkest night will end and the sun will rise.</div>
+        <div class="lc-author" id="lcAuthor">— 빅토르 위고</div>
+        <div class="lc-care">
+          <span class="ci" id="lcCareIc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M6 6l1.5 1.5M16.5 16.5L18 18M18 6l-1.5 1.5M7.5 16.5L6 18"/></svg></span>
+          <div><div class="ct">오늘의 작은 처방</div><div class="cb" id="lcCareTitle">햇빛 한 줌</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="quote-band">
+    <div class="wrap">
+      <svg class="env-deco" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+        <path d="M4 12 h32 a2 2 0 0 1 2 2 v12 a2 2 0 0 1 -2 2 h-32 a2 2 0 0 1 -2 -2 v-12 a2 2 0 0 1 2 -2 z" stroke-linejoin="round"/>
+        <path d="M3 14 l17 10 l17 -10" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="q reveal">"오늘도 당신의 최고가 될 겁니다.<br>힘내세요."</div>
+      <div class="qs reveal">오늘도가 매일 건네는 인사말</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="wrap-wide">
+      <div class="about-row">
+        <div class="about-illust reveal">
+          <svg viewBox="0 0 240 240" fill="none" aria-hidden="true">
+            <circle cx="120" cy="120" r="96" stroke="#efecf4" stroke-width="18"/>
+            <path d="M60 96 h120 a8 8 0 0 1 8 8 v56 a8 8 0 0 1 -8 8 h-120 a8 8 0 0 1 -8 -8 v-56 a8 8 0 0 1 8 -8 z" stroke="#5a4a7a" stroke-width="2.5" stroke-linejoin="round"/>
+            <path d="M54 100 l66 46 l66 -46" stroke="#5a4a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M120 58 l3.5 11 12 .5 -9.5 7.5 3.5 11.5 -9.5-7 -9.5 7 3.5-11.5 -9.5-7.5 12-.5z" fill="#5a4a7a" opacity=".85"/>
+            <circle cx="184" cy="70" r="4" fill="#d8d0e4"/>
+            <circle cx="58" cy="66" r="3" fill="#d8d0e4"/>
+          </svg>
+        </div>
+        <div class="about-copy">
+          <div class="section-eyebrow reveal" style="text-align:left;">WHAT IS OND2U</div>
+          <h2 class="reveal" style="font-size:30px; font-weight:800; letter-spacing:-0.035em; line-height:1.35; margin-bottom:22px;">스팸이 아니라,<br>편지예요</h2>
+          <p class="reveal">세상엔 자동으로 쏟아지는 알림이 너무 많죠. <strong>오늘도</strong>는 달라요.</p>
+          <p class="reveal">누군가가 당신을 생각하며 <strong>이름을 담아 보내는 한 통의 편지</strong>. 당신이 정한 시각에, 하루를 견딜 작은 위로가 도착해요.</p>
+          <p class="reveal">위로받은 당신은, 이번엔 <strong>아끼는 누군가에게</strong> 그 마음을 보낼 수 있어요.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="background:var(--white); border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
+    <div class="wrap">
+      <div class="section-eyebrow reveal">HOW IT WORKS</div>
+      <div class="section-title reveal">이렇게 작동해요</div>
+      <div class="section-desc reveal">복잡한 건 없어요. 세 걸음이면 충분합니다.</div>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7 h16 a1 1 0 0 1 1 1 v9 a1 1 0 0 1 -1 1 h-16 a1 1 0 0 1 -1 -1 v-9 a1 1 0 0 1 1 -1 z"/><path d="M3 8 l9 6 l9 -6"/></svg></div>
+          <div><div class="st">매일 한 편이 도착해요</div><div class="sd">정해진 시각, 좋은 명언과 에세이·음악이 담긴 편지가 옵니다.</div></div>
+        </div>
+        <div class="step reveal">
+          <div class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg></div>
+          <div><div class="st">힘든 날엔 기분을 골라요</div><div class="sd">마음이 힘든 날엔 기분을 고르면, 그에 맞는 위로와 작은 처방을 건네드려요.</div></div>
+        </div>
+        <div class="step reveal">
+          <div class="sicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+          <div><div class="st">아끼는 사람에게도 보내요</div><div class="sd">"당신이 보내는" 이름 담긴 편지로, 소중한 사람에게 매일의 위로를 선물해요.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="wrap">
+      <div class="section-eyebrow reveal">WHY OND2U</div>
+      <div class="section-title reveal">이런 점이 달라요</div>
+      <div class="section-desc reveal">위로받는 공간이 어떠해야 하는지, 오래 고민했어요.</div>
+      <div class="feats">
+        <div class="feat reveal">
+          <div class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8 h14 a2 2 0 0 1 2 2 v8 a2 2 0 0 1 -2 2 h-14 a2 2 0 0 1 -2 -2 v-8 a2 2 0 0 1 2 -2 z"/><path d="M4 10 l9 6 l9 -6"/></svg></div>
+          <div class="ft">이름이 담긴 편지</div>
+          <div class="fd">기계가 뿌리는 알림이 아니에요. 누군가가 당신을 생각하며 보내는, 이름이 박힌 진짜 편지예요.</div>
+        </div>
+        <div class="feat reveal">
+          <div class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+          <div class="ft">기다림의 리듬</div>
+          <div class="fd">아무 때나 쏟아지지 않아요. 하루 한 편, 오늘도를 기다리는 마음이 하루의 결을 만들어요.</div>
+        </div>
+        <div class="feat reveal">
+          <div class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/></svg></div>
+          <div class="ft">마음과 몸을 함께</div>
+          <div class="fd">명언과 에세이로 마음을, '오늘의 작은 처방'으로 몸을 챙겨요. 따뜻한 차, 잠깐의 산책처럼요.</div>
+        </div>
+        <div class="feat reveal">
+          <div class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="3.2"/><path d="M17 11l2 2 4-4"/></svg></div>
+          <div class="ft">번져가는 위로</div>
+          <div class="fd">받기만 하는 게 아니라 보낼 수도 있어요. 위로받은 당신이, 다른 누군가의 위로가 됩니다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="final">
+    <svg class="env-float" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+      <path d="M6 12 h22 a3 3 0 0 1 3 3 v12 a3 3 0 0 1 -3 3 h-22 a3 3 0 0 1 -3 -3 v-12 a3 3 0 0 1 3 -3 z" stroke-linejoin="round"/>
+      <path d="M4 14 l13 9 l13 -9" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="wrap">
+      <h2 class="reveal">오늘, 당신에게<br>한 편을 보내도 될까요?</h2>
+      <p class="reveal">받는 건 무료예요. 지금 바로 첫 편지를 만나보세요.</p>
+      <a href="app.html" class="cta reveal">오늘도 시작하기 →</a>
+    </div>
+  </div>
+
+  <div class="family">
+    <div class="wrap">
+      <div class="family-label">ALLIANCE WXN의 다른 이야기</div>
+      <div class="family-grid">
+        <a class="family-card" href="https://lpstock.co.kr" target="_blank" rel="noopener">
+          <div class="fc-ic" style="color:#5a4a7a;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg></div>
+          <div><div class="fc-name">엘피스탁</div><div class="fc-desc">클래식·현대음악 LP 음반점</div></div>
+        </a>
+        <a class="family-card" href="https://booklps.vercel.app" target="_blank" rel="noopener">
+          <div class="fc-ic" style="color:#185fa5;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2 2 0 016 4h5v15H6a2 2 0 00-2 1.5z"/><path d="M20 5.5A2 2 0 0018 4h-5v15h5a2 2 0 012 1.5z"/></svg></div>
+          <div><div class="fc-name">부클립스</div><div class="fc-desc">희귀 책·음반 통합 검색</div></div>
+        </a>
+        <a class="family-card" href="https://lpaug.vercel.app" target="_blank" rel="noopener">
+          <div class="fc-ic" style="color:#0f6e56;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13a8 8 0 0116 0"/><rect x="3" y="13" width="4" height="7" rx="1.5"/><rect x="17" y="13" width="4" height="7" rx="1.5"/></svg></div>
+          <div><div class="fc-name">엘파그</div><div class="fc-desc">LP·오디오 입문 가이드</div></div>
+        </a>
+        <a class="family-card" href="https://pinhome-five.vercel.app" target="_blank" rel="noopener">
+          <div class="fc-ic" style="color:#854f0b;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6 8 6"/><path d="M6 10v9h12v-9"/></svg></div>
+          <div><div class="fc-name">핀홈</div><div class="fc-desc">정책자금·지원금 매칭</div></div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="wrap">
+      <div class="fsig">오늘도 당신의 최고가 될 겁니다. 힘내세요.</div>
+      <div class="fcopy">오늘도 OND2U · Alliance WXN<br>매일, 당신에게 한 편의 위로를 보냅니다.</div>
+    </div>
+  </div>
+
+<script>
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); } });
+  }, { threshold:0.12 });
+  document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+
+  const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M6 6l1.5 1.5M16.5 16.5L18 18M18 6l-1.5 1.5M7.5 16.5L6 18"/></svg>';
+  const TEA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h11v5a4 4 0 01-4 4H9a4 4 0 01-4-4z"/><path d="M16 9h2a2 2 0 010 4h-2"/><path d="M8 3c-.5 1 .5 1 0 2M11 3c-.5 1 .5 1 0 2"/></svg>';
+  const WALK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="1.5"/><path d="M11 8l3 2 2 3M11 8l-1 5-2 4M14 10l-1 4 2 4"/></svg>';
+  const BREATH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg>';
+
+  const LETTERS = [
+    { q:"가장 어두운 밤도<br>결국 끝나고 해는 떠오른다.", en:"Even the darkest night will end and the sun will rise.", a:"빅토르 위고", ci:SUN, ct:"햇빛 한 줌" },
+    { q:"넘어지는 것은 실패가 아니다.<br>넘어진 자리에 머무는 것이 실패다.", en:"Falling down is not failure. Staying down is.", a:"소크라테스", ci:BREATH, ct:"손을 가슴에" },
+    { q:"필요하다면 쉬어라.<br>그러나 절대 포기하지 마라.", en:"Rest if you must, but don't you quit.", a:"에드거 게스트", ci:TEA, ct:"따뜻한 차 한 잔" },
+    { q:"오늘 할 수 있는 일에<br>집중하라.", en:"Do what you can, with what you have, where you are.", a:"시어도어 루스벨트", ci:WALK, ct:"딱 하나만 적기" },
+    { q:"별을 보려면<br>어둠이 필요하다.", en:"You need the darkness to see the stars.", a:"작자 미상", ci:SUN, ct:"창문 열기" }
+  ];
+  let lcIdx = 0;
+  const card = document.getElementById("letterCard");
+  function swapLetter(){
+    lcIdx = (lcIdx + 1) % LETTERS.length;
+    const L = LETTERS[lcIdx];
+    card.classList.add("swapping");
+    setTimeout(()=>{
+      document.getElementById("lcQuote").innerHTML = L.q;
+      document.getElementById("lcEn").textContent = L.en;
+      document.getElementById("lcAuthor").textContent = "— " + L.a;
+      document.getElementById("lcCareIc").innerHTML = L.ci;
+      document.getElementById("lcCareTitle").textContent = L.ct;
+      card.classList.remove("swapping");
+    }, 500);
+  }
+  setInterval(swapLetter, 4000);
+</script>
+</body>
+</html>
