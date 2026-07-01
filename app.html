@@ -953,19 +953,40 @@
       else { pickedTone=t; document.querySelectorAll(".tochip").forEach(c=>c.classList.remove("on")); b.classList.add("on"); } };
     toneWrap.appendChild(b); });
 
-  $("addBtn").onclick = () => {
+  $("addBtn").onclick = async () => {
     const name = $("rName").value.trim();
     const email = $("rEmail").value.trim();
     if(!name){ $("rName").focus(); return; }
     if(!email || !email.includes("@")){ $("rEmail").focus(); return; }
+    if(!loggedIn){ alert("아끼는 사람을 추가하려면 먼저 로그인해 주세요."); return; }
     if(!pickedTimes.length){ pickedTimes = ["아침 8시"]; }
-    recipients.push({ name, email, times:[...pickedTimes], tone:pickedTone });
+    const rec = { name, email, times:[...pickedTimes], tone:pickedTone };
+    recipients.push(rec);
+    // 창고에 저장
+    const { data, error } = await odoDB.from("odo_recipients")
+      .insert({ sender_id: currentUser.id, name, email, send_times: rec.times, tone: pickedTone }).select().maybeSingle();
+    if(!error && data) rec.rowId = data.id;
+    else if(error) console.log("수신자 저장 오류:", error);
     // 초기화
     $("rName").value=""; $("rEmail").value="";
     pickedTimes=[]; pickedTone=null;
     document.querySelectorAll(".tchip,.tochip").forEach(c=>c.classList.remove("on"));
     renderRecipients();
   };
+
+  // 로그인 시 창고에서 수신자 불러오기
+  async function loadRecipients(){
+    if(!loggedIn) return;
+    try {
+      const { data, error } = await odoDB.from("odo_recipients").select("*").order("created_at", { ascending: true });
+      if(error || !data) return;
+      recipients.length = 0;
+      data.forEach(row=>{
+        recipients.push({ name:row.name, email:row.email, times:row.send_times||["아침 8시"], tone:row.tone, rowId:row.id });
+      });
+      renderRecipients();
+    } catch(e){ console.log("수신자 불러오기 오류:", e); }
+  }
 
   function renderRecipients(){
     if(!recipients.length){
@@ -991,7 +1012,15 @@
     `).join("");
   }
 
-  window.delRecipient = function(i){ recipients.splice(i,1); renderRecipients(); };
+  window.delRecipient = async function(i){
+    const rec = recipients[i];
+    recipients.splice(i,1);
+    renderRecipients();
+    if(loggedIn && rec && rec.rowId){
+      const { error } = await odoDB.from("odo_recipients").delete().eq("id", rec.rowId);
+      if(error) console.log("수신자 삭제 오류:", error);
+    }
+  };
 
   /* ── 로그인 (실제 Supabase 구글 로그인) ── */
   let loggedIn = false;
@@ -1019,9 +1048,12 @@
     updateFromLine();
     loadSaved();
     loadTrace();
+    loadRecipients();
     $("logoutBtn").onclick = async () => {
       await odoDB.auth.signOut();
       loggedIn = false; currentUser = null; senderName = "";
+      saved.length = 0; trace.length = 0; recipients.length = 0;
+      renderRecipients();
       $("gate").style.display = "block";
       $("sendPanel").style.display = "none";
     };
