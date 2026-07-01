@@ -47,7 +47,7 @@
   .leftnav { width:150px; flex-shrink:0; position:sticky; top:56px; }
   .leftnav .brand { margin-bottom:64px; }
   .leftnav .brand-mark { display:block; margin-bottom:12px; }
-  .leftnav .brand-txt { font-size:20px; font-weight:800; letter-spacing:-0.04em; line-height:1.3; display:block; }
+  .leftnav .brand-txt { font-size:20px; font-weight:800; letter-spacing:-0.04em; line-height:1.3; display:block; color:var(--ink); }
   .leftnav .brand-en { display:block; font-size:11px; font-weight:600; color:var(--plum); letter-spacing:0.08em; margin-top:2px; }
   .leftnav .tabs { display:flex; flex-direction:column; }
   .tab {
@@ -346,7 +346,7 @@
   .tchip:hover, .tochip:hover, .kchip:hover { border-color:var(--plum); color:var(--plum); }
   .tchip.on, .tochip.on, .kchip.on { background:var(--plum); border-color:var(--plum); color:#fff; }
   .kind-hint { font-size:12px; color:var(--plum); margin-top:8px; line-height:1.6; }
-  .bible-check { display:inline-flex; align-items:center; gap:11px; cursor:pointer; user-select:none; font-size:14px; color:var(--ink); padding:10px 14px; border:1px solid var(--plum-line); border-radius:14px; background:var(--white); transition:all .16s; }
+  .bible-check { display:inline-flex !important; align-items:center; gap:11px; cursor:pointer; user-select:none; font-size:14px; color:var(--ink); padding:10px 14px; border:1px solid var(--plum-line); border-radius:14px; background:var(--white); transition:all .16s; margin-bottom:0; }
   .bible-check:hover { border-color:var(--plum); }
   .bible-check.on { background:var(--plum-soft); border-color:var(--plum); }
   .bible-check .bc-box { width:22px; height:22px; border:2px solid var(--plum); border-radius:6px; flex-shrink:0; transition:all .16s; position:relative; background:var(--white); }
@@ -395,13 +395,13 @@
 </div>
 <div class="layout">
 <nav class="leftnav">
-  <div class="brand">
+  <a class="brand" href="index.html" style="text-decoration:none; display:block; cursor:pointer; color:inherit;">
     <svg class="brand-mark" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
       <path d="M6 12 h22 a3 3 0 0 1 3 3 v12 a3 3 0 0 1 -3 3 h-22 a3 3 0 0 1 -3 -3 v-12 a3 3 0 0 1 3 -3 z" fill="none" stroke="#5a4a7a" stroke-width="2"/>
       <path d="M4 14 l13 9 l13 -9" fill="none" stroke="#5a4a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     <span class="brand-txt">오늘도 <span class="brand-en">OND2U</span></span>
-  </div>
+  </a>
   <div class="tabs">
     <button class="tab on" data-view="home">오늘</button>
     <button class="tab" data-view="saved">담아둔 글</button>
