@@ -346,6 +346,11 @@
   .tchip:hover, .tochip:hover, .kchip:hover { border-color:var(--plum); color:var(--plum); }
   .tchip.on, .tochip.on, .kchip.on { background:var(--plum); border-color:var(--plum); color:#fff; }
   .kind-hint { font-size:12px; color:var(--plum); margin-top:8px; line-height:1.6; }
+  .bible-check { display:inline-flex; align-items:center; gap:10px; cursor:pointer; user-select:none; font-size:14px; color:var(--ink); }
+  .bible-check .bc-box { width:22px; height:22px; border:1.5px solid var(--line-strong); border-radius:7px; flex-shrink:0; transition:all .16s; position:relative; }
+  .bible-check.on .bc-box { background:var(--plum); border-color:var(--plum); }
+  .bible-check.on .bc-box::after { content:"✓"; color:#fff; font-size:14px; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); }
+  .bible-check.on .bc-txt { color:var(--plum-deep); font-weight:600; }
   .add-btn { width:100%; font-family:inherit; font-size:15px; font-weight:600; color:#fff; background:var(--ink);
     border:none; border-radius:30px; padding:15px; cursor:pointer; transition:all .2s; margin-top:6px; }
   .add-btn:hover { background:var(--plum-deep); }
@@ -571,13 +576,15 @@
           <div class="time-chips" id="timeChips"></div>
         </div>
         <div class="field">
-          <label>어떤 글을 보낼까요?</label>
-          <div class="kind-chips" id="kindChips"></div>
-          <div class="kind-hint" id="kindHint"></div>
-        </div>
-        <div class="field">
           <label>이 사람에게 맞는 결 <span class="opt">(선택)</span></label>
           <div class="tone-chips" id="toneChips"></div>
+        </div>
+        <div class="field">
+          <label class="bible-check" id="bibleCheck">
+            <span class="bc-box" id="bcBox"></span>
+            <span class="bc-txt">✝ 성경 말씀도 함께 보내기</span>
+          </label>
+          <div class="kind-hint">체크하면 일반 위로글에 더해, "하나님께서 오늘 주신 말씀입니다"와 함께 성경 구절도 같이 보내요. (기독교인에게)</div>
         </div>
         <button class="add-btn" id="addBtn">명단에 추가</button>
         <div class="add-hint">추가 전에 "매일 좋은 글 보낼게, 받을래?" 하고 한 번 물어봐 주세요. 편지 맨 밑엔 언제든 '그만 받기'가 있어요.</div>
@@ -944,14 +951,10 @@
   /* ── 보내는 사람들 ── */
   const TIMES = ["아침 8시","점심 1시","저녁 9시","밤 11시"];
   const TONES = ["위로","응원","평온","시작"];
-  const KINDS = [
-    { key:"normal", label:"일반 위로글", hint:"명언·시·에세이 등 마음을 다독이는 글이 나가요." },
-    { key:"bible", label:"성경 말씀", hint:'"하나님께서 오늘 주신 말씀입니다"와 함께 성경 구절이 나가요. (기독교인에게)' }
-  ];
   const recipients = [];
   let pickedTimes = [];
   let pickedTone = null;
-  let pickedKind = "normal";   // 기본은 일반 위로글
+  let bibleAlso = false;   // 성경 말씀도 함께 보낼지 (기본 꺼짐)
 
   const timeWrap = $("timeChips");
   TIMES.forEach(t => { const b=document.createElement("button"); b.className="tchip"; b.textContent=t;
@@ -959,13 +962,11 @@
       else { pickedTimes.push(t); b.classList.add("on"); } };
     timeWrap.appendChild(b); });
 
-  // 글 종류 칩 (일반/성경) — 하나만 선택, 기본 일반
-  const kindWrap = $("kindChips");
-  KINDS.forEach(k => { const b=document.createElement("button"); b.className="kchip"+(k.key===pickedKind?" on":""); b.textContent=k.label; b.dataset.key=k.key;
-    b.onclick=()=>{ pickedKind=k.key; document.querySelectorAll(".kchip").forEach(c=>c.classList.remove("on")); b.classList.add("on");
-      $("kindHint").textContent = KINDS.find(x=>x.key===pickedKind).hint; };
-    kindWrap.appendChild(b); });
-  $("kindHint").textContent = KINDS.find(x=>x.key===pickedKind).hint;
+  // 성경 말씀 함께 보내기 체크박스 토글
+  $("bibleCheck").onclick = () => {
+    bibleAlso = !bibleAlso;
+    $("bibleCheck").classList.toggle("on", bibleAlso);
+  };
 
   const toneWrap = $("toneChips");
   TONES.forEach(t => { const b=document.createElement("button"); b.className="tochip"; b.textContent=t;
@@ -980,19 +981,18 @@
     if(!email || !email.includes("@")){ $("rEmail").focus(); return; }
     if(!loggedIn){ alert("아끼는 사람을 추가하려면 먼저 로그인해 주세요."); return; }
     if(!pickedTimes.length){ pickedTimes = ["아침 8시"]; }
-    const rec = { name, email, times:[...pickedTimes], tone:pickedTone, kind:pickedKind };
+    const rec = { name, email, times:[...pickedTimes], tone:pickedTone, bible:bibleAlso };
     recipients.push(rec);
-    // 창고에 저장
+    // 창고에 저장 (kind: 성경 함께면 'bible', 아니면 'normal')
     const { data, error } = await odoDB.from("odo_recipients")
-      .insert({ sender_id: currentUser.id, name, email, send_times: rec.times, tone: pickedTone, kind: pickedKind }).select().maybeSingle();
+      .insert({ sender_id: currentUser.id, name, email, send_times: rec.times, tone: pickedTone, kind: bibleAlso?"bible":"normal" }).select().maybeSingle();
     if(!error && data) rec.rowId = data.id;
     else if(error) console.log("수신자 저장 오류:", error);
     // 초기화
     $("rName").value=""; $("rEmail").value="";
-    pickedTimes=[]; pickedTone=null; pickedKind="normal";
+    pickedTimes=[]; pickedTone=null; bibleAlso=false;
     document.querySelectorAll(".tchip,.tochip").forEach(c=>c.classList.remove("on"));
-    document.querySelectorAll(".kchip").forEach(c=>c.classList.toggle("on", c.dataset.key==="normal"));
-    $("kindHint").textContent = KINDS.find(x=>x.key==="normal").hint;
+    $("bibleCheck").classList.remove("on");
     renderRecipients();
   };
 
@@ -1004,7 +1004,7 @@
       if(error || !data) return;
       recipients.length = 0;
       data.forEach(row=>{
-        recipients.push({ name:row.name, email:row.email, times:row.send_times||["아침 8시"], tone:row.tone, kind:row.kind||"normal", rowId:row.id });
+        recipients.push({ name:row.name, email:row.email, times:row.send_times||["아침 8시"], tone:row.tone, bible:(row.kind==="bible"), rowId:row.id });
       });
       renderRecipients();
     } catch(e){ console.log("수신자 불러오기 오류:", e); }
@@ -1026,8 +1026,8 @@
           <div class="re">${r.email}</div>
           <div class="rmeta">
             ${r.times.map(t=>`<span class="rtag">${t}</span>`).join("")}
-            ${r.kind==="bible"?`<span class="rtone rbible">✝ 성경 말씀</span>`:""}
             ${r.tone?`<span class="rtone">${r.tone} 결</span>`:""}
+            ${r.bible?`<span class="rtone rbible">✝ 성경 말씀 함께</span>`:""}
           </div>
         </div>
         <button class="rdel" onclick="delRecipient(${i})">삭제</button>
