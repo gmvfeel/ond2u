@@ -340,11 +340,12 @@
     background:var(--paper); border:1px solid var(--line-strong); border-radius:14px; padding:12px 16px; outline:none; transition:border-color .2s; }
   .field input:focus { border-color:var(--plum); }
   .field input::placeholder { color:var(--ink-faint); }
-  .time-chips, .tone-chips { display:flex; flex-wrap:wrap; gap:8px; }
-  .tchip, .tochip { font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--paper);
+  .time-chips, .tone-chips, .kind-chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .tchip, .tochip, .kchip { font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--paper);
     border:1px solid var(--line-strong); border-radius:30px; padding:9px 15px; cursor:pointer; transition:all .16s; }
-  .tchip:hover, .tochip:hover { border-color:var(--plum); color:var(--plum); }
-  .tchip.on, .tochip.on { background:var(--plum); border-color:var(--plum); color:#fff; }
+  .tchip:hover, .tochip:hover, .kchip:hover { border-color:var(--plum); color:var(--plum); }
+  .tchip.on, .tochip.on, .kchip.on { background:var(--plum); border-color:var(--plum); color:#fff; }
+  .kind-hint { font-size:12px; color:var(--plum); margin-top:8px; line-height:1.6; }
   .add-btn { width:100%; font-family:inherit; font-size:15px; font-weight:600; color:#fff; background:var(--ink);
     border:none; border-radius:30px; padding:15px; cursor:pointer; transition:all .2s; margin-top:6px; }
   .add-btn:hover { background:var(--plum-deep); }
@@ -362,6 +363,7 @@
   .recipient .rmeta { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
   .recipient .rtag { font-size:12px; color:var(--plum-deep); background:var(--plum-soft); border-radius:20px; padding:4px 10px; }
   .recipient .rtone { font-size:12px; color:var(--ink-soft); background:var(--paper); border:1px solid var(--line); border-radius:20px; padding:4px 10px; }
+  .recipient .rtone.rbible { color:var(--plum-deep); background:var(--plum-soft); border-color:var(--plum-line); font-weight:600; }
   .recipient .rdel { font-family:inherit; font-size:12px; color:var(--ink-faint); background:transparent; border:none; cursor:pointer; padding:4px; flex-shrink:0; }
   .recipient .rdel:hover { color:var(--plum); }
   .recipient-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:44px 0; }
@@ -567,6 +569,11 @@
         <div class="field">
           <label>보낼 시각 (여러 개 고를 수 있어요)</label>
           <div class="time-chips" id="timeChips"></div>
+        </div>
+        <div class="field">
+          <label>어떤 글을 보낼까요?</label>
+          <div class="kind-chips" id="kindChips"></div>
+          <div class="kind-hint" id="kindHint"></div>
         </div>
         <div class="field">
           <label>이 사람에게 맞는 결 <span class="opt">(선택)</span></label>
@@ -937,15 +944,28 @@
   /* ── 보내는 사람들 ── */
   const TIMES = ["아침 8시","점심 1시","저녁 9시","밤 11시"];
   const TONES = ["위로","응원","평온","시작"];
+  const KINDS = [
+    { key:"normal", label:"일반 위로글", hint:"명언·시·에세이 등 마음을 다독이는 글이 나가요." },
+    { key:"bible", label:"성경 말씀", hint:'"하나님께서 오늘 주신 말씀입니다"와 함께 성경 구절이 나가요. (기독교인에게)' }
+  ];
   const recipients = [];
   let pickedTimes = [];
   let pickedTone = null;
+  let pickedKind = "normal";   // 기본은 일반 위로글
 
   const timeWrap = $("timeChips");
   TIMES.forEach(t => { const b=document.createElement("button"); b.className="tchip"; b.textContent=t;
     b.onclick=()=>{ if(pickedTimes.includes(t)){ pickedTimes=pickedTimes.filter(x=>x!==t); b.classList.remove("on"); }
       else { pickedTimes.push(t); b.classList.add("on"); } };
     timeWrap.appendChild(b); });
+
+  // 글 종류 칩 (일반/성경) — 하나만 선택, 기본 일반
+  const kindWrap = $("kindChips");
+  KINDS.forEach(k => { const b=document.createElement("button"); b.className="kchip"+(k.key===pickedKind?" on":""); b.textContent=k.label; b.dataset.key=k.key;
+    b.onclick=()=>{ pickedKind=k.key; document.querySelectorAll(".kchip").forEach(c=>c.classList.remove("on")); b.classList.add("on");
+      $("kindHint").textContent = KINDS.find(x=>x.key===pickedKind).hint; };
+    kindWrap.appendChild(b); });
+  $("kindHint").textContent = KINDS.find(x=>x.key===pickedKind).hint;
 
   const toneWrap = $("toneChips");
   TONES.forEach(t => { const b=document.createElement("button"); b.className="tochip"; b.textContent=t;
@@ -960,17 +980,19 @@
     if(!email || !email.includes("@")){ $("rEmail").focus(); return; }
     if(!loggedIn){ alert("아끼는 사람을 추가하려면 먼저 로그인해 주세요."); return; }
     if(!pickedTimes.length){ pickedTimes = ["아침 8시"]; }
-    const rec = { name, email, times:[...pickedTimes], tone:pickedTone };
+    const rec = { name, email, times:[...pickedTimes], tone:pickedTone, kind:pickedKind };
     recipients.push(rec);
     // 창고에 저장
     const { data, error } = await odoDB.from("odo_recipients")
-      .insert({ sender_id: currentUser.id, name, email, send_times: rec.times, tone: pickedTone }).select().maybeSingle();
+      .insert({ sender_id: currentUser.id, name, email, send_times: rec.times, tone: pickedTone, kind: pickedKind }).select().maybeSingle();
     if(!error && data) rec.rowId = data.id;
     else if(error) console.log("수신자 저장 오류:", error);
     // 초기화
     $("rName").value=""; $("rEmail").value="";
-    pickedTimes=[]; pickedTone=null;
+    pickedTimes=[]; pickedTone=null; pickedKind="normal";
     document.querySelectorAll(".tchip,.tochip").forEach(c=>c.classList.remove("on"));
+    document.querySelectorAll(".kchip").forEach(c=>c.classList.toggle("on", c.dataset.key==="normal"));
+    $("kindHint").textContent = KINDS.find(x=>x.key==="normal").hint;
     renderRecipients();
   };
 
@@ -982,7 +1004,7 @@
       if(error || !data) return;
       recipients.length = 0;
       data.forEach(row=>{
-        recipients.push({ name:row.name, email:row.email, times:row.send_times||["아침 8시"], tone:row.tone, rowId:row.id });
+        recipients.push({ name:row.name, email:row.email, times:row.send_times||["아침 8시"], tone:row.tone, kind:row.kind||"normal", rowId:row.id });
       });
       renderRecipients();
     } catch(e){ console.log("수신자 불러오기 오류:", e); }
@@ -1004,6 +1026,7 @@
           <div class="re">${r.email}</div>
           <div class="rmeta">
             ${r.times.map(t=>`<span class="rtag">${t}</span>`).join("")}
+            ${r.kind==="bible"?`<span class="rtone rbible">✝ 성경 말씀</span>`:""}
             ${r.tone?`<span class="rtone">${r.tone} 결</span>`:""}
           </div>
         </div>
@@ -1268,14 +1291,16 @@
       const { data, error } = await odoDB.from("odo_contents").select("*");
       if (error || !data || !data.length) throw error || new Error("empty");
       // 창고 데이터를 화면이 쓰는 형식으로 변환
+      // SQL에 저장된 "\n"(백슬래시+n 두 글자)을 진짜 줄바꿈으로 바꿔줌
+      const fixNL = s => (s || "").replace(/\\n/g, "\n");
       const loaded = data.map(r => ({
         dbId: r.id,
-        quote: r.quote,
+        quote: fixNL(r.quote),
         en: r.quote_en,
         author: r.author,
         mood: r.mood_tags || [],
         essayTitle: r.essay_title,
-        essay: (r.essay || "").split("\n\n"),
+        essay: fixNL(r.essay).split("\n\n"),
         videoId: r.video_id,
         videoTitle: r.video_title,
         videoSub: "약 5분",
