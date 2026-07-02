@@ -7,6 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23efe7f4'/%3E%3Cpath d='M9 14 h22 a3 3 0 0 1 3 3 v10 a3 3 0 0 1 -3 3 h-22 a3 3 0 0 1 -3 -3 v-10 a3 3 0 0 1 3 -3 z' fill='none' stroke='%235a4a7a' stroke-width='2.2'/%3E%3Cpath d='M7 16 l13 8 l13 -8' fill='none' stroke='%235a4a7a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://t1.kakao.com/kakao_js_sdk/2.7.4/kakao.min.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" />
 <style>
 @font-face { font-family:'NanumSquare'; src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2107@1.1/NanumSquareR.woff') format('woff'); font-weight:400; font-display:swap; }
@@ -89,7 +90,7 @@
   .author { margin-top:20px; font-size:14px; color:var(--ink-soft); text-align:center; }
 
   /* 담아두기 버튼 */
-  .save-row { display:flex; justify-content:center; margin-top:24px; }
+  .save-row { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:24px; }
   .save-btn {
     font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--white);
     border:1px solid var(--line-strong); border-radius:30px; padding:9px 18px; cursor:pointer;
@@ -98,6 +99,8 @@
   .save-btn:hover { border-color:var(--plum); color:var(--plum); }
   .save-btn.saved { background:var(--plum-soft); border-color:var(--plum); color:var(--plum-deep); font-weight:600; }
   .save-btn .heart { font-size:15px; }
+  .kakao-btn { display:inline-flex; align-items:center; gap:7px; font-family:inherit; font-size:14px; font-weight:600; color:#3c1e1e; background:#FEE500; border:none; border-radius:30px; padding:11px 20px; cursor:pointer; transition:filter .16s; }
+  .kakao-btn:hover { filter:brightness(0.96); }
 
   .essay-wrap { margin-top:16px; }
   .essay { background:var(--plum); border:none; border-radius:20px; padding:34px 32px;
@@ -432,6 +435,7 @@
 
       <div class="save-row">
         <button class="save-btn" id="saveBtn"><span class="heart">♡</span> <span id="saveLabel">이 글 담아두기</span></button>
+        <button class="kakao-btn" id="kakaoShareBtn"><svg viewBox="0 0 24 24" width="16" height="16" fill="#3c1e1e"><path d="M12 3.5C6.75 3.5 2.5 6.86 2.5 11c0 2.67 1.79 5.01 4.48 6.33-.18.63-.66 2.4-.76 2.78-.12.47.17.46.36.34.15-.1 2.4-1.63 3.38-2.3.52.07 1.05.11 1.54.11 5.25 0 9.5-3.36 9.5-7.5S17.25 3.5 12 3.5z"/></svg> 카톡으로 보내기</button>
       </div>
     </div><!-- /content(명언) -->
     </div><!-- /letter-card -->
@@ -791,6 +795,7 @@
   const saved = [];
   const trace = [];
   const $ = id => document.getElementById(id);
+  if (window.Kakao && !Kakao.isInitialized()) Kakao.init('b60c84006b3ecf757bd39fd7f6eb7917');
 
   // 탭 전환
   document.querySelectorAll(".tab").forEach(t => {
@@ -872,6 +877,17 @@
   }
 
   // 담아두기 (로그인 시 창고 저장)
+  { const kb = $("kakaoShareBtn"); if (kb) kb.onclick = () => {
+    if (!window.Kakao || !Kakao.isInitialized()) { alert("카카오톡 공유를 불러오지 못했어요. 잠시 후 다시 시도해 주세요."); return; }
+    const q = ($("quote") ? $("quote").innerText : "").trim();
+    const a = ($("author") ? $("author").innerText : "").trim();
+    Kakao.Share.sendDefault({
+      objectType: 'text',
+      text: '오늘도 · 당신을 위한 한 편\n\n"' + q + '"' + (a ? '\n' + a : ''),
+      link: { mobileWebUrl: 'https://ond2u.vercel.app', webUrl: 'https://ond2u.vercel.app' }
+    });
+  }; }
+
   $("saveBtn").onclick = async () => {
     if(!current) return;
     const sb=$("saveBtn");
