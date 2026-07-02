@@ -879,13 +879,17 @@
   // 담아두기 (로그인 시 창고 저장)
   { const kb = $("kakaoShareBtn"); if (kb) kb.onclick = () => {
     if (!window.Kakao || !Kakao.isInitialized()) { alert("카카오톡 공유를 불러오지 못했어요. 잠시 후 다시 시도해 주세요."); return; }
-    const q = ($("quote") ? $("quote").innerText : "").trim();
+    const q = ($("quote") ? $("quote").innerText : "").replace(/\s+/g,' ').trim();
     const a = ($("author") ? $("author").innerText : "").trim();
     Kakao.Share.sendDefault({
-      objectType: 'text',
-      text: '오늘도 · 당신을 위한 한 편\n\n"' + q + '"' + (a ? '\n' + a : ''),
-      link: { mobileWebUrl: 'https://ond2u.vercel.app', webUrl: 'https://ond2u.vercel.app' },
-      buttons: [{ title: '오늘의 편지 보기', link: { mobileWebUrl: 'https://ond2u.vercel.app', webUrl: 'https://ond2u.vercel.app' } }]
+      objectType: 'feed',
+      content: {
+        title: q,
+        description: (a ? a + '  ·  ' : '') + '오늘도가 전하는 오늘의 한 편',
+        imageUrl: 'https://ond2u.vercel.app/og.png',
+        link: { mobileWebUrl: 'https://ond2u.vercel.app/app.html', webUrl: 'https://ond2u.vercel.app/app.html' }
+      },
+      buttons: [{ title: '오늘의 편지 보기', link: { mobileWebUrl: 'https://ond2u.vercel.app/app.html', webUrl: 'https://ond2u.vercel.app/app.html' } }]
     });
   }; }
 
