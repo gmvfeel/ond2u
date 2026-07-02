@@ -91,6 +91,7 @@
   .eyebrow { font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:20px; text-align:center; }
   .content { transition: opacity .45s ease; }
   .content.fade { opacity:0; }
+  .letter-card { background:var(--white); border:1px solid var(--plum-line); border-radius:20px; padding:38px 34px 34px; }
 
   .quote { font-family:'Pretendard', sans-serif; font-size:30px; line-height:1.5; font-weight:800; letter-spacing:-0.035em; white-space:pre-line; text-align:center; }
   .quote-en { font-family:'Pretendard', sans-serif; font-size:15px; line-height:1.6; font-weight:500; color:var(--ink-soft); white-space:pre-line; text-align:center; margin-top:14px; font-style:italic; }
@@ -107,14 +108,14 @@
   .save-btn.saved { background:var(--plum-soft); border-color:var(--plum); color:var(--plum-deep); font-weight:600; }
   .save-btn .heart { font-size:15px; }
 
-  .essay-wrap { margin-top:48px; }
+  .essay-wrap { margin-top:16px; }
   .essay { background:var(--white); border:1px solid var(--plum-line); border-radius:20px; padding:34px 32px;
     box-shadow:0 1px 2px rgba(80,60,70,.03), 0 12px 32px rgba(80,60,70,.05); }
   .essay .etitle { font-size:18px; font-weight:700; margin-bottom:18px; letter-spacing:-0.02em; }
   .essay p { font-size:15px; line-height:2.05; color:var(--ink-2); margin-bottom:16px; }
   .essay p:last-child { margin-bottom:0; }
 
-  .care-wrap { margin-top:32px; }
+  .care-wrap { margin-top:16px; }
   .care { background:var(--plum-soft); border-radius:18px; padding:22px 24px; }
   .care-head { display:flex; align-items:center; gap:13px; margin-bottom:12px; }
   .care-ic { width:38px; height:38px; border-radius:11px; background:var(--white); color:var(--plum); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -123,7 +124,7 @@
   .care-title { font-size:16px; font-weight:700; color:var(--plum-deep); margin-top:2px; }
   .care-body { font-size:14px; line-height:1.85; color:var(--ink-2); }
 
-  .video-wrap { margin-top:44px; }
+  .video-wrap { margin-top:16px; }
   .player { position:relative; aspect-ratio:16/9; border-radius:18px; overflow:hidden; background:#000; }
   .player iframe { width:100%; height:100%; border:0; display:block; }
   .vcap { margin-top:14px; text-align:center; }
@@ -132,7 +133,7 @@
   .fallback { display:inline-block; margin-top:12px; font-size:13px; font-weight:500; color:var(--plum); text-decoration:none; }
 
   /* 반응 (남에게 받았을 때) */
-  .react-wrap { margin-top:44px; padding:24px; background:var(--white); border:1px solid var(--plum-line); border-radius:20px; text-align:center; }
+  .react-wrap { margin-top:16px; padding:24px; background:var(--white); border:1px solid var(--plum-line); border-radius:20px; text-align:center; }
   .react-wrap .rq { font-size:13px; color:var(--ink-soft); margin-bottom:14px; }
   .react-btns { display:flex; gap:9px; justify-content:center; flex-wrap:wrap; }
   .react-btn {
@@ -144,7 +145,7 @@
   .react-done { font-size:13px; color:var(--plum-deep); font-weight:600; margin-top:14px; display:none; }
 
   /* 기분 */
-  .mood { margin-top:52px; padding:32px 28px; background:var(--white); border:1px solid var(--plum-line); border-radius:20px; }
+  .mood { margin-top:18px; padding:32px 28px; background:var(--white); border:1px solid var(--plum-line); border-radius:20px; }
   .mood .ask { font-size:14px; color:var(--ink-soft); margin-bottom:18px; text-align:center; }
   .mood .ask span { color:var(--ink-faint); font-size:13px; }
   .mood .sublabel { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); margin:24px 0 12px; text-align:center; }
@@ -185,7 +186,7 @@
   .trace-item .tm b { color:var(--plum-deep); font-weight:600; }
   .trace-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:50px 0; }
 
-  .footnote { margin-top:46px; text-align:center; font-size:12px; color:var(--ink-faint); line-height:1.8; }
+  .footnote { margin-top:18px; text-align:center; font-size:12px; color:var(--ink-faint); line-height:1.8; }
 
   @media (max-width:640px) {
     body { padding:28px 16px 70px; }
@@ -193,7 +194,7 @@
     .quote-en { font-size:14px; }
     .essay { padding:26px 22px; }
     .essay .etitle { font-size:18px; }
-    .mood { padding:24px 20px; margin-top:40px; }
+    .mood { padding:24px 20px; margin-top:16px; }
     .gate { padding:32px 22px; }
     .me-card { padding:22px 20px; }
     .add-card { padding:22px 20px; }
@@ -404,6 +405,7 @@
 
   <!-- 홈 -->
   <div class="view on" id="view-home">
+    <div class="letter-card">
     <div class="season" id="season"></div>
     <div class="from-line" id="fromLine"><span class="from-badge">윤</span> <b>윤기</b>님이 오늘도 보냅니다</div>
     <div class="sig">오늘도 당신의 최고가 될 겁니다. 힘내세요.</div>
@@ -422,7 +424,10 @@
       <div class="save-row">
         <button class="save-btn" id="saveBtn"><span class="heart">♡</span> <span id="saveLabel">이 글 담아두기</span></button>
       </div>
+    </div><!-- /content(명언) -->
+    </div><!-- /letter-card -->
 
+    <div class="content" id="content2">
       <div class="essay-wrap">
         <div class="essay">
           <div class="etitle" id="essayTitle"></div>
@@ -831,7 +836,7 @@
   function show(useMood){
     const {p,i}=pick(useMood); current={p,i};
     updateConnector(useMood);
-    $("content").classList.add("fade"); $("player").src="";
+    $("content").classList.add("fade"); $("content2").classList.add("fade"); $("player").src="";
     // 반응 초기화
     document.querySelectorAll(".react-btn").forEach(c=>c.classList.remove("picked")); $("reactDone").style.display="none";
     // 담기 버튼 초기화
@@ -852,7 +857,7 @@
       $("player").src="https://www.youtube.com/embed/"+p.videoId+"?rel=0";
       $("fallback").href="https://www.youtube.com/watch?v="+p.videoId;
       $("videoTitle").textContent=p.videoTitle; $("videoSub").textContent=p.videoSub;
-      $("content").classList.remove("fade");
+      $("content").classList.remove("fade"); $("content2").classList.remove("fade");
     },450);
   }
 
