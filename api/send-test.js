@@ -23,41 +23,86 @@ export default async function handler(req, res) {
   if (!RESEND_KEY || !SB_URL || !SB_SERVICE)
     return res.status(500).json({ ok: false, error: "서버 설정(환경변수)이 아직 안 됐어요." });
 
-  const to = req.query.to;
-  if (!to) return res.status(400).json({ ok: false, error: "받을 이메일(to)이 없어요." });
   const fromName = req.query.from_name || "윤기";
-  const toName = req.query.to_name || "";
-  const wantBible = req.query.bible === "1";
+  const all = req.query.all === "1";   // all=1 이면 수신자 전체 발송
 
   try {
-    const normal = await fetchContents(SB_URL, SB_SERVICE, "normal");
-    if (!normal.length) throw new Error("창고에 일반 콘텐츠가 없어요.");
-    const pickN = normal[Math.floor(Math.random() * normal.length)];
+    // 콘텐츠는 한 번만 불러와 재사용 (수신자가 여러 명이어도 창고는 1~2번만 읽음)
+    const normalPool = await fetchContents(SB_URL, SB_SERVICE, "normal");
+    if (!normalPool.length) throw new Error("창고에 일반 콘텐츠가 없어요.");
+    const biblePool = await fetchContents(SB_URL, SB_SERVICE, "bible");
 
-    let pickB = null;
-    if (wantBible) {
-      const bible = await fetchContents(SB_URL, SB_SERVICE, "bible");
-      if (bible.length) pickB = bible[Math.floor(Math.random() * bible.length)];
+    const cfg = { RESEND_KEY, FROM, fromName, normalPool, biblePool };
+
+    if (all) {
+      // ── 전체 발송: 수신자 명단 전원에게 ──
+      const recipients = await fetchRecipients(SB_URL, SB_SERVICE);
+      if (!recipients.length)
+        return res.status(200).json({ ok: true, message: "보낼 수신자가 없어요. (odo_recipients 비어있음)", sent: 0 });
+
+      const results = [];
+      for (const rc of recipients) {
+        try {
+          const id = await sendOne({ ...cfg, to: rc.email, toName: rc.name || "", wantBible: rc.kind === "bible" });
+          results.push({ email: rc.email, ok: true, id });
+        } catch (e) {
+          results.push({ email: rc.email, ok: false, error: String(e && e.message || e) });
+        }
+      }
+      const okCount = results.filter(x => x.ok).length;
+      return res.status(200).json({ ok: true, message: okCount + "/" + results.length + "명에게 보냈어요.", sent: okCount, total: results.length, results });
+    } else {
+      // ── 단일 발송: 한 명에게 (기존 테스트 방식) ──
+      const to = req.query.to;
+      if (!to) return res.status(400).json({ ok: false, error: "받을 이메일(to)이 없어요. (전체 발송은 주소 끝에 all=1)" });
+      const toName = req.query.to_name || "";
+      const wantBible = req.query.bible === "1";
+      const id = await sendOne({ ...cfg, to, toName, wantBible });
+      return res.status(200).json({ ok: true, message: "보냈어요!", to, id });
     }
-
-    const html = buildEmail({ fromName, toName, normal: pickN, bible: pickB });
-
-    const r = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: "오늘도 <" + FROM + ">",
-        to: [to],
-        subject: fromName + "님이 오늘도 보냅니다",
-        html
-      })
-    });
-    const data = await r.json();
-    if (!r.ok) return res.status(500).json({ ok: false, error: "Resend 발송 실패", detail: data });
-    return res.status(200).json({ ok: true, message: "보냈어요!", to, id: data.id });
   } catch (e) {
     return res.status(500).json({ ok: false, error: String(e && e.message || e) });
   }
+}
+
+// 수신자 한 명에게 발송 (콘텐츠 풀에서 랜덤으로 뽑아 메일 만들어 Resend로)
+async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, to, toName, wantBible }) {
+  const pickN = normalPool[Math.floor(Math.random() * normalPool.length)];
+  let pickB = null;
+  if (wantBible && biblePool.length) pickB = biblePool[Math.floor(Math.random() * biblePool.length)];
+
+  const html = buildEmail({ fromName, toName, normal: pickN, bible: pickB });
+
+  const r = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "오늘도 <" + FROM + ">",
+      to: [to],
+      subject: fromName + "님이 오늘도 보냅니다",
+      html
+    })
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error("Resend 발송 실패: " + JSON.stringify(data));
+  return data.id;
+}
+
+// 수신자 명단 전체 읽기
+async function fetchRecipients(url, key) {
+  const r = await fetch(url + "/rest/v1/odo_recipients?select=*", {
+    headers: { "apikey": key, "Authorization": "Bearer " + key }
+  });
+  if (!r.ok) throw new Error("수신자 명단 읽기 실패: " + r.status);
+  return await r.json();
+}
+
+// 이름 뒤 조사(가/이) 자동 처리
+function josaGaI(name) {
+  if (!name) return "";
+  const c = name.charCodeAt(name.length - 1);
+  if (c < 0xAC00 || c > 0xD7A3) return name + "가";
+  return name + (((c - 0xAC00) % 28 !== 0) ? "이" : "가");
 }
 
 async function fetchContents(url, key, kind) {
@@ -138,6 +183,7 @@ function buildEmail({ fromName, toName, normal, bible }) {
       '<div style="margin-top:34px; padding-top:28px; border-top:1px solid #eae7e3;">' +
         (normal.essay_title ? '<div style="font-size:16px; font-weight:700; color:#2b2730; margin-bottom:14px;">' + normal.essay_title + '</div>' : "") +
         essayParas +
+        '<div style="margin-top:20px; text-align:right; font-size:14px; font-weight:500; color:#5a4a7a;">' + josaGaI(fromName) + ' 드려요. 오늘도 좋은 하루 되세요 ^^</div>' +
       '</div>' +
 
       (normal.care_title ?
