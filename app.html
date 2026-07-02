@@ -114,6 +114,7 @@
   .essay .etitle { font-size:18px; font-weight:700; margin-bottom:18px; letter-spacing:-0.02em; color:#fff; }
   .essay p { font-size:15px; line-height:2.05; color:rgba(255,255,255,.9); margin-bottom:16px; }
   .essay p:last-child { margin-bottom:0; }
+  .esign { margin-top:22px; text-align:right; font-size:14px; font-weight:500; color:#fff; line-height:1.6; }
 
   .care-wrap { margin-top:16px; }
   .care { background:var(--plum-soft); border-radius:18px; padding:22px 24px; }
@@ -432,6 +433,7 @@
         <div class="essay">
           <div class="etitle" id="essayTitle"></div>
           <div id="essayBody"></div>
+          <div class="esign" id="essaySign">윤기가 드려요. 오늘도 좋은 하루 되세요 ^^</div>
         </div>
       </div>
 
@@ -1054,10 +1056,18 @@
   let senderName = "";   // 편지에 찍힐 "보내는 이름"
 
   // 오늘 탭 "보낸 사람" 표시를 senderName으로 갱신
+  function josaGaI(name){
+    if(!name) return "";
+    const c = name.charCodeAt(name.length-1);
+    if (c < 0xAC00 || c > 0xD7A3) return name + "가";
+    return name + (((c-0xAC00)%28!==0) ? "이" : "가");
+  }
   function updateFromLine(){
     const nm = senderName || "윤기";
     const fl = $("fromLine");
     if (fl) fl.innerHTML = '<span class="from-badge">'+nm.charAt(0)+'</span> <b>'+nm+'</b>님이 오늘도 보냅니다';
+    const es = $("essaySign");
+    if (es) es.textContent = josaGaI(nm) + " 드려요. 오늘도 좋은 하루 되세요 ^^";
   }
 
   // 로그인 성공 후 화면 전환
