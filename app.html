@@ -34,9 +34,10 @@
     .layout { display: block; }
     .leftnav { width: 100%; max-width: 600px; margin: 0 auto 24px; position: static; }
     .leftnav .brand { margin-bottom: 16px; }
-    .leftnav .tabs { flex-direction: row; flex-wrap: wrap; gap: 6px 18px; }
-    .tab { width: auto; border: none; border-radius: 0; padding: 6px 0; font-size: 14px; }
-    .tab:last-child { border-bottom: none; }
+    .leftnav .tabs { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+    .tab { width: auto; border: 1px solid var(--line); border-radius: 20px; padding: 8px 15px; font-size: 13px; background: var(--white); white-space: nowrap; text-align: center; }
+    .tab:last-child { border-bottom: 1px solid var(--line); }
+    .tab.on { background: var(--plum); color: #fff; border-color: var(--plum); font-weight: 600; }
     .stage { max-width: 600px; margin: 0 auto; }
     .sidebar { width: 100%; max-width: 600px; margin: 40px auto 0; position: static; padding-top: 32px; border-top: 1px solid var(--line); }
   }
@@ -1166,29 +1167,52 @@
     $("meTimeField").style.pointerEvents = on ? "auto" : "none";
   };
 
-  /* ── 받은 반응 (데모 예시 데이터) ── */
-  const REACTIONS_RECEIVED = [
-    { who:"엄마", emo:"위로됐어요 ♡", date:"7월 1일 아침", quote:"가장 어두운 밤도 결국 끝나고 해는 떠오른다." },
-    { who:"민수", emo:"힘이 나요", date:"6월 30일 저녁", quote:"산을 움직이는 자는 작은 돌을 나르는 것부터 시작한다." },
-    { who:"엄마", emo:"고마워요", date:"6월 30일 아침", quote:"필요하다면 쉬어라. 그러나 절대 포기하지 마라." },
-    { who:"지영", emo:"위로됐어요 ♡", date:"6월 29일 저녁", quote:"성공이란 실패를 뒤집어 놓은 것이다." }
-  ];
+  /* ── 받은 반응 (창고 odo_reactions 실데이터) ── */
+  async function renderReactions(){
+    const box = $("reactionList");
+    const escR = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const fmtR = iso => { try { const d=new Date(iso); return (d.getMonth()+1)+"월 "+d.getDate()+"일"; } catch(e){ return ""; } };
 
-  function renderReactions(){
-    if(!REACTIONS_RECEIVED.length){
-      $("reactionList").innerHTML='<div class="recipient-empty">아직 받은 반응이 없어요.<br>보낸 편지에 답이 오면 여기 쌓여요.</div>';
+    if (!currentUser) {
+      box.innerHTML = '<div class="recipient-empty">로그인하면 받은 반응을 볼 수 있어요.</div>';
       return;
     }
-    $("reactionList").innerHTML = REACTIONS_RECEIVED.map(r=>`
+    box.innerHTML = '<div class="recipient-empty">불러오는 중…</div>';
+
+    const { data, error } = await odoDB.from("odo_reactions")
+      .select("emotion, content_quote, recipient_email, created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      box.innerHTML = '<div class="recipient-empty">반응을 불러오지 못했어요.</div>';
+      return;
+    }
+    if (!data || !data.length) {
+      box.innerHTML = '<div class="recipient-empty">아직 받은 반응이 없어요.<br>보낸 편지에 답이 오면 여기 쌓여요.</div>';
+      return;
+    }
+
+    // 받는 사람 이메일 → 이름 매핑 (있으면 "엄마"처럼 이름으로 표시)
+    let nameByEmail = {};
+    try {
+      const { data: recips } = await odoDB.from("odo_recipients").select("email, name");
+      (recips||[]).forEach(x => { if (x.email) nameByEmail[x.email] = x.name; });
+    } catch(e){}
+
+    box.innerHTML = data.map(r => {
+      const who = nameByEmail[r.recipient_email] || (r.recipient_email||"").split("@")[0] || "받는 분";
+      const emo = r.emotion || "";
+      const quote = r.content_quote || "";
+      return `
       <div class="reaction">
-        <div class="rcav">${r.who.charAt(0)}</div>
+        <div class="rcav">${escR(who).charAt(0)}</div>
         <div class="rcinfo">
-          <div class="rcwho"><b>${r.who}</b>님이 <span class="rcemo">${r.emo}</span></div>
-          <div class="rcdate">${r.date}</div>
-          <div class="rcquote">"${r.quote}"</div>
+          <div class="rcwho"><b>${escR(who)}</b>님이 <span class="rcemo">${escR(emo)}</span></div>
+          <div class="rcdate">${fmtR(r.created_at)}</div>
+          ${quote ? `<div class="rcquote">"${escR(quote)}"</div>` : ""}
         </div>
-      </div>
-    `).join("");
+      </div>`;
+    }).join("");
   }
 
   /* ── 작은 온기: 연속 기록 · 계절 인사 · 첫 방문 환영 ── */
