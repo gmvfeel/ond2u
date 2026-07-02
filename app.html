@@ -30,7 +30,6 @@
   .sidebar { width: 220px; flex-shrink: 0; position: sticky; top: 56px; padding-top: 90px; }
   .sidebar .family-label { margin-bottom: 14px; }
   .sidebar .family { margin-top: 0; padding-top: 0; border-top: none; }
-  .sidebar .family-grid { grid-template-columns: 1fr; }
   @media (max-width: 1080px) {
     .layout { display: block; }
     .leftnav { width: 100%; max-width: 600px; margin: 0 auto 24px; position: static; }
@@ -40,7 +39,6 @@
     .tab:last-child { border-bottom: none; }
     .stage { max-width: 600px; margin: 0 auto; }
     .sidebar { width: 100%; max-width: 600px; margin: 40px auto 0; position: static; padding-top: 32px; border-top: 1px solid var(--line); }
-    .sidebar .family-grid { grid-template-columns: 1fr 1fr; }
   }
 
   /* 상단바 */
@@ -305,29 +303,20 @@
   .adm-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:50px 0; }
   .adm-loading { text-align:center; color:var(--ink-faint); font-size:14px; padding:40px 0; }
 
-  /* 형제 프로젝트 배너 */
+  /* 형제 프로젝트 배너 (리스트형) */
   .family { margin-top:56px; padding-top:32px; border-top:1px solid var(--line); }
   .family-label { font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-faint); text-align:center; margin-bottom:18px; }
-  .family-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .family-card { display:flex; align-items:center; gap:11px; text-decoration:none; background:var(--white); border:1px solid var(--line);
-    border-radius:14px; padding:13px 14px; transition:all .18s; }
-  .family-card:hover { border-color:var(--plum); transform:translateY(-1px); box-shadow:0 6px 18px rgba(80,60,70,.06); }
-  .family-card .fc-ic { width:26px; height:26px; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:filter .18s, opacity .18s; }
-  .family-card .fc-ic svg { width:22px; height:22px; }
-  /* 평소: 아이콘은 회색 톤으로 흐리게 (인라인 색을 회색으로 눌러둠) */
-  .family-card .fc-ic { color:#b8b4c0 !important; opacity:.85; }
-  .family-card .fc-ic svg { stroke:#b8b4c0; }
-  /* 마우스 오버: 아이콘이 원래 브랜드 색으로 살아남 (인라인 style의 색이 복원됨) */
-  .family-card:hover .fc-ic { color:var(--fc-color, #5a4a7a) !important; opacity:1; }
-  .family-card:hover .fc-ic svg { stroke:currentColor; }
-  .family-card .fc-txt { min-width:0; }
-  /* 평소: 텍스트 흐리게 */
-  .family-card .fc-name { font-size:14px; font-weight:700; color:var(--ink-faint); transition:color .18s; }
-  .family-card .fc-desc { font-size:12px; color:var(--ink-faint); margin-top:2px; line-height:1.35; transition:color .18s; }
-  /* 마우스 오버: 텍스트 진하게 */
-  .family-card:hover .fc-name { color:var(--ink); }
-  .family-card:hover .fc-desc { color:var(--ink-soft); }
-  .fc-soon { display:inline-block; font-size:10px; color:var(--plum); background:var(--plum-soft); border-radius:20px; padding:1px 7px; margin-left:2px; }
+  .family-list { background:var(--white); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .family-item { display:flex; align-items:center; gap:10px; text-decoration:none; padding:11px 13px; transition:background .16s; }
+  .family-item + .family-item { border-top:1px solid var(--line); }
+  .family-item:hover { background:var(--plum-soft); }
+  .family-item .fc-ic { width:18px; height:18px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .family-item .fc-ic svg { width:16px; height:16px; stroke:#b8b4c0; transition:stroke .16s; }
+  .family-item:hover .fc-ic svg { stroke:var(--fc-color, #5a4a7a); }
+  .family-item .fc-name { font-size:13px; font-weight:600; color:var(--ink-faint); transition:color .16s; }
+  .family-item:hover .fc-name { color:var(--ink); }
+  .fc-soon { display:inline-block; font-size:9px; color:var(--plum); background:var(--plum-soft); border-radius:20px; padding:1px 6px; margin-left:auto; }
+  .family-item:hover .fc-soon { background:var(--white); }
 
   /* 보내는 사람들 */
   .add-card { background:var(--white); border:1px solid var(--plum-line); border-radius:20px; padding:26px 24px; margin-bottom:28px;
@@ -640,46 +629,47 @@
 <aside class="sidebar">
   <div class="family">
     <div class="family-label">Alliance WXN의 다른 이야기</div>
-    <div class="family-grid">
-      <a class="family-card" href="https://lpstock.co.kr" target="_blank" rel="noopener">
+    <div class="family-list">
+      <a class="family-item" href="https://lpstock.co.kr" target="_blank" rel="noopener" title="클래식·현대음악 LP 음반점">
         <div class="fc-ic" style="--fc-color:#5a4a7a;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">엘피스탁</div><div class="fc-desc">클래식·현대음악 LP 음반점</div></div>
+        <div class="fc-name">엘피스탁</div>
       </a>
-      <a class="family-card" href="https://booklps.vercel.app" target="_blank" rel="noopener">
+      <a class="family-item" href="https://booklps.vercel.app" target="_blank" rel="noopener" title="희귀 책·음반 통합 검색">
         <div class="fc-ic" style="--fc-color:#185fa5;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2 2 0 016 4h5v15H6a2 2 0 00-2 1.5z"/><path d="M20 5.5A2 2 0 0018 4h-5v15h5a2 2 0 012 1.5z"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">부클립스</div><div class="fc-desc">희귀 책·음반 통합 검색</div></div>
+        <div class="fc-name">부클립스</div>
       </a>
-      <a class="family-card" href="https://lpaug.vercel.app" target="_blank" rel="noopener">
+      <a class="family-item" href="https://lpaug.vercel.app" target="_blank" rel="noopener" title="LP·오디오 입문 가이드">
         <div class="fc-ic" style="--fc-color:#0f6e56;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13a8 8 0 0116 0"/><rect x="3" y="13" width="4" height="7" rx="1.5"/><rect x="17" y="13" width="4" height="7" rx="1.5"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">엘파그</div><div class="fc-desc">LP·오디오 입문 가이드</div></div>
+        <div class="fc-name">엘파그</div>
       </a>
-      <a class="family-card" href="https://pinhome-five.vercel.app" target="_blank" rel="noopener">
+      <a class="family-item" href="https://pinhome-five.vercel.app" target="_blank" rel="noopener" title="정책자금·지원금 매칭">
         <div class="fc-ic" style="--fc-color:#854f0b;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6 8 6"/><path d="M6 10v9h12v-9"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">핀홈</div><div class="fc-desc">정책자금·지원금 매칭</div></div>
+        <div class="fc-name">핀홈</div>
       </a>
-      <a class="family-card" href="#" target="_blank" rel="noopener">
+      <a class="family-item" href="#" target="_blank" rel="noopener" title="순수음악 커뮤니티">
         <div class="fc-ic" style="--fc-color:#993556;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">오퍼스클램</div><div class="fc-desc">순수음악 커뮤니티</div></div>
+        <div class="fc-name">오퍼스클램</div>
       </a>
-      <a class="family-card" href="#" target="_blank" rel="noopener">
+      <a class="family-item" href="#" target="_blank" rel="noopener" title="개인 자산 대시보드">
         <div class="fc-ic" style="--fc-color:#3b6d11;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16l3-4 3 2 4-6"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">한눈에셋</div><div class="fc-desc">개인 자산 대시보드</div></div>
+        <div class="fc-name">한눈에셋</div>
       </a>
-      <a class="family-card" href="#" target="_blank" rel="noopener">
+      <a class="family-item" href="#" target="_blank" rel="noopener" title="소크라테스식 AI 학습">
         <div class="fc-ic" style="--fc-color:#185fa5;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-4 3v-3H4z"/><path d="M9 10h6"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">되묻 SOCRA</div><div class="fc-desc">소크라테스식 AI 학습</div></div>
+        <div class="fc-name">되묻 SOCRA</div>
       </a>
-      <a class="family-card" href="#" target="_blank" rel="noopener">
+      <a class="family-item" href="#" target="_blank" rel="noopener" title="부모-자녀 대화 코칭">
         <div class="fc-ic" style="--fc-color:#0f6e56;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c0-5 0-8-3-10"/><path d="M12 11c0-3 2-5 6-5 0 4-2 6-6 5z"/><path d="M12 13c0-2.5-1.5-4.5-5-4.5 0 3.5 1.5 5 5 4.5z"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">시드맵</div><div class="fc-desc">부모-자녀 대화 코칭</div></div>
+        <div class="fc-name">시드맵</div>
       </a>
-      <a class="family-card" href="#" target="_blank" rel="noopener">
+      <a class="family-item" href="#" target="_blank" rel="noopener" title="사기 피해 신고 플랫폼">
         <div class="fc-ic" style="--fc-color:#a32d2d;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">치킬 CheatKill</div><div class="fc-desc">사기 피해 신고 플랫폼</div></div>
+        <div class="fc-name">치킬 CheatKill</div>
       </a>
-      <a class="family-card" href="#" target="_blank" rel="noopener">
+      <a class="family-item" href="#" target="_blank" rel="noopener" title="참여형 연재소설 (준비 중)">
         <div class="fc-ic" style="--fc-color:#5a4a7a;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 9-9-3-3-9 9z"/><path d="M14 6l3 3"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">GROOVE</div><div class="fc-desc">참여형 연재소설 <span class="fc-soon">준비 중</span></div></div>
+        <div class="fc-name">GROOVE</div>
+        <span class="fc-soon">준비 중</span>
       </a>
     </div>
   </div>
