@@ -134,7 +134,7 @@ function buildEmail({ fromName, toName, normal, bible }) {
   const nl = s => (s || "").replace(/\\n/g, "\n");
   const brQuote = nl(normal.quote).replace(/\n/g, "<br>");
   const essayParas = nl(normal.essay).split("\n\n").filter(Boolean)
-    .map(p => '<p style="font-size:14px; line-height:1.95; color:#46414d; margin:0 0 13px;">' + p.replace(/\n/g,"<br>") + '</p>').join("");
+    .map(p => '<p style="font-size:14px; line-height:1.95; color:#e9e5f0; margin:0 0 13px;">' + p.replace(/\n/g,"<br>") + '</p>').join("");
   const careIc = careEmoji(normal.care_icon);
   const badge = fromName.charAt(0);
   const toLine = toName ? ("받는 사람<br>" + toName) : "받는 사람";
@@ -185,10 +185,10 @@ function buildEmail({ fromName, toName, normal, bible }) {
       (normal.quote_en ? '<div style="font-size:14px; font-style:italic; color:#7a7580; text-align:center; margin-top:12px; line-height:1.5;">' + normal.quote_en + '</div>' : "") +
       '<div style="font-size:13px; color:#7a7580; text-align:center; margin-top:16px;">— ' + (normal.author || "") + '</div>' +
 
-      '<div style="margin-top:34px; padding-top:28px; border-top:1px solid #eae7e3;">' +
-        (normal.essay_title ? '<div style="font-size:16px; font-weight:700; color:#2b2730; margin-bottom:14px;">' + normal.essay_title + '</div>' : "") +
+      '<div style="margin-top:30px; background:#5a4a7a; border-radius:14px; padding:26px 24px;">' +
+        (normal.essay_title ? '<div style="font-size:16px; font-weight:700; color:#ffffff; margin-bottom:14px;">' + normal.essay_title + '</div>' : "") +
         essayParas +
-        '<div style="margin-top:20px; text-align:right; font-size:14px; font-weight:500; color:#5a4a7a;">' + josaGaI(fromName) + ' 드려요. 오늘도 좋은 하루 되세요 ^^</div>' +
+        '<div style="margin-top:20px; text-align:right; font-size:14px; font-weight:500; color:#ffffff;">' + josaGaI(fromName) + ' 드려요. 오늘도 좋은 하루 되세요 ^^</div>' +
       '</div>' +
 
       (normal.care_title ?
