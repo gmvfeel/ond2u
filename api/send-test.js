@@ -48,7 +48,7 @@ export default async function handler(req, res) {
       const results = [];
       for (const rc of recipients) {
         try {
-          const id = await sendOne({ ...cfg, to: rc.email, toName: rc.name || "", wantBible: rc.kind === "bible" });
+          const id = await sendOne({ ...cfg, to: rc.email, toName: rc.name || "", wantBible: rc.kind === "bible", senderId: rc.sender_id });
           results.push({ email: rc.email, ok: true, id });
         } catch (e) {
           results.push({ email: rc.email, ok: false, error: String(e && e.message || e) });
@@ -62,7 +62,7 @@ export default async function handler(req, res) {
       if (!to) return res.status(400).json({ ok: false, error: "받을 이메일(to)이 없어요. (전체 발송은 주소 끝에 all=1)" });
       const toName = req.query.to_name || "";
       const wantBible = req.query.bible === "1";
-      const id = await sendOne({ ...cfg, to, toName, wantBible });
+      const id = await sendOne({ ...cfg, to, toName, wantBible, senderId: req.query.sender_id || "" });
       return res.status(200).json({ ok: true, message: "보냈어요!", to, id });
     }
   } catch (e) {
@@ -71,12 +71,12 @@ export default async function handler(req, res) {
 }
 
 // 수신자 한 명에게 발송 (콘텐츠 풀에서 랜덤으로 뽑아 메일 만들어 Resend로)
-async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, to, toName, wantBible }) {
+async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, to, toName, wantBible, senderId }) {
   const pickN = normalPool[Math.floor(Math.random() * normalPool.length)];
   let pickB = null;
   if (wantBible && biblePool.length) pickB = biblePool[Math.floor(Math.random() * biblePool.length)];
 
-  const html = buildEmail({ fromName, toName, normal: pickN, bible: pickB });
+  const html = buildEmail({ fromName, toName, normal: pickN, bible: pickB, recipientEmail: to, senderId });
 
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -130,8 +130,13 @@ function careEmoji(k){
   return map[k] || "\uD83C\uDF43"; // 기본 🍃
 }
 
-function buildEmail({ fromName, toName, normal, bible }) {
+function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId }) {
   const nl = s => (s || "").replace(/\\n/g, "\n");
+  // 반응 버튼이 눌리면 이 주소로 이동 → api/react 가 창고에 기록
+  const rParam = encodeURIComponent(recipientEmail || "");
+  const sParam = encodeURIComponent(senderId || "");
+  const qParam = encodeURIComponent(nl(normal.quote).replace(/\n/g, " ").slice(0, 60));
+  const reactUrl = em => "https://ond2u.vercel.app/api/react?e=" + encodeURIComponent(em) + "&r=" + rParam + "&s=" + sParam + "&q=" + qParam;
   const brQuote = nl(normal.quote).replace(/\n/g, "<br>");
   const essayParas = nl(normal.essay).split("\n\n").filter(Boolean)
     .map(p => '<p style="font-size:14px; line-height:1.95; color:#e9e5f0; margin:0 0 13px;">' + p.replace(/\n/g,"<br>") + '</p>').join("");
@@ -214,9 +219,9 @@ function buildEmail({ fromName, toName, normal, bible }) {
       '<div style="margin-top:32px; padding:22px; background:#efecf4; border-radius:14px; text-align:center;">' +
         '<div style="font-size:13px; color:#453961; margin-bottom:14px;">이 편지, ' + (toName ? toName + " 마음" : "당신 마음") + '엔 어떠셨어요?</div>' +
         '<div>' +
-          '<a href="https://ond2u.vercel.app/app.html" style="display:inline-block; font-size:13px; color:#453961; background:#fff; border:1px solid #5a4a7a; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">위로됐어요 \u2661</a>' +
-          '<a href="https://ond2u.vercel.app/app.html" style="display:inline-block; font-size:13px; color:#453961; background:#fff; border:1px solid #5a4a7a; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">힘이 나요</a>' +
-          '<a href="https://ond2u.vercel.app/app.html" style="display:inline-block; font-size:13px; color:#453961; background:#fff; border:1px solid #5a4a7a; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">고마워요</a>' +
+          '<a href="' + reactUrl("위로됐어요") + '" style="display:inline-block; font-size:13px; color:#453961; background:#fff; border:1px solid #5a4a7a; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">위로됐어요 \u2661</a>' +
+          '<a href="' + reactUrl("힘이 나요") + '" style="display:inline-block; font-size:13px; color:#453961; background:#fff; border:1px solid #5a4a7a; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">힘이 나요</a>' +
+          '<a href="' + reactUrl("고마워요") + '" style="display:inline-block; font-size:13px; color:#453961; background:#fff; border:1px solid #5a4a7a; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">고마워요</a>' +
         '</div>' +
       '</div>' +
 
