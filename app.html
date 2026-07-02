@@ -1150,6 +1150,15 @@
     if (error) { alert("로그인에 문제가 생겼어요. 잠시 후 다시 시도해 주세요."); console.log("로그인 오류:", error); }
   }
 
+  // 카카오 로그인 시작
+  async function loginWithKakao(){
+    const { error } = await odoDB.auth.signInWithOAuth({
+      provider: "kakao",
+      options: { redirectTo: window.location.href.split("#")[0] }
+    });
+    if (error) { alert("카카오 로그인에 문제가 생겼어요. 잠시 후 다시 시도해 주세요."); console.log("카카오 로그인 오류:", error); }
+  }
+
   // 페이지 열릴 때 이미 로그인돼 있는지 확인 (로그인 후 돌아왔을 때 포함)
   async function checkSession(){
     const { data } = await odoDB.auth.getSession();
@@ -1175,7 +1184,7 @@
 
   // 구글 버튼 → 진짜 로그인. 카카오·네이버는 아직 준비 중 안내.
   $("googleBtn").onclick = () => loginWithGoogle();
-  $("kakaoBtn").onclick = () => alert("카카오 로그인은 준비 중이에요. 지금은 구글 로그인을 이용해 주세요.");
+  $("kakaoBtn").onclick = () => loginWithKakao();
   $("naverBtn").onclick = () => alert("네이버 로그인은 준비 중이에요. 지금은 구글 로그인을 이용해 주세요.");
   $("loginBtn").onclick = () => alert("지금은 구글 로그인을 이용해 주세요. (이메일 로그인은 준비 중이에요.)");
 
