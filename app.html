@@ -1360,6 +1360,11 @@
   const ODO_KEY = "sb_publishable_4d7_STnlpFQZlWaOQ3RnkQ_GQ3zNKmy";
   const odoDB = window.supabase.createClient(ODO_URL, ODO_KEY);
 
+  // 로그인 상태가 바뀌면(소셜 로그인 후 돌아왔을 때 포함) 자동으로 반영
+  odoDB.auth.onAuthStateChange((event, session) => {
+    if (session && session.user && !loggedIn) checkSession();
+  });
+
   async function loadFromWarehouse(){
     try {
       const { data, error } = await odoDB.from("odo_contents").select("*");
