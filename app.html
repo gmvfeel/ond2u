@@ -190,6 +190,8 @@
     .tab.on { background: var(--plum); color: #fff; border-color: var(--plum); font-weight: 600; }
     .stage { max-width: 600px; margin: 0 auto; }
     .sidebar { width: 100%; max-width: 600px; margin: 40px auto 0; position: static; padding-top: 32px; border-top: 1px solid var(--line); }
+    .sidebar .family-list { display:grid; grid-template-columns:1fr 1fr; gap:8px; background:transparent; border:none; box-shadow:none; border-radius:0; overflow:visible; }
+    .sidebar .family-item { background:var(--white); border:1px solid var(--line); border-radius:7px; box-shadow:0 2px 8px rgba(80,60,70,.05); }
   }
 
   @media (max-width:640px) {
@@ -311,7 +313,7 @@
   /* 형제 프로젝트 배너 (리스트형) */
   .family { margin-top:56px; padding-top:32px; border-top:1px solid var(--line); }
   .family-label { font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); text-align:center; margin-bottom:12px; }
-  .family-list { background:var(--white); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .family-list { background:var(--white); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
   .family-item { display:flex; align-items:center; gap:8px; text-decoration:none; padding:7px 12px; transition:background .16s; }
   .family-item + .family-item { border-top:1px solid var(--line); }
   .family-item:hover { background:var(--plum-soft); }
@@ -919,7 +921,7 @@
 
   function renderSaved(){
     if(!saved.length){ $("savedList").innerHTML='<div class="saved-empty">아직 담아둔 글이 없어요.<br>오늘 탭에서 마음에 드는 글을 담아보세요.</div>'; return; }
-    $("savedList").innerHTML = saved.map(s=>`<div class="saved-item"><div class="sdate">${s.date?s.date+" 담음":"담아둔 글"}</div><div class="sq">${s.quote.replace(/\n/g,"<br>")}</div><div class="sa">— ${s.author}</div></div>`).join("");
+    $("savedList").innerHTML = saved.map(s=>`<div class="saved-item"><div class="sdate">${s.date?s.date+" 담음":"담아둔 글"}</div><div class="sq">${s.quote.replace(/\n+/g,"<br>")}</div><div class="sa">— ${s.author}</div></div>`).join("");
   }
 
   function renderTrace(){
