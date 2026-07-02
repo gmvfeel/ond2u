@@ -5,6 +5,8 @@
 //
 // 호출: /api/send-test?key=<CRON_SECRET>&to=<이메일>&from_name=<이름>&to_name=<받는사람>&bible=<1이면 성경도>
 
+export const config = { maxDuration: 60 };
+
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -12,7 +14,10 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
 
   const SECRET = process.env.CRON_SECRET;
-  if (!SECRET || (req.query.key || "") !== SECRET)
+  const authHeader = req.headers.authorization || "";
+  const isCron = !!SECRET && authHeader === "Bearer " + SECRET;   // Vercel Cron이 자동으로 붙이는 헤더
+  const keyOk  = !!SECRET && (req.query.key || "") === SECRET;    // 주소창 수동 호출 ?key=
+  if (!isCron && !keyOk)
     return res.status(401).json({ ok: false, error: "열쇠가 맞지 않아요." });
 
   const RESEND_KEY = process.env.RESEND_API_KEY;
@@ -24,7 +29,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ ok: false, error: "서버 설정(환경변수)이 아직 안 됐어요." });
 
   const fromName = req.query.from_name || "윤기";
-  const all = req.query.all === "1";   // all=1 이면 수신자 전체 발송
+  const all = isCron || req.query.all === "1";   // cron 호출이거나 all=1 이면 수신자 전체 발송
 
   try {
     // 콘텐츠는 한 번만 불러와 재사용 (수신자가 여러 명이어도 창고는 1~2번만 읽음)
