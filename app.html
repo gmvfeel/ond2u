@@ -30,17 +30,7 @@
   .sidebar { width: 220px; flex-shrink: 0; position: sticky; top: 56px; padding-top: 90px; }
   .sidebar .family-label { margin-bottom: 14px; }
   .sidebar .family { margin-top: 0; padding-top: 0; border-top: none; }
-  @media (max-width: 1080px) {
-    .layout { display: block; }
-    .leftnav { width: 100%; max-width: 600px; margin: 0 auto 24px; position: static; }
-    .leftnav .brand { margin-bottom: 16px; }
-    .leftnav .tabs { flex-direction: row; flex-wrap: wrap; gap: 8px; }
-    .tab { width: auto; border: 1px solid var(--line); border-radius: 20px; padding: 8px 15px; font-size: 13px; background: var(--white); white-space: nowrap; text-align: center; }
-    .tab:last-child { border-bottom: 1px solid var(--line); }
-    .tab.on { background: var(--plum); color: #fff; border-color: var(--plum); font-weight: 600; }
-    .stage { max-width: 600px; margin: 0 auto; }
-    .sidebar { width: 100%; max-width: 600px; margin: 40px auto 0; position: static; padding-top: 32px; border-top: 1px solid var(--line); }
-  }
+
 
   /* 상단바 */
   .leftnav { width:150px; flex-shrink:0; position:sticky; top:56px; }
@@ -189,6 +179,18 @@
   .trace-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:50px 0; }
 
   .footnote { margin-top:18px; text-align:center; font-size:12px; color:var(--ink-faint); line-height:1.8; }
+
+  @media (max-width: 1080px) {
+    .layout { display: block; }
+    .leftnav { width: 100%; max-width: 600px; margin: 0 auto 24px; position: static; }
+    .leftnav .brand { margin-bottom: 16px; }
+    .leftnav .tabs { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+    .tab { width: auto; border: 1px solid var(--line); border-radius: 20px; padding: 8px 15px; font-size: 13px; background: var(--white); white-space: nowrap; text-align: center; }
+    .tab:last-child { border-bottom: 1px solid var(--line); }
+    .tab.on { background: var(--plum); color: #fff; border-color: var(--plum); font-weight: 600; }
+    .stage { max-width: 600px; margin: 0 auto; }
+    .sidebar { width: 100%; max-width: 600px; margin: 40px auto 0; position: static; padding-top: 32px; border-top: 1px solid var(--line); }
+  }
 
   @media (max-width:640px) {
     body { padding:28px 16px 70px; }
