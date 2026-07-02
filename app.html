@@ -885,7 +885,7 @@
       objectType: 'feed',
       content: {
         title: q,
-        description: (a ? a + '  ·  ' : '') + '오늘도가 전하는 오늘의 한 편',
+        description: josaGaI(senderName || '윤기') + ' 보내는 편지' + (a ? '  ·  ' + a : ''),
         imageUrl: 'https://ond2u.vercel.app/og.png',
         link: { mobileWebUrl: 'https://ond2u.vercel.app/app.html', webUrl: 'https://ond2u.vercel.app/app.html' }
       },
