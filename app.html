@@ -7,6 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23efe7f4'/%3E%3Cpath d='M9 14 h22 a3 3 0 0 1 3 3 v10 a3 3 0 0 1 -3 3 h-22 a3 3 0 0 1 -3 -3 v-10 a3 3 0 0 1 3 -3 z' fill='none' stroke='%235a4a7a' stroke-width='2.2'/%3E%3Cpath d='M7 16 l13 8 l13 -8' fill='none' stroke='%235a4a7a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" />
 <style>
 @font-face { font-family:'NanumSquare'; src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2107@1.1/NanumSquareR.woff') format('woff'); font-weight:400; font-display:swap; }
@@ -27,31 +28,20 @@
   }
   .layout { max-width: 1120px; margin: 0 auto; display: flex; gap: 32px; align-items: flex-start; justify-content: center; }
   .stage { width: 100%; max-width: 600px; flex-shrink: 0; }
-  .sidebar { width: 220px; flex-shrink: 0; position: sticky; top: 56px; padding-top: 90px; }
+  .sidebar { width: 180px; flex-shrink: 0; position: sticky; top: 56px; padding-top: 90px; }
   .sidebar .family-label { margin-bottom: 14px; }
   .sidebar .family { margin-top: 0; padding-top: 0; border-top: none; }
-  .sidebar .family-grid { grid-template-columns: 1fr; }
-  @media (max-width: 1080px) {
-    .layout { display: block; }
-    .leftnav { width: 100%; max-width: 600px; margin: 0 auto 24px; position: static; }
-    .leftnav .brand { margin-bottom: 16px; }
-    .leftnav .tabs { flex-direction: row; flex-wrap: wrap; gap: 6px 18px; }
-    .tab { width: auto; border: none; border-radius: 0; padding: 6px 0; font-size: 14px; }
-    .tab:last-child { border-bottom: none; }
-    .stage { max-width: 600px; margin: 0 auto; }
-    .sidebar { width: 100%; max-width: 600px; margin: 40px auto 0; position: static; padding-top: 32px; border-top: 1px solid var(--line); }
-    .sidebar .family-grid { grid-template-columns: 1fr 1fr; }
-  }
+
 
   /* 상단바 */
   .leftnav { width:150px; flex-shrink:0; position:sticky; top:56px; }
   .leftnav .brand { margin-bottom:64px; }
   .leftnav .brand-mark { display:block; margin-bottom:12px; }
-  .leftnav .brand-txt { font-size:20px; font-weight:800; letter-spacing:-0.04em; line-height:1.3; display:block; }
+  .leftnav .brand-txt { font-size:20px; font-weight:800; letter-spacing:-0.04em; line-height:1.3; display:block; color:var(--ink); }
   .leftnav .brand-en { display:block; font-size:11px; font-weight:600; color:var(--plum); letter-spacing:0.08em; margin-top:2px; }
   .leftnav .tabs { display:flex; flex-direction:column; }
   .tab {
-    font-family:inherit; font-size:14px; color:var(--ink-faint); background:transparent;
+    font-family:inherit; font-size:14px; color:var(--ink-soft); background:transparent;
     border:none; border-top:1px solid var(--line); border-radius:0; padding:14px 4px; cursor:pointer; transition:all .16s; text-align:left; width:100%;
   }
   .tab:last-child { border-bottom:1px solid var(--line); }
@@ -93,13 +83,14 @@
   .eyebrow { font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:20px; text-align:center; }
   .content { transition: opacity .45s ease; }
   .content.fade { opacity:0; }
+  .letter-card { background:var(--white); border:1px solid var(--plum-line); border-radius:20px; padding:38px 34px 34px; }
 
   .quote { font-family:'Pretendard', sans-serif; font-size:30px; line-height:1.5; font-weight:800; letter-spacing:-0.035em; white-space:pre-line; text-align:center; }
   .quote-en { font-family:'Pretendard', sans-serif; font-size:15px; line-height:1.6; font-weight:500; color:var(--ink-soft); white-space:pre-line; text-align:center; margin-top:14px; font-style:italic; }
   .author { margin-top:20px; font-size:14px; color:var(--ink-soft); text-align:center; }
 
   /* 담아두기 버튼 */
-  .save-row { display:flex; justify-content:center; margin-top:24px; }
+  .save-row { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:24px; }
   .save-btn {
     font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--white);
     border:1px solid var(--line-strong); border-radius:30px; padding:9px 18px; cursor:pointer;
@@ -108,15 +99,18 @@
   .save-btn:hover { border-color:var(--plum); color:var(--plum); }
   .save-btn.saved { background:var(--plum-soft); border-color:var(--plum); color:var(--plum-deep); font-weight:600; }
   .save-btn .heart { font-size:15px; }
+  .kakao-btn { display:inline-flex; align-items:center; gap:7px; font-family:inherit; font-size:14px; font-weight:600; color:#3c1e1e; background:#FEE500; border:none; border-radius:30px; padding:11px 20px; cursor:pointer; transition:filter .16s; }
+  .kakao-btn:hover { filter:brightness(0.96); }
 
-  .essay-wrap { margin-top:48px; }
-  .essay { background:var(--white); border:1px solid var(--plum-line); border-radius:20px; padding:34px 32px;
-    box-shadow:0 1px 2px rgba(80,60,70,.03), 0 12px 32px rgba(80,60,70,.05); }
-  .essay .etitle { font-size:18px; font-weight:700; margin-bottom:18px; letter-spacing:-0.02em; }
-  .essay p { font-size:15px; line-height:2.05; color:var(--ink-2); margin-bottom:16px; }
+  .essay-wrap { margin-top:16px; }
+  .essay { background:var(--plum); border:none; border-radius:20px; padding:34px 32px;
+    box-shadow:0 1px 2px rgba(80,60,70,.06), 0 12px 32px rgba(80,60,70,.12); }
+  .essay .etitle { font-size:18px; font-weight:700; margin-bottom:18px; letter-spacing:-0.02em; color:#fff; }
+  .essay p { font-size:15px; line-height:2.05; color:rgba(255,255,255,.9); margin-bottom:16px; }
   .essay p:last-child { margin-bottom:0; }
+  .esign { margin-top:22px; text-align:right; font-size:14px; font-weight:500; color:#fff; line-height:1.6; }
 
-  .care-wrap { margin-top:32px; }
+  .care-wrap { margin-top:16px; }
   .care { background:var(--plum-soft); border-radius:18px; padding:22px 24px; }
   .care-head { display:flex; align-items:center; gap:13px; margin-bottom:12px; }
   .care-ic { width:38px; height:38px; border-radius:11px; background:var(--white); color:var(--plum); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -125,7 +119,7 @@
   .care-title { font-size:16px; font-weight:700; color:var(--plum-deep); margin-top:2px; }
   .care-body { font-size:14px; line-height:1.85; color:var(--ink-2); }
 
-  .video-wrap { margin-top:44px; }
+  .video-wrap { margin-top:16px; }
   .player { position:relative; aspect-ratio:16/9; border-radius:18px; overflow:hidden; background:#000; }
   .player iframe { width:100%; height:100%; border:0; display:block; }
   .vcap { margin-top:14px; text-align:center; }
@@ -134,7 +128,7 @@
   .fallback { display:inline-block; margin-top:12px; font-size:13px; font-weight:500; color:var(--plum); text-decoration:none; }
 
   /* 반응 (남에게 받았을 때) */
-  .react-wrap { margin-top:44px; padding:24px; background:var(--white); border:1px solid var(--plum-line); border-radius:20px; text-align:center; }
+  .react-wrap { margin-top:16px; padding:24px; background:var(--white); border:1px solid var(--plum-line); border-radius:20px; text-align:center; }
   .react-wrap .rq { font-size:13px; color:var(--ink-soft); margin-bottom:14px; }
   .react-btns { display:flex; gap:9px; justify-content:center; flex-wrap:wrap; }
   .react-btn {
@@ -146,7 +140,7 @@
   .react-done { font-size:13px; color:var(--plum-deep); font-weight:600; margin-top:14px; display:none; }
 
   /* 기분 */
-  .mood { margin-top:52px; padding:32px 28px; background:var(--white); border:1px solid var(--plum-line); border-radius:20px; }
+  .mood { margin-top:18px; padding:32px 28px; background:var(--white); border:1px solid var(--plum-line); border-radius:20px; }
   .mood .ask { font-size:14px; color:var(--ink-soft); margin-bottom:18px; text-align:center; }
   .mood .ask span { color:var(--ink-faint); font-size:13px; }
   .mood .sublabel { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); margin:24px 0 12px; text-align:center; }
@@ -176,7 +170,7 @@
   .section-sub { font-size:13px; color:var(--ink-soft); margin-bottom:28px; }
   .saved-item { background:var(--white); border:1px solid var(--plum-line); border-radius:16px; padding:22px 24px; margin-bottom:14px; }
   .saved-item .sdate { font-size:11px; letter-spacing:0.1em; color:var(--plum); margin-bottom:12px; }
-  .saved-item .sq { font-size:16px; font-weight:700; line-height:1.6; white-space:pre-line; }
+  .saved-item .sq { font-size:16px; font-weight:700; line-height:1.6; }
   .saved-item .sa { font-size:13px; color:var(--ink-soft); margin-top:8px; }
   .saved-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:50px 0; }
 
@@ -187,7 +181,21 @@
   .trace-item .tm b { color:var(--plum-deep); font-weight:600; }
   .trace-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:50px 0; }
 
-  .footnote { margin-top:46px; text-align:center; font-size:12px; color:var(--ink-faint); line-height:1.8; }
+  .footnote { margin-top:18px; text-align:center; font-size:12px; color:var(--ink-faint); line-height:1.8; }
+
+  @media (max-width: 1080px) {
+    .layout { display: block; }
+    .leftnav { width: 100%; max-width: 600px; margin: 0 auto 24px; position: static; }
+    .leftnav .brand { margin-bottom: 16px; }
+    .leftnav .tabs { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+    .tab { width: auto; border: 1px solid var(--line); border-radius: 20px; padding: 8px 15px; font-size: 13px; background: var(--white); white-space: nowrap; text-align: center; }
+    .tab:last-child { border-bottom: 1px solid var(--line); }
+    .tab.on { background: var(--plum); color: #fff; border-color: var(--plum); font-weight: 600; }
+    .stage { max-width: 600px; margin: 0 auto; }
+    .sidebar { width: 100%; max-width: 600px; margin: 40px auto 0; position: static; padding-top: 32px; border-top: 1px solid var(--line); }
+    .sidebar .family-list { display:grid; grid-template-columns:1fr 1fr; gap:5px; background:transparent; border:none; box-shadow:none; border-radius:0; overflow:visible; }
+    .sidebar .family-item { background:var(--white); border:1px solid var(--line); border-radius:7px; box-shadow:0 2px 8px rgba(80,60,70,.05); }
+  }
 
   @media (max-width:640px) {
     body { padding:28px 16px 70px; }
@@ -195,7 +203,7 @@
     .quote-en { font-size:14px; }
     .essay { padding:26px 22px; }
     .essay .etitle { font-size:18px; }
-    .mood { padding:24px 20px; margin-top:40px; }
+    .mood { padding:24px 20px; margin-top:16px; }
     .gate { padding:32px 22px; }
     .me-card { padding:22px 20px; }
     .add-card { padding:22px 20px; }
@@ -305,29 +313,23 @@
   .adm-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:50px 0; }
   .adm-loading { text-align:center; color:var(--ink-faint); font-size:14px; padding:40px 0; }
 
-  /* 형제 프로젝트 배너 */
+  /* 형제 프로젝트 배너 (리스트형) */
   .family { margin-top:56px; padding-top:32px; border-top:1px solid var(--line); }
-  .family-label { font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-faint); text-align:center; margin-bottom:18px; }
-  .family-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .family-card { display:flex; align-items:center; gap:11px; text-decoration:none; background:var(--white); border:1px solid var(--line);
-    border-radius:14px; padding:13px 14px; transition:all .18s; }
-  .family-card:hover { border-color:var(--plum); transform:translateY(-1px); box-shadow:0 6px 18px rgba(80,60,70,.06); }
-  .family-card .fc-ic { width:26px; height:26px; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:filter .18s, opacity .18s; }
-  .family-card .fc-ic svg { width:22px; height:22px; }
-  /* 평소: 아이콘은 회색 톤으로 흐리게 (인라인 색을 회색으로 눌러둠) */
-  .family-card .fc-ic { color:#b8b4c0 !important; opacity:.85; }
-  .family-card .fc-ic svg { stroke:#b8b4c0; }
-  /* 마우스 오버: 아이콘이 원래 브랜드 색으로 살아남 (인라인 style의 색이 복원됨) */
-  .family-card:hover .fc-ic { color:var(--fc-color, #5a4a7a) !important; opacity:1; }
-  .family-card:hover .fc-ic svg { stroke:currentColor; }
-  .family-card .fc-txt { min-width:0; }
-  /* 평소: 텍스트 흐리게 */
-  .family-card .fc-name { font-size:14px; font-weight:700; color:var(--ink-faint); transition:color .18s; }
-  .family-card .fc-desc { font-size:12px; color:var(--ink-faint); margin-top:2px; line-height:1.35; transition:color .18s; }
-  /* 마우스 오버: 텍스트 진하게 */
-  .family-card:hover .fc-name { color:var(--ink); }
-  .family-card:hover .fc-desc { color:var(--ink-soft); }
-  .fc-soon { display:inline-block; font-size:10px; color:var(--plum); background:var(--plum-soft); border-radius:20px; padding:1px 7px; margin-left:2px; }
+  .family-label { font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); text-align:center; margin-bottom:12px; }
+  .family-list { background:var(--white); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .family-item { display:flex; align-items:center; gap:8px; text-decoration:none; padding:7px 12px; transition:background .16s; }
+  .family-item + .family-item { border-top:1px solid var(--line); }
+  .family-item:hover { background:var(--plum-soft); }
+  .family-item .fc-ic { width:15px; height:15px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .family-item .fc-ic svg { width:14px; height:14px; stroke:#b8b4c0; transition:stroke .16s; }
+  .family-item:hover .fc-ic svg { stroke:var(--fc-color, #5a4a7a); }
+  .family-item .fc-name { font-size:11.5px; font-weight:600; color:var(--ink-faint); transition:color .16s; }
+  .family-item:hover .fc-name { color:var(--ink); }
+  .fc-soon { display:inline-block; font-size:9px; color:var(--plum); background:var(--plum-soft); border-radius:20px; padding:1px 6px; margin-left:auto; }
+
+  /* 카드 공통 드롭섀도우 (배경에서 살짝 떠 보이게) */
+  .letter-card, .essay, .care, .react-wrap, .mood, .family-list, .player { box-shadow: 0 2px 8px rgba(80,60,70,.05), 0 14px 30px rgba(80,60,70,.07); }
+  .family-item:hover .fc-soon { background:var(--white); }
 
   /* 보내는 사람들 */
   .add-card { background:var(--white); border:1px solid var(--plum-line); border-radius:20px; padding:26px 24px; margin-bottom:28px;
@@ -340,11 +342,19 @@
     background:var(--paper); border:1px solid var(--line-strong); border-radius:14px; padding:12px 16px; outline:none; transition:border-color .2s; }
   .field input:focus { border-color:var(--plum); }
   .field input::placeholder { color:var(--ink-faint); }
-  .time-chips, .tone-chips { display:flex; flex-wrap:wrap; gap:8px; }
-  .tchip, .tochip { font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--paper);
+  .time-chips, .tone-chips, .kind-chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .tchip, .tochip, .kchip { font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--paper);
     border:1px solid var(--line-strong); border-radius:30px; padding:9px 15px; cursor:pointer; transition:all .16s; }
-  .tchip:hover, .tochip:hover { border-color:var(--plum); color:var(--plum); }
-  .tchip.on, .tochip.on { background:var(--plum); border-color:var(--plum); color:#fff; }
+  .tchip:hover, .tochip:hover, .kchip:hover { border-color:var(--plum); color:var(--plum); }
+  .tchip.on, .tochip.on, .kchip.on { background:var(--plum); border-color:var(--plum); color:#fff; }
+  .kind-hint { font-size:12px; color:var(--plum); margin-top:8px; line-height:1.6; }
+  .bible-check { display:inline-flex !important; align-items:center; gap:11px; cursor:pointer; user-select:none; font-size:14px; color:var(--ink); padding:10px 14px; border:1px solid var(--plum-line); border-radius:14px; background:var(--white); transition:all .16s; margin-bottom:0; }
+  .bible-check:hover { border-color:var(--plum); }
+  .bible-check.on { background:var(--plum-soft); border-color:var(--plum); }
+  .bible-check .bc-box { width:22px; height:22px; border:2px solid var(--plum); border-radius:6px; flex-shrink:0; transition:all .16s; position:relative; background:var(--white); }
+  .bible-check.on .bc-box { background:var(--plum); border-color:var(--plum); }
+  .bible-check.on .bc-box::after { content:"✓"; color:#fff; font-size:15px; font-weight:700; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); line-height:1; }
+  .bible-check.on .bc-txt { color:var(--plum-deep); font-weight:600; }
   .add-btn { width:100%; font-family:inherit; font-size:15px; font-weight:600; color:#fff; background:var(--ink);
     border:none; border-radius:30px; padding:15px; cursor:pointer; transition:all .2s; margin-top:6px; }
   .add-btn:hover { background:var(--plum-deep); }
@@ -362,6 +372,7 @@
   .recipient .rmeta { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
   .recipient .rtag { font-size:12px; color:var(--plum-deep); background:var(--plum-soft); border-radius:20px; padding:4px 10px; }
   .recipient .rtone { font-size:12px; color:var(--ink-soft); background:var(--paper); border:1px solid var(--line); border-radius:20px; padding:4px 10px; }
+  .recipient .rtone.rbible { color:var(--plum-deep); background:var(--plum-soft); border-color:var(--plum-line); font-weight:600; }
   .recipient .rdel { font-family:inherit; font-size:12px; color:var(--ink-faint); background:transparent; border:none; cursor:pointer; padding:4px; flex-shrink:0; }
   .recipient .rdel:hover { color:var(--plum); }
   .recipient-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:44px 0; }
@@ -386,7 +397,7 @@
 </div>
 <div class="layout">
 <nav class="leftnav">
-  <div class="brand">
+  <div class="brand" id="brandHome" style="cursor:pointer;" title="오늘 화면으로">
     <svg class="brand-mark" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
       <path d="M6 12 h22 a3 3 0 0 1 3 3 v12 a3 3 0 0 1 -3 3 h-22 a3 3 0 0 1 -3 -3 v-12 a3 3 0 0 1 3 -3 z" fill="none" stroke="#5a4a7a" stroke-width="2"/>
       <path d="M4 14 l13 9 l13 -9" fill="none" stroke="#5a4a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -406,6 +417,7 @@
 
   <!-- 홈 -->
   <div class="view on" id="view-home">
+    <div class="letter-card">
     <div class="season" id="season"></div>
     <div class="from-line" id="fromLine"><span class="from-badge">윤</span> <b>윤기</b>님이 오늘도 보냅니다</div>
     <div class="sig">오늘도 당신의 최고가 될 겁니다. 힘내세요.</div>
@@ -423,12 +435,17 @@
 
       <div class="save-row">
         <button class="save-btn" id="saveBtn"><span class="heart">♡</span> <span id="saveLabel">이 글 담아두기</span></button>
+        <button class="kakao-btn" id="kakaoShareBtn"><svg viewBox="0 0 24 24" width="16" height="16" fill="#3c1e1e"><path d="M12 3.5C6.75 3.5 2.5 6.86 2.5 11c0 2.67 1.79 5.01 4.48 6.33-.18.63-.66 2.4-.76 2.78-.12.47.17.46.36.34.15-.1 2.4-1.63 3.38-2.3.52.07 1.05.11 1.54.11 5.25 0 9.5-3.36 9.5-7.5S17.25 3.5 12 3.5z"/></svg> 카톡으로 보내기</button>
       </div>
+    </div><!-- /content(명언) -->
+    </div><!-- /letter-card -->
 
+    <div class="content" id="content2">
       <div class="essay-wrap">
         <div class="essay">
           <div class="etitle" id="essayTitle"></div>
           <div id="essayBody"></div>
+          <div class="esign" id="essaySign">윤기가 드려요. 오늘도 좋은 하루 되세요 ^^</div>
         </div>
       </div>
 
@@ -572,6 +589,13 @@
           <label>이 사람에게 맞는 결 <span class="opt">(선택)</span></label>
           <div class="tone-chips" id="toneChips"></div>
         </div>
+        <div class="field">
+          <label class="bible-check" id="bibleCheck">
+            <span class="bc-box" id="bcBox"></span>
+            <span class="bc-txt">✝ 성경 말씀도 함께 보내기</span>
+          </label>
+          <div class="kind-hint">체크하면 일반 위로글에 더해, "하나님께서 오늘 주신 말씀입니다"와 함께 성경 구절도 같이 보내요. (기독교인에게)</div>
+        </div>
         <button class="add-btn" id="addBtn">명단에 추가</button>
         <div class="add-hint">추가 전에 "매일 좋은 글 보낼게, 받을래?" 하고 한 번 물어봐 주세요. 편지 맨 밑엔 언제든 '그만 받기'가 있어요.</div>
       </div>
@@ -624,46 +648,47 @@
 <aside class="sidebar">
   <div class="family">
     <div class="family-label">Alliance WXN의 다른 이야기</div>
-    <div class="family-grid">
-      <a class="family-card" href="https://lpstock.co.kr" target="_blank" rel="noopener">
+    <div class="family-list">
+      <a class="family-item" href="https://lpstock.co.kr" target="_blank" rel="noopener" title="클래식·현대음악 LP 음반점">
         <div class="fc-ic" style="--fc-color:#5a4a7a;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">엘피스탁</div><div class="fc-desc">클래식·현대음악 LP 음반점</div></div>
+        <div class="fc-name">엘피스탁</div>
       </a>
-      <a class="family-card" href="https://booklps.vercel.app" target="_blank" rel="noopener">
+      <a class="family-item" href="https://booklps.vercel.app" target="_blank" rel="noopener" title="희귀 책·음반 통합 검색">
         <div class="fc-ic" style="--fc-color:#185fa5;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2 2 0 016 4h5v15H6a2 2 0 00-2 1.5z"/><path d="M20 5.5A2 2 0 0018 4h-5v15h5a2 2 0 012 1.5z"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">부클립스</div><div class="fc-desc">희귀 책·음반 통합 검색</div></div>
+        <div class="fc-name">부클립스</div>
       </a>
-      <a class="family-card" href="https://lpaug.vercel.app" target="_blank" rel="noopener">
+      <a class="family-item" href="https://lpaug.vercel.app" target="_blank" rel="noopener" title="LP·오디오 입문 가이드">
         <div class="fc-ic" style="--fc-color:#0f6e56;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13a8 8 0 0116 0"/><rect x="3" y="13" width="4" height="7" rx="1.5"/><rect x="17" y="13" width="4" height="7" rx="1.5"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">엘파그</div><div class="fc-desc">LP·오디오 입문 가이드</div></div>
+        <div class="fc-name">엘파그</div>
       </a>
-      <a class="family-card" href="https://pinhome-five.vercel.app" target="_blank" rel="noopener">
+      <a class="family-item" href="https://pinhome-five.vercel.app" target="_blank" rel="noopener" title="정책자금·지원금 매칭">
         <div class="fc-ic" style="--fc-color:#854f0b;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6 8 6"/><path d="M6 10v9h12v-9"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">핀홈</div><div class="fc-desc">정책자금·지원금 매칭</div></div>
+        <div class="fc-name">핀홈</div>
       </a>
-      <a class="family-card" href="#" target="_blank" rel="noopener">
+      <a class="family-item" href="#" target="_blank" rel="noopener" title="순수음악 커뮤니티">
         <div class="fc-ic" style="--fc-color:#993556;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">오퍼스클램</div><div class="fc-desc">순수음악 커뮤니티</div></div>
+        <div class="fc-name">오퍼스클램</div>
       </a>
-      <a class="family-card" href="#" target="_blank" rel="noopener">
+      <a class="family-item" href="#" target="_blank" rel="noopener" title="개인 자산 대시보드">
         <div class="fc-ic" style="--fc-color:#3b6d11;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16l3-4 3 2 4-6"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">한눈에셋</div><div class="fc-desc">개인 자산 대시보드</div></div>
+        <div class="fc-name">한눈에셋</div>
       </a>
-      <a class="family-card" href="#" target="_blank" rel="noopener">
+      <a class="family-item" href="#" target="_blank" rel="noopener" title="소크라테스식 AI 학습">
         <div class="fc-ic" style="--fc-color:#185fa5;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-4 3v-3H4z"/><path d="M9 10h6"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">되묻 SOCRA</div><div class="fc-desc">소크라테스식 AI 학습</div></div>
+        <div class="fc-name">되묻 SOCRA</div>
       </a>
-      <a class="family-card" href="#" target="_blank" rel="noopener">
+      <a class="family-item" href="#" target="_blank" rel="noopener" title="부모-자녀 대화 코칭">
         <div class="fc-ic" style="--fc-color:#0f6e56;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c0-5 0-8-3-10"/><path d="M12 11c0-3 2-5 6-5 0 4-2 6-6 5z"/><path d="M12 13c0-2.5-1.5-4.5-5-4.5 0 3.5 1.5 5 5 4.5z"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">시드맵</div><div class="fc-desc">부모-자녀 대화 코칭</div></div>
+        <div class="fc-name">시드맵</div>
       </a>
-      <a class="family-card" href="#" target="_blank" rel="noopener">
+      <a class="family-item" href="#" target="_blank" rel="noopener" title="사기 피해 신고 플랫폼">
         <div class="fc-ic" style="--fc-color:#a32d2d;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">치킬 CheatKill</div><div class="fc-desc">사기 피해 신고 플랫폼</div></div>
+        <div class="fc-name">치킬 CheatKill</div>
       </a>
-      <a class="family-card" href="#" target="_blank" rel="noopener">
+      <a class="family-item" href="#" target="_blank" rel="noopener" title="참여형 연재소설 (준비 중)">
         <div class="fc-ic" style="--fc-color:#5a4a7a;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 9-9-3-3-9 9z"/><path d="M14 6l3 3"/></svg></div>
-        <div class="fc-txt"><div class="fc-name">GROOVE</div><div class="fc-desc">참여형 연재소설 <span class="fc-soon">준비 중</span></div></div>
+        <div class="fc-name">GROOVE</div>
+        <span class="fc-soon">준비 중</span>
       </a>
     </div>
   </div>
@@ -770,6 +795,7 @@
   const saved = [];
   const trace = [];
   const $ = id => document.getElementById(id);
+  if (window.Kakao && !Kakao.isInitialized()) Kakao.init('b60c84006b3ecf757bd39fd7f6eb7917');
 
   // 탭 전환
   document.querySelectorAll(".tab").forEach(t => {
@@ -784,6 +810,12 @@
       window.scrollTo({ top: 0, behavior: "instant" });
     };
   });
+
+  // 로고 클릭 → "오늘" 탭으로 이동
+  $("brandHome").onclick = () => {
+    const homeTab = document.querySelector('.tab[data-view="home"]');
+    if (homeTab) homeTab.click();
+  };
 
   // 칩/강도/반응 렌더
   MOOD_CHIPS.forEach(m => { const b=document.createElement("button"); b.className="chip"; b.textContent=m;
@@ -819,7 +851,7 @@
   function show(useMood){
     const {p,i}=pick(useMood); current={p,i};
     updateConnector(useMood);
-    $("content").classList.add("fade"); $("player").src="";
+    $("content").classList.add("fade"); $("content2").classList.add("fade"); $("player").src="";
     // 반응 초기화
     document.querySelectorAll(".react-btn").forEach(c=>c.classList.remove("picked")); $("reactDone").style.display="none";
     // 담기 버튼 초기화
@@ -840,11 +872,27 @@
       $("player").src="https://www.youtube.com/embed/"+p.videoId+"?rel=0";
       $("fallback").href="https://www.youtube.com/watch?v="+p.videoId;
       $("videoTitle").textContent=p.videoTitle; $("videoSub").textContent=p.videoSub;
-      $("content").classList.remove("fade");
+      $("content").classList.remove("fade"); $("content2").classList.remove("fade");
     },450);
   }
 
   // 담아두기 (로그인 시 창고 저장)
+  { const kb = $("kakaoShareBtn"); if (kb) kb.onclick = () => {
+    if (!window.Kakao || !Kakao.isInitialized()) { alert("카카오톡 공유를 불러오지 못했어요. 잠시 후 다시 시도해 주세요."); return; }
+    const q = ($("quote") ? $("quote").innerText : "").replace(/\s+/g,' ').trim();
+    const a = ($("author") ? $("author").innerText : "").trim();
+    Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: q,
+        description: josaGaI(senderName || '윤기') + ' 보내는 편지' + (a ? '  ·  ' + a : ''),
+        imageUrl: 'https://ond2u.vercel.app/og3.png',
+        link: { mobileWebUrl: 'https://ond2u.vercel.app/app.html', webUrl: 'https://ond2u.vercel.app/app.html' }
+      },
+      buttons: [{ title: '오늘의 편지 보기', link: { mobileWebUrl: 'https://ond2u.vercel.app/app.html', webUrl: 'https://ond2u.vercel.app/app.html' } }]
+    });
+  }; }
+
   $("saveBtn").onclick = async () => {
     if(!current) return;
     const sb=$("saveBtn");
@@ -894,7 +942,7 @@
 
   function renderSaved(){
     if(!saved.length){ $("savedList").innerHTML='<div class="saved-empty">아직 담아둔 글이 없어요.<br>오늘 탭에서 마음에 드는 글을 담아보세요.</div>'; return; }
-    $("savedList").innerHTML = saved.map(s=>`<div class="saved-item"><div class="sdate">${s.date?s.date+" 담음":"담아둔 글"}</div><div class="sq">${s.quote.replace(/\n/g,"<br>")}</div><div class="sa">— ${s.author}</div></div>`).join("");
+    $("savedList").innerHTML = saved.map(s=>`<div class="saved-item"><div class="sdate">${s.date?s.date+" 담음":"담아둔 글"}</div><div class="sq">${s.quote.replace(/(\s*(?:<br\s*\/?>|[\r\n])\s*)+/gi,"<br>")}</div><div class="sa">— ${s.author}</div></div>`).join("");
   }
 
   function renderTrace(){
@@ -940,6 +988,7 @@
   const recipients = [];
   let pickedTimes = [];
   let pickedTone = null;
+  let bibleAlso = false;   // 성경 말씀도 함께 보낼지 (기본 꺼짐)
 
   const timeWrap = $("timeChips");
   TIMES.forEach(t => { const b=document.createElement("button"); b.className="tchip"; b.textContent=t;
@@ -947,25 +996,53 @@
       else { pickedTimes.push(t); b.classList.add("on"); } };
     timeWrap.appendChild(b); });
 
+  // 성경 말씀 함께 보내기 체크박스 토글
+  $("bibleCheck").onclick = () => {
+    bibleAlso = !bibleAlso;
+    $("bibleCheck").classList.toggle("on", bibleAlso);
+  };
+
   const toneWrap = $("toneChips");
   TONES.forEach(t => { const b=document.createElement("button"); b.className="tochip"; b.textContent=t;
     b.onclick=()=>{ if(pickedTone===t){ pickedTone=null; b.classList.remove("on"); }
       else { pickedTone=t; document.querySelectorAll(".tochip").forEach(c=>c.classList.remove("on")); b.classList.add("on"); } };
     toneWrap.appendChild(b); });
 
-  $("addBtn").onclick = () => {
+  $("addBtn").onclick = async () => {
     const name = $("rName").value.trim();
     const email = $("rEmail").value.trim();
     if(!name){ $("rName").focus(); return; }
     if(!email || !email.includes("@")){ $("rEmail").focus(); return; }
+    if(!loggedIn){ alert("아끼는 사람을 추가하려면 먼저 로그인해 주세요."); return; }
     if(!pickedTimes.length){ pickedTimes = ["아침 8시"]; }
-    recipients.push({ name, email, times:[...pickedTimes], tone:pickedTone });
+    const rec = { name, email, times:[...pickedTimes], tone:pickedTone, bible:bibleAlso };
+    recipients.push(rec);
+    // 창고에 저장 (kind: 성경 함께면 'bible', 아니면 'normal')
+    const { data, error } = await odoDB.from("odo_recipients")
+      .insert({ sender_id: currentUser.id, name, email, send_times: rec.times, tone: pickedTone, kind: bibleAlso?"bible":"normal" }).select().maybeSingle();
+    if(!error && data) rec.rowId = data.id;
+    else if(error) console.log("수신자 저장 오류:", error);
     // 초기화
     $("rName").value=""; $("rEmail").value="";
-    pickedTimes=[]; pickedTone=null;
+    pickedTimes=[]; pickedTone=null; bibleAlso=false;
     document.querySelectorAll(".tchip,.tochip").forEach(c=>c.classList.remove("on"));
+    $("bibleCheck").classList.remove("on");
     renderRecipients();
   };
+
+  // 로그인 시 창고에서 수신자 불러오기
+  async function loadRecipients(){
+    if(!loggedIn) return;
+    try {
+      const { data, error } = await odoDB.from("odo_recipients").select("*").order("created_at", { ascending: true });
+      if(error || !data) return;
+      recipients.length = 0;
+      data.forEach(row=>{
+        recipients.push({ name:row.name, email:row.email, times:row.send_times||["아침 8시"], tone:row.tone, bible:(row.kind==="bible"), rowId:row.id });
+      });
+      renderRecipients();
+    } catch(e){ console.log("수신자 불러오기 오류:", e); }
+  }
 
   function renderRecipients(){
     if(!recipients.length){
@@ -984,6 +1061,7 @@
           <div class="rmeta">
             ${r.times.map(t=>`<span class="rtag">${t}</span>`).join("")}
             ${r.tone?`<span class="rtone">${r.tone} 결</span>`:""}
+            ${r.bible?`<span class="rtone rbible">✝ 성경 말씀 함께</span>`:""}
           </div>
         </div>
         <button class="rdel" onclick="delRecipient(${i})">삭제</button>
@@ -991,7 +1069,15 @@
     `).join("");
   }
 
-  window.delRecipient = function(i){ recipients.splice(i,1); renderRecipients(); };
+  window.delRecipient = async function(i){
+    const rec = recipients[i];
+    recipients.splice(i,1);
+    renderRecipients();
+    if(loggedIn && rec && rec.rowId){
+      const { error } = await odoDB.from("odo_recipients").delete().eq("id", rec.rowId);
+      if(error) console.log("수신자 삭제 오류:", error);
+    }
+  };
 
   /* ── 로그인 (실제 Supabase 구글 로그인) ── */
   let loggedIn = false;
@@ -999,10 +1085,18 @@
   let senderName = "";   // 편지에 찍힐 "보내는 이름"
 
   // 오늘 탭 "보낸 사람" 표시를 senderName으로 갱신
+  function josaGaI(name){
+    if(!name) return "";
+    const c = name.charCodeAt(name.length-1);
+    if (c < 0xAC00 || c > 0xD7A3) return name + "가";
+    return name + (((c-0xAC00)%28!==0) ? "이" : "가");
+  }
   function updateFromLine(){
     const nm = senderName || "윤기";
     const fl = $("fromLine");
     if (fl) fl.innerHTML = '<span class="from-badge">'+nm.charAt(0)+'</span> <b>'+nm+'</b>님이 오늘도 보냅니다';
+    const es = $("essaySign");
+    if (es) es.textContent = josaGaI(nm) + " 드려요. 오늘도 좋은 하루 되세요 ^^";
   }
 
   // 로그인 성공 후 화면 전환
@@ -1019,9 +1113,12 @@
     updateFromLine();
     loadSaved();
     loadTrace();
+    loadRecipients();
     $("logoutBtn").onclick = async () => {
       await odoDB.auth.signOut();
       loggedIn = false; currentUser = null; senderName = "";
+      saved.length = 0; trace.length = 0; recipients.length = 0;
+      renderRecipients();
       $("gate").style.display = "block";
       $("sendPanel").style.display = "none";
     };
@@ -1053,6 +1150,15 @@
     if (error) { alert("로그인에 문제가 생겼어요. 잠시 후 다시 시도해 주세요."); console.log("로그인 오류:", error); }
   }
 
+  // 카카오 로그인 시작
+  async function loginWithKakao(){
+    const { error } = await odoDB.auth.signInWithOAuth({
+      provider: "kakao",
+      options: { scopes: "profile_nickname", redirectTo: window.location.href.split("#")[0] }
+    });
+    if (error) { alert("카카오 로그인에 문제가 생겼어요. 잠시 후 다시 시도해 주세요."); console.log("카카오 로그인 오류:", error); }
+  }
+
   // 페이지 열릴 때 이미 로그인돼 있는지 확인 (로그인 후 돌아왔을 때 포함)
   async function checkSession(){
     const { data } = await odoDB.auth.getSession();
@@ -1078,7 +1184,7 @@
 
   // 구글 버튼 → 진짜 로그인. 카카오·네이버는 아직 준비 중 안내.
   $("googleBtn").onclick = () => loginWithGoogle();
-  $("kakaoBtn").onclick = () => alert("카카오 로그인은 준비 중이에요. 지금은 구글 로그인을 이용해 주세요.");
+  $("kakaoBtn").onclick = () => loginWithKakao();
   $("naverBtn").onclick = () => alert("네이버 로그인은 준비 중이에요. 지금은 구글 로그인을 이용해 주세요.");
   $("loginBtn").onclick = () => alert("지금은 구글 로그인을 이용해 주세요. (이메일 로그인은 준비 중이에요.)");
 
@@ -1098,29 +1204,52 @@
     $("meTimeField").style.pointerEvents = on ? "auto" : "none";
   };
 
-  /* ── 받은 반응 (데모 예시 데이터) ── */
-  const REACTIONS_RECEIVED = [
-    { who:"엄마", emo:"위로됐어요 ♡", date:"7월 1일 아침", quote:"가장 어두운 밤도 결국 끝나고 해는 떠오른다." },
-    { who:"민수", emo:"힘이 나요", date:"6월 30일 저녁", quote:"산을 움직이는 자는 작은 돌을 나르는 것부터 시작한다." },
-    { who:"엄마", emo:"고마워요", date:"6월 30일 아침", quote:"필요하다면 쉬어라. 그러나 절대 포기하지 마라." },
-    { who:"지영", emo:"위로됐어요 ♡", date:"6월 29일 저녁", quote:"성공이란 실패를 뒤집어 놓은 것이다." }
-  ];
+  /* ── 받은 반응 (창고 odo_reactions 실데이터) ── */
+  async function renderReactions(){
+    const box = $("reactionList");
+    const escR = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const fmtR = iso => { try { const d=new Date(iso); return (d.getMonth()+1)+"월 "+d.getDate()+"일"; } catch(e){ return ""; } };
 
-  function renderReactions(){
-    if(!REACTIONS_RECEIVED.length){
-      $("reactionList").innerHTML='<div class="recipient-empty">아직 받은 반응이 없어요.<br>보낸 편지에 답이 오면 여기 쌓여요.</div>';
+    if (!currentUser) {
+      box.innerHTML = '<div class="recipient-empty">로그인하면 받은 반응을 볼 수 있어요.</div>';
       return;
     }
-    $("reactionList").innerHTML = REACTIONS_RECEIVED.map(r=>`
+    box.innerHTML = '<div class="recipient-empty">불러오는 중…</div>';
+
+    const { data, error } = await odoDB.from("odo_reactions")
+      .select("emotion, content_quote, recipient_email, created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      box.innerHTML = '<div class="recipient-empty">반응을 불러오지 못했어요.</div>';
+      return;
+    }
+    if (!data || !data.length) {
+      box.innerHTML = '<div class="recipient-empty">아직 받은 반응이 없어요.<br>보낸 편지에 답이 오면 여기 쌓여요.</div>';
+      return;
+    }
+
+    // 받는 사람 이메일 → 이름 매핑 (있으면 "엄마"처럼 이름으로 표시)
+    let nameByEmail = {};
+    try {
+      const { data: recips } = await odoDB.from("odo_recipients").select("email, name");
+      (recips||[]).forEach(x => { if (x.email) nameByEmail[x.email] = x.name; });
+    } catch(e){}
+
+    box.innerHTML = data.map(r => {
+      const who = nameByEmail[r.recipient_email] || (r.recipient_email||"").split("@")[0] || "받는 분";
+      const emo = r.emotion || "";
+      const quote = r.content_quote || "";
+      return `
       <div class="reaction">
-        <div class="rcav">${r.who.charAt(0)}</div>
+        <div class="rcav">${escR(who).charAt(0)}</div>
         <div class="rcinfo">
-          <div class="rcwho"><b>${r.who}</b>님이 <span class="rcemo">${r.emo}</span></div>
-          <div class="rcdate">${r.date}</div>
-          <div class="rcquote">"${r.quote}"</div>
+          <div class="rcwho"><b>${escR(who)}</b>님이 <span class="rcemo">${escR(emo)}</span></div>
+          <div class="rcdate">${fmtR(r.created_at)}</div>
+          ${quote ? `<div class="rcquote">"${escR(quote)}"</div>` : ""}
         </div>
-      </div>
-    `).join("");
+      </div>`;
+    }).join("");
   }
 
   /* ── 작은 온기: 연속 기록 · 계절 인사 · 첫 방문 환영 ── */
@@ -1236,14 +1365,16 @@
       const { data, error } = await odoDB.from("odo_contents").select("*");
       if (error || !data || !data.length) throw error || new Error("empty");
       // 창고 데이터를 화면이 쓰는 형식으로 변환
+      // SQL에 저장된 "\n"(백슬래시+n 두 글자)을 진짜 줄바꿈으로 바꿔줌
+      const fixNL = s => (s || "").replace(/\\n/g, "\n");
       const loaded = data.map(r => ({
         dbId: r.id,
-        quote: r.quote,
+        quote: fixNL(r.quote),
         en: r.quote_en,
         author: r.author,
         mood: r.mood_tags || [],
         essayTitle: r.essay_title,
-        essay: (r.essay || "").split("\n\n"),
+        essay: fixNL(r.essay).split("\n\n"),
         videoId: r.video_id,
         videoTitle: r.video_title,
         videoSub: "약 5분",
