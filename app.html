@@ -385,7 +385,7 @@
   /* 형제 프로젝트 배너 (리스트형) */
   .family { margin-top:56px; padding-top:32px; border-top:1px solid var(--line); }
   .family-label { font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); text-align:center; margin-bottom:12px; }
-  .family-list { background:var(--white); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .family-list { background:var(--white); border:1px solid var(--line); border-radius:10px; overflow:hidden; box-shadow:0 2px 8px rgba(80,60,70,.05); }
   .family-item { display:flex; align-items:center; gap:8px; text-decoration:none; padding:7px 12px; transition:background .16s; }
   .family-item + .family-item { border-top:1px solid var(--line); }
   .family-item:hover { background:var(--plum-soft); }
@@ -397,7 +397,7 @@
   .fc-soon { display:inline-block; font-size:9px; color:var(--plum); background:var(--plum-soft); border-radius:20px; padding:1px 6px; margin-left:auto; }
 
   /* 카드 공통 드롭섀도우 (배경에서 살짝 떠 보이게) */
-  .letter-card, .essay, .care, .react-wrap, .mood, .family-list, .player { box-shadow: 0 4px 12px rgba(80,60,70,.09), 0 20px 44px rgba(80,60,70,.13); }
+  .letter-card, .essay, .care, .react-wrap, .mood, .player { box-shadow: 0 4px 12px rgba(80,60,70,.09), 0 20px 44px rgba(80,60,70,.13); }
   .family-item:hover .fc-soon { background:var(--white); }
   .family-item.soon { pointer-events:none; opacity:.5; }
 
