@@ -129,6 +129,10 @@
   .vcap .vt { font-weight:600; font-size:14px; }
   .vcap .vs { font-size:12px; color:var(--ink-faint); margin-top:3px; }
   .fallback { display:inline-block; margin-top:12px; font-size:13px; font-weight:500; color:var(--plum); text-decoration:none; }
+  .video-fallback { display:none; position:absolute; inset:0; background:var(--plum-soft); flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--plum-deep); text-align:center; padding:0 20px; }
+  .video-fallback.on { display:flex; }
+  .video-fallback .vf-ic { font-size:32px; opacity:.55; }
+  .video-fallback .vf-text { font-size:14px; line-height:1.5; }
 
   /* 반응 (남에게 받았을 때) */
   .react-wrap { margin-top:16px; padding:24px; background:var(--white); border:1px solid var(--plum-line); border-radius:20px; text-align:center; }
@@ -485,6 +489,10 @@
       <div class="video-wrap">
         <div class="player">
           <iframe id="player" src="" title="오늘의 영상" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          <div class="video-fallback" id="videoFallback">
+            <div class="vf-ic">♪</div>
+            <div class="vf-text">잔잔한 음악을 준비 중이에요</div>
+          </div>
         </div>
         <div class="vcap">
           <div class="vt" id="videoTitle"></div>
@@ -874,6 +882,23 @@
     }
   }
 
+  // 영상이 실제로 있는지 썸네일로 먼저 확인 → 없으면 부드러운 안내로 대체
+  function loadVideo(id){
+    const iframe = $("player");
+    const fb = $("videoFallback");
+    if (!id) { if (iframe) iframe.src=""; if (fb) fb.classList.add("on"); return; }
+    const img = new Image();
+    img.onload = function(){
+      if (iframe) iframe.src = "https://www.youtube.com/embed/"+id+"?rel=0";
+      if (fb) fb.classList.remove("on");
+    };
+    img.onerror = function(){
+      if (iframe) iframe.src = "";
+      if (fb) fb.classList.add("on");
+    };
+    img.src = "https://img.youtube.com/vi/"+id+"/hqdefault.jpg";
+  }
+
   function show(useMood){
     const {p,i}=pick(useMood); current={p,i};
     updateConnector(useMood);
@@ -895,7 +920,7 @@
       $("careIc").innerHTML=CARE_ICONS[p.careIcon]||CARE_ICONS.tea;
       $("careTitle").textContent=p.careTitle||"";
       $("careBody").textContent=p.careBody||"";
-      $("player").src="https://www.youtube.com/embed/"+p.videoId+"?rel=0";
+      loadVideo(p.videoId);
       $("fallback").href="https://www.youtube.com/watch?v="+p.videoId;
       $("videoTitle").textContent=p.videoTitle; $("videoSub").textContent=p.videoSub;
       $("content").classList.remove("fade"); $("content2").classList.remove("fade");
