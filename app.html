@@ -1215,7 +1215,11 @@
   // 구글 버튼 → 진짜 로그인. 카카오·네이버는 아직 준비 중 안내.
   $("googleBtn").onclick = () => loginWithGoogle();
   $("kakaoBtn").onclick = () => loginWithKakao();
-  $("naverBtn").onclick = () => alert("네이버 로그인은 준비 중이에요. 지금은 구글 로그인을 이용해 주세요.");
+  $("naverBtn").onclick = () => {
+    const state = Math.random().toString(36).slice(2);
+    const redirectUri = encodeURIComponent("https://ond2u.vercel.app/api/naver-callback");
+    window.location.href = "https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=1b9f9_YPgdsQEBOGd0RU&redirect_uri=" + redirectUri + "&state=" + state;
+  };
   $("loginBtn").onclick = () => alert("지금은 구글 로그인을 이용해 주세요. (이메일 로그인은 준비 중이에요.)");
 
   /* ── 나에게 보내기 ── */
@@ -1429,6 +1433,15 @@
 
   (async () => {
     await loadFromWarehouse();  // 먼저 POOL 채우기(dbId 포함)
+    // 네이버 로그인에서 돌아온 경우: 일회성 토큰으로 세션 설정
+    try {
+      const h = new URLSearchParams(location.hash.slice(1));
+      const nt = h.get("naver_token");
+      if (nt) {
+        await odoDB.auth.verifyOtp({ token_hash: nt, type: "magiclink" });
+        history.replaceState(null, "", location.pathname);
+      }
+    } catch (e) { console.log("네이버 세션 설정 오류:", e); }
     await checkSession();       // 그다음 로그인 확인 + 담은글/기분 불러오기
     renderNavAuth();            // 왼쪽 메뉴 로그인/사용자 영역 표시
   })();
