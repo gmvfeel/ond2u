@@ -169,12 +169,12 @@
   .chips { display:flex; flex-wrap:wrap; gap:9px; justify-content:center; }
   .chip { font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--paper);
     border:1px solid var(--line-strong); border-radius:30px; padding:9px 16px; cursor:pointer; transition:all .16s; }
-  .chip:hover { border-color:var(--plum); color:var(--plum); }
+  .chip:hover { border-color:var(--rose); color:var(--rose); }
   .chip.on { background:var(--plum); border-color:var(--plum); color:#fff; }
   .levels { display:flex; gap:9px; }
   .level { font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--paper);
     border:1px solid var(--line-strong); border-radius:30px; padding:10px 0; cursor:pointer; transition:all .16s; flex:1; text-align:center; }
-  .level:hover { border-color:var(--plum); color:var(--plum); }
+  .level:hover { border-color:var(--rose); color:var(--rose); }
   .level.on { background:var(--plum-soft); border-color:var(--plum); color:var(--plum-deep); font-weight:600; }
   .mood input { width:100%; font-family:inherit; font-size:14px; color:var(--ink); text-align:center;
     background:var(--paper); border:1px solid var(--line-strong); border-radius:30px; padding:13px 18px; outline:none; transition:border-color .2s; margin-top:22px; }
@@ -182,8 +182,8 @@
   .mood input::placeholder { color:var(--ink-faint); }
   .actions { display:flex; gap:11px; margin-top:22px; }
   .btn { font-family:inherit; font-size:15px; font-weight:600; padding:15px; border-radius:30px; cursor:pointer; transition:all .2s; border:1px solid transparent; }
-  .btn-main { background:var(--rose); color:#fff; flex:1.4; }
-  .btn-main:hover { background:var(--rose-deep); }
+  .btn-main { background:var(--plum); color:#fff; flex:1.4; }
+  .btn-main:hover { background:var(--plum-deep); }
   .btn-sub { background:var(--paper); color:var(--ink-soft); border-color:var(--line-strong); flex:1; }
   .btn-sub:hover { border-color:var(--ink-soft); color:var(--ink); }
 
@@ -273,12 +273,13 @@
   .gate-hint { font-size:12px; color:var(--ink-faint); margin-top:18px; line-height:1.6; }
   .welcome-bar { background:var(--plum-soft); border-radius:14px; padding:14px 18px; font-size:13px; color:var(--plum-deep); margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; }
   .welcome-bar .logout { font-family:inherit; font-size:12px; color:var(--plum); background:transparent; border:none; cursor:pointer; text-decoration:underline; }
-  .nav-auth { margin:16px 0 22px; }
-  .nav-login-btn { font-family:inherit; font-size:13px; font-weight:600; color:var(--plum); background:none; border:none; padding:8px 4px; cursor:pointer; text-align:left; }
-  .nav-login-btn:hover { text-decoration:underline; }
-  .nav-user { font-size:12.5px; color:var(--ink-soft); line-height:1.7; padding:8px 4px; }
+  .nav-auth { position:fixed; top:18px; right:26px; z-index:60; display:flex; align-items:center; }
+  .nav-login-btn { font-family:inherit; font-size:13px; font-weight:600; color:var(--plum); background:var(--white); border:1px solid var(--plum-line); border-radius:20px; padding:7px 16px; cursor:pointer; }
+  .nav-login-btn:hover { background:var(--plum-soft); }
+  .nav-user { font-size:12.5px; color:var(--ink-soft); display:flex; align-items:center; gap:12px; background:var(--white); border:1px solid var(--line-strong); border-radius:20px; padding:6px 8px 6px 16px; box-shadow:0 2px 8px rgba(80,60,70,.06); }
   .nav-user b { color:var(--ink); font-weight:700; }
-  .nav-user .nav-logout { display:block; margin-top:8px; font-size:12px; color:var(--plum); background:none; border:none; cursor:pointer; text-decoration:underline; font-family:inherit; padding:0; }
+  .nav-user .nav-logout { font-size:12px; color:var(--plum); background:var(--plum-soft); border:none; border-radius:16px; padding:5px 12px; cursor:pointer; font-family:inherit; }
+  .nav-user .nav-logout:hover { background:var(--plum-line); }
   .top-bar { position:fixed; top:0; left:0; width:100%; height:5px; background:#d0ccd6; z-index:2000; transition:background .5s ease; }
   .top-bar.on { background:var(--plum); }
   .welcome-bar .namebtn { font-family:inherit; font-size:11px; color:var(--plum); background:var(--white); border:1px solid var(--plum-line); border-radius:20px; padding:2px 10px; cursor:pointer; margin-left:6px; }
@@ -506,7 +507,7 @@
   .mr-btn { font-size:12px; color:var(--plum-deep); background:#fff; border:1px solid var(--plum); border-radius:20px; padding:6px 12px; }
   .tchip, .tochip, .kchip { font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--paper);
     border:1px solid var(--line-strong); border-radius:30px; padding:9px 15px; cursor:pointer; transition:all .16s; }
-  .tchip:hover, .tochip:hover, .kchip:hover { border-color:var(--plum); color:var(--plum); }
+  .tchip:hover, .tochip:hover, .kchip:hover { border-color:var(--rose); color:var(--rose); }
   .tchip.on, .tochip.on, .kchip.on { background:var(--plum); border-color:var(--plum); color:#fff; }
   .kind-hint { font-size:12px; color:var(--plum); margin-top:8px; line-height:1.6; }
   .bible-check { display:inline-flex !important; align-items:center; gap:11px; cursor:pointer; user-select:none; font-size:14px; color:var(--ink); padding:10px 14px; border:1px solid var(--plum-line); border-radius:14px; background:var(--white); transition:all .16s; margin-bottom:0; }
@@ -541,6 +542,7 @@
 </head>
 <body>
 <div class="top-bar" id="topBar"></div>
+<div class="nav-auth" id="navAuth"></div>
 <div class="welcome-overlay" id="welcomeOverlay">
   <div class="welcome-box">
     <div class="welcome-icon">
@@ -569,7 +571,6 @@
     </svg>
     <span class="brand-txt">오늘도 <span class="brand-en">OND2U</span></span>
   </div>
-  <div class="nav-auth" id="navAuth"></div>
   <div class="tabs">
     <button class="tab on" data-view="home">오늘</button>
     <button class="tab" data-view="monthly">돌아보기</button>
@@ -1765,7 +1766,7 @@
     const bar = $("topBar"); if (bar) bar.classList.toggle("on", loggedIn);
     if (!el) return;
     if (loggedIn && currentUser) {
-      el.innerHTML = '<div class="nav-user">반가워요<br><b>'+(senderName||"")+'</b>님<button class="nav-logout" id="navLogoutBtn">로그아웃</button></div>';
+      el.innerHTML = '<div class="nav-user"><span>반가워요 <b>'+(senderName||"")+'</b>님</span><button class="nav-logout" id="navLogoutBtn">로그아웃</button></div>';
       $("navLogoutBtn").onclick = () => doLogout();
     } else {
       el.innerHTML = '<button class="nav-login-btn" id="navLoginBtn">로그인 / 가입</button>';
