@@ -427,6 +427,14 @@
   .time-note { font-size:12px; color:var(--ink-faint); margin-top:8px; line-height:1.6; }
   .me-onboard { display:none; font-size:13px; color:var(--plum-deep); background:var(--plum-soft); border:1px dashed var(--plum-line); border-radius:12px; padding:11px 14px; margin:14px 0 4px; line-height:1.5; }
   .me-onboard.show { display:block; }
+  /* 사용법 */
+  .guide-card { display:flex; gap:16px; background:var(--white); border:1px solid var(--plum-line); border-radius:16px; padding:20px 22px; margin-bottom:12px; }
+  .gd-num { font-size:15px; font-weight:800; color:#fff; background:var(--plum); border-radius:10px; min-width:38px; height:38px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .gd-t { font-size:15px; font-weight:700; color:var(--ink); letter-spacing:-0.01em; }
+  .gd-d { font-size:14px; line-height:1.75; color:var(--ink-soft); margin-top:7px; }
+  .gd-d b { color:var(--plum-deep); font-weight:700; }
+  .gd-hint { display:block; font-size:12.5px; color:var(--ink-faint); margin-top:8px; }
+  .guide-foot { text-align:center; font-size:14px; font-weight:600; color:var(--plum-deep); background:var(--plum-soft); border-radius:16px; padding:22px 20px; margin-top:8px; line-height:1.7; }
   .tchip, .tochip, .kchip { font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--paper);
     border:1px solid var(--line-strong); border-radius:30px; padding:9px 15px; cursor:pointer; transition:all .16s; }
   .tchip:hover, .tochip:hover, .kchip:hover { border-color:var(--plum); color:var(--plum); }
@@ -495,6 +503,7 @@
     <button class="tab" data-view="trace">내 흔적</button>
     <button class="tab" data-view="send">보내기</button>
     <button class="tab" data-view="reactions">받은 반응 <span class="tab-badge" id="reactBadge"></span></button>
+    <button class="tab" data-view="guide">사용법</button>
     <button class="tab tab-admin" data-view="admin">⚙ 콘텐츠 공장</button>
     <button class="tab tab-admin" data-view="manage">⚙ 콘텐츠 관리</button>
     <button class="tab tab-admin" data-view="members">⚙ 회원 관리</button>
@@ -717,6 +726,54 @@
     <div class="section-title">받은 반응</div>
     <div class="section-sub">내가 보낸 편지에, 그 사람들이 남긴 마음이에요.</div>
     <div id="reactionList"></div>
+  </div>
+
+  <!-- 사용법 -->
+  <div class="view" id="view-guide">
+    <div class="section-title">오늘도 사용법</div>
+    <div class="section-sub">매일 위로 한 편을 받고, 아끼는 사람에게 대신 보내주는 곳이에요. 이렇게 쓰면 돼요.</div>
+
+    <div class="guide-card">
+      <div class="gd-num">01</div>
+      <div class="gd-body">
+        <div class="gd-t">오늘도가 뭐예요?</div>
+        <div class="gd-d">매일 한 편의 위로 편지를 받아보는 곳이에요. 마음을 어루만지는 한 줄과 짧은 에세이, 작은 처방, 어울리는 음악까지 담겨 있어요. 나만 받는 게 아니라, 아끼는 사람에게 매일 대신 보내줄 수도 있고요.</div>
+      </div>
+    </div>
+
+    <div class="guide-card">
+      <div class="gd-num">02</div>
+      <div class="gd-body">
+        <div class="gd-t">위로받기 — 로그인 없이도 돼요</div>
+        <div class="gd-d"><b>오늘</b> 탭에서 바로 오늘의 편지를 볼 수 있어요. 마음 상태를 골라 그날의 나에게 맞는 글을 받을 수도 있고요. 마음에 드는 글은 <b>담아둔 글</b>에 저장돼요.</div>
+      </div>
+    </div>
+
+    <div class="guide-card">
+      <div class="gd-num">03</div>
+      <div class="gd-body">
+        <div class="gd-t">나에게 매일 받기</div>
+        <div class="gd-d">로그인한 뒤 <b>보내기</b> 탭에서 <b>‘매일 나에게 받기’</b>를 켜면, 매일 아침 나에게도 한 편이 이메일로 도착해요. 먼저 나부터 챙기는 거예요.</div>
+      </div>
+    </div>
+
+    <div class="guide-card">
+      <div class="gd-num">04</div>
+      <div class="gd-body">
+        <div class="gd-t">아끼는 사람에게 보내기</div>
+        <div class="gd-d"><b>보내기</b> 탭에서 아끼는 사람의 이름과 이메일을 명단에 추가하면, 매일 그 사람에게도 편지를 대신 보내드려요. 부모님, 친구, 힘든 시간을 지나는 누군가에게요. <span class="gd-hint">추가 전에 “매일 좋은 글 보낼게, 받을래?” 하고 한 번 물어봐 주세요.</span></div>
+      </div>
+    </div>
+
+    <div class="guide-card">
+      <div class="gd-num">05</div>
+      <div class="gd-body">
+        <div class="gd-t">마음 주고받기</div>
+        <div class="gd-d">편지를 받은 사람은 ‘위로됐어요·힘이 나요·고마워요’ 버튼으로 마음을 전할 수 있어요. 그 마음은 <b>받은 반응</b> 탭에서 확인할 수 있고요. 주고받는 온기가 오늘도의 진짜 이야기예요.</div>
+      </div>
+    </div>
+
+    <div class="guide-foot">매일 쌓인 당신의 오늘도는, 언젠가 세상에 단 하나뿐인 위로 책이 됩니다.</div>
   </div>
 
   <!-- 콘텐츠 공장 (관리자) -->
