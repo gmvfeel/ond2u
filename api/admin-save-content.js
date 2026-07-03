@@ -62,9 +62,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ ok: false, error: "명언·에세이 제목·에세이 본문은 꼭 있어야 해요." });
 
   // 5) 창고에 넣을 한 줄로 정리
-  //    영상은 지금은 잔잔한 기본 영상으로 채우고, videoSuggestion(검색어)은 제목 자리에 남겨둬요.
-  //    → 나중에 창고에서 그 검색어를 보고 어울리는 영상으로 교체하기 편하도록.
-  const DEFAULT_VIDEO = "kcihcYEOeic"; // Einaudi — Nuvole Bianche (잔잔한 기본 영상)
+  //    영상은 비워둡니다. videoSuggestion(검색어)만 제목 자리에 남겨둬요.
+  //    → 저장 후 "콘텐츠 관리"에서 검사하면 자동으로 채울 대상으로 잡혀
+  //       정상 영상으로 자동 채우기 하면 됩니다. (임베드 안 되는 영상이 박히는 일이 없어요.)
+  const DEFAULT_VIDEO = ""; // 기본 영상 없음
   const ALLOWED_ICONS = ["tea", "breath", "sun", "walk", "stretch"];
   const icon = ALLOWED_ICONS.includes(s.careIcon) ? s.careIcon : "tea";
 
