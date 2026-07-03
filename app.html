@@ -60,7 +60,9 @@
   /* 헤더 (홈) */
   .top { text-align:center; margin-bottom:10px; }
   .from-line { text-align:center; font-size:13px; color:var(--ink-soft); margin-bottom:14px; display:flex; align-items:center; justify-content:center; gap:7px; }
-  .streak { text-align:center; font-size:12px; color:var(--plum); background:var(--plum-soft); border-radius:30px; padding:7px 16px; margin:0 auto 20px; display:inline-block; width:auto; }
+  .streak { text-align:center; font-size:12px; color:var(--plum); background:var(--plum-soft); border-radius:30px; padding:7px 16px; margin:0 auto 20px; display:inline-block; width:auto; transition:all .2s; }
+  .streak b { font-weight:800; }
+  .streak.milestone { color:#fff; background:var(--plum); font-weight:600; box-shadow:0 4px 14px rgba(66,52,88,.28); }
   .season { text-align:center; font-size:13px; color:var(--ink-soft); margin-bottom:16px; }
   .greet-row { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
   .greet-row .season, .greet-row .from-line { margin-bottom:0; }
@@ -2012,7 +2014,16 @@
     const wrap = el ? el.parentElement : null;   // .streak-wrap
     if (!days || days < 1) { if (wrap) wrap.style.display = "none"; return; }
     if (wrap) wrap.style.display = "";
-    el.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M12 20c0-5 0-7-3-9"/><path d="M12 11c0-3 2-5 6-5 0 4-2 6-6 5z"/></svg>' + days + "일째 오늘도와 함께하고 있어요";
+    const flame = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M12 20c0-5 0-7-3-9"/><path d="M12 11c0-3 2-5 6-5 0 4-2 6-6 5z"/></svg>';
+    let msg, milestone = false;
+    if (days === 7)        { msg = '벌써 <b>7일</b>째예요! 일주일을 함께했어요 🎉'; milestone = true; }
+    else if (days === 14)  { msg = '<b>2주</b>째 함께하고 있어요 🎉'; milestone = true; }
+    else if (days === 30)  { msg = '<b>한 달</b>째예요! 정말 대단해요 🎉'; milestone = true; }
+    else if (days === 100) { msg = '<b>100일</b>! 오늘도가 당신의 하루가 됐네요 🎉'; milestone = true; }
+    else if (days % 100 === 0) { msg = '<b>'+days+'일</b>째, 놀라운 기록이에요 🎉'; milestone = true; }
+    else { msg = '<b>'+days+'일</b>째 오늘도와 함께하고 있어요'; }
+    el.innerHTML = flame + msg;
+    el.classList.toggle('milestone', milestone);
   }
   // 로그인 전에는 숨겨둡니다 (로그인해야 기록이 시작돼요)
   renderStreak(null);
