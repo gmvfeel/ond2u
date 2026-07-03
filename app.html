@@ -425,6 +425,8 @@
   .field input::placeholder { color:var(--ink-faint); }
   .time-chips, .tone-chips, .kind-chips { display:flex; flex-wrap:wrap; gap:8px; }
   .time-note { font-size:12px; color:var(--ink-faint); margin-top:8px; line-height:1.6; }
+  .me-onboard { display:none; font-size:13px; color:var(--plum-deep); background:var(--plum-soft); border:1px dashed var(--plum-line); border-radius:12px; padding:11px 14px; margin:14px 0 4px; line-height:1.5; }
+  .me-onboard.show { display:block; }
   .tchip, .tochip, .kchip { font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--paper);
     border:1px solid var(--line-strong); border-radius:30px; padding:9px 15px; cursor:pointer; transition:all .16s; }
   .tchip:hover, .tochip:hover, .kchip:hover { border-color:var(--plum); color:var(--plum); }
@@ -654,6 +656,8 @@
             <div class="me-sub">먼저 나부터 챙겨요. 매일 정해진 시각에 나에게도 한 편이 와요.</div>
           </div>
         </div>
+
+        <div class="me-onboard" id="meOnboard">👋 여기서 시작해요 — 매일 나에게 한 통. 아래 스위치를 켜보세요.</div>
 
         <div class="me-toggle-row">
           <span>매일 나에게 받기</span>
@@ -1299,6 +1303,7 @@
       }
       $("meTimeField").style.opacity = selfRow ? "1" : "0.4";
       $("meTimeField").style.pointerEvents = selfRow ? "auto" : "none";
+      const ob = $("meOnboard"); if (ob) ob.classList.toggle("show", !selfRow);
       refreshMeTimeChips();
       renderRecipients();
     } catch(e){ console.log("수신자 불러오기 오류:", e); }
@@ -1584,6 +1589,7 @@
     const on = $("meToggle").classList.toggle("on");
     $("meTimeField").style.opacity = on ? "1" : "0.4";
     $("meTimeField").style.pointerEvents = on ? "auto" : "none";
+    const ob = $("meOnboard"); if (ob) ob.classList.toggle("show", !on);
     await saveSelfRecipient(on);
   };
 
