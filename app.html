@@ -51,6 +51,11 @@
 
   .view { display:none; }
   .view.on { display:block; }
+  .view.on.from-below { animation: vwUp .34s cubic-bezier(.22,.61,.36,1); }
+  .view.on.from-above { animation: vwDown .34s cubic-bezier(.22,.61,.36,1); }
+  @keyframes vwUp { from { opacity:0; transform:translateY(26px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes vwDown { from { opacity:0; transform:translateY(-26px); } to { opacity:1; transform:translateY(0); } }
+  @media (prefers-reduced-motion: reduce) { .view.on.from-below, .view.on.from-above { animation:none; } }
 
   /* 헤더 (홈) */
   .top { text-align:center; margin-bottom:10px; }
@@ -923,12 +928,16 @@
   if (window.Kakao && !Kakao.isInitialized()) Kakao.init('b60c84006b3ecf757bd39fd7f6eb7917');
 
   // 탭 전환
+  const tabsArr = [...document.querySelectorAll(".tab")];
   document.querySelectorAll(".tab").forEach(t => {
     t.onclick = () => {
+      const prevIdx = tabsArr.findIndex(x=>x.classList.contains("on"));
+      const newIdx = tabsArr.indexOf(t);
+      const dir = (newIdx < prevIdx) ? "from-above" : "from-below";
       document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
-      document.querySelectorAll(".view").forEach(x=>x.classList.remove("on"));
+      document.querySelectorAll(".view").forEach(x=>x.classList.remove("on","from-above","from-below"));
       t.classList.add("on");
-      $("view-"+t.dataset.view).classList.add("on");
+      $("view-"+t.dataset.view).classList.add("on", dir);
       if (t.dataset.view==="saved") renderSaved();
       if (t.dataset.view==="trace") renderTrace();
       if (t.dataset.view==="reactions"){ renderReactions(); markReactionsSeen(); }
