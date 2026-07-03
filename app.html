@@ -1280,6 +1280,7 @@
 
     const { data, error } = await odoDB.from("odo_reactions")
       .select("emotion, content_quote, recipient_email, created_at")
+      .eq("sender_id", currentUser.id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -1539,5 +1540,3 @@
 </script>
 </body>
 </html>
-
-
