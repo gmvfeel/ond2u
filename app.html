@@ -488,7 +488,7 @@
 
       <div class="video-wrap">
         <div class="player">
-          <iframe id="player" src="" title="오늘의 영상" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          <div id="player"></div>
           <div class="video-fallback" id="videoFallback">
             <div class="vf-ic">♪</div>
             <div class="vf-text">잔잔한 음악을 준비 중이에요</div>
@@ -882,27 +882,37 @@
     }
   }
 
-  // 영상이 실제로 있는지 썸네일로 먼저 확인 → 없으면 부드러운 안내로 대체
+  // 유튜브 공식 플레이어 — 재생 불가(임베드 금지·삭제) 영상을 감지해 부드러운 안내로 대체
+  let ytPlayer = null, ytReady = false, pendingVid = null;
+  window.onYouTubeIframeAPIReady = function(){
+    ytPlayer = new YT.Player('player', {
+      height: '100%', width: '100%',
+      playerVars: { rel: 0 },
+      events: {
+        onReady: function(){ ytReady = true; if (pendingVid){ const v = pendingVid; pendingVid = null; loadVideo(v); } },
+        onError: function(){ const fb = $("videoFallback"); if (fb) fb.classList.add("on"); },
+        onStateChange: function(e){
+          if (e.data === YT.PlayerState.CUED || e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.BUFFERING){
+            const fb = $("videoFallback"); if (fb) fb.classList.remove("on");
+          }
+        }
+      }
+    });
+  };
+  (function(){ const s = document.createElement('script'); s.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(s); })();
+
   function loadVideo(id){
-    const iframe = $("player");
     const fb = $("videoFallback");
-    if (!id) { if (iframe) iframe.src=""; if (fb) fb.classList.add("on"); return; }
-    const img = new Image();
-    img.onload = function(){
-      if (iframe) iframe.src = "https://www.youtube.com/embed/"+id+"?rel=0";
-      if (fb) fb.classList.remove("on");
-    };
-    img.onerror = function(){
-      if (iframe) iframe.src = "";
-      if (fb) fb.classList.add("on");
-    };
-    img.src = "https://img.youtube.com/vi/"+id+"/hqdefault.jpg";
+    if (!id){ if (ytReady && ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo(); if (fb) fb.classList.add("on"); return; }
+    if (!ytReady || !ytPlayer){ pendingVid = id; return; }   // 아직 플레이어 준비 전이면 대기
+    if (fb) fb.classList.remove("on");                        // 일단 숨기고, 재생 불가면 onError가 다시 표시
+    ytPlayer.cueVideoById(id);                                // 썸네일+재생버튼만 (자동재생 안 함)
   }
 
   function show(useMood){
     const {p,i}=pick(useMood); current={p,i};
     updateConnector(useMood);
-    $("content").classList.add("fade"); $("content2").classList.add("fade"); $("player").src="";
+    $("content").classList.add("fade"); $("content2").classList.add("fade");
     // 반응 초기화
     document.querySelectorAll(".react-btn").forEach(c=>c.classList.remove("picked")); $("reactDone").style.display="none";
     // 담기 버튼 초기화
