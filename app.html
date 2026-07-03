@@ -314,6 +314,16 @@
   .mg-frame { margin-top:10px; aspect-ratio:16/9; border-radius:10px; overflow:hidden; background:#000; display:none; }
   .mg-frame.on { display:block; }
   .mg-frame iframe { width:100%; height:100%; border:0; }
+  .mg-top { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
+  .mg-top #mgCount { font-size:14px; color:var(--ink); }
+  .mg-summary { font-size:13px; color:var(--plum-deep); margin-bottom:12px; }
+  .mg-head { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+  .mg-status { font-size:11px; white-space:nowrap; padding:2px 7px; border-radius:6px; }
+  .mg-status.checking { color:var(--ink-faint); }
+  .mg-status.ok { color:#2e7d32; background:#e8f5e9; }
+  .mg-status.bad { color:#c62828; background:#ffebee; }
+  .mg-status.warn { color:#b26a00; background:#fff3e0; }
+  .mg-card.bad { border-color:#e0a0a0; box-shadow:0 0 0 1px #e0a0a0; }
   .admin-banner { font-size:12px; color:var(--plum-deep); background:var(--plum-soft); border-radius:12px; padding:12px 16px; margin-bottom:22px; line-height:1.6; }
   .maker { background:var(--white); border:1px solid var(--plum-line); border-radius:18px; padding:20px 22px; margin-bottom:24px; }
   .maker-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
@@ -343,18 +353,6 @@
   .jbtn.drop:hover, .jbtn.drop.on { background:var(--ink-soft); border-color:var(--ink-soft); color:#fff; }
   .adm-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:50px 0; }
   .adm-loading { text-align:center; color:var(--ink-faint); font-size:14px; padding:40px 0; }
-  .mg-card { background:var(--white); border:1px solid var(--plum-line); border-radius:14px; padding:16px 18px; margin-bottom:12px; }
-  .mg-q { font-size:14px; color:var(--ink); font-weight:600; line-height:1.5; }
-  .mg-a { font-size:12px; color:var(--ink-faint); margin-top:4px; }
-  .mg-cur { font-size:12px; color:var(--ink-soft); margin-top:8px; word-break:break-all; }
-  .mg-row { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; align-items:center; }
-  .mg-row input { flex:1; min-width:180px; font-family:inherit; font-size:13px; padding:8px 10px; border:1px solid var(--plum-line); border-radius:8px; }
-  .mg-btn { font-family:inherit; font-size:12px; padding:8px 12px; border-radius:8px; border:1px solid var(--plum); background:var(--white); color:var(--plum-deep); cursor:pointer; white-space:nowrap; }
-  .mg-btn.save { background:var(--plum); color:#fff; border-color:var(--plum); }
-  .mg-btn.del { border-color:#d9a3a3; color:#a55555; }
-  .mg-frame { margin-top:10px; aspect-ratio:16/9; border-radius:10px; overflow:hidden; background:#000; display:none; }
-  .mg-frame.on { display:block; }
-  .mg-frame iframe { width:100%; height:100%; border:0; }
 
   /* 형제 프로젝트 배너 (리스트형) */
   .family { margin-top:56px; padding-top:32px; border-top:1px solid var(--line); }
@@ -1736,11 +1734,16 @@
     catch(e){ error = e; }
     if (error || !data || !data.length){ box.innerHTML = '<div class="adm-empty">콘텐츠를 불러오지 못했어요.</div>'; return; }
     const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-    box.innerHTML = data.map(r => {
+    let html = '<div class="mg-top">'
+      + '<span id="mgCount">총 <b>'+data.length+'</b>개</span>'
+      + '<button class="mg-btn" id="mgCheckBtn" onclick="mgCheckAll()">⚠ 재생 안 되는 영상 찾기</button>'
+      + '</div>'
+      + '<div id="mgSummary" class="mg-summary"></div>';
+    html += data.map(r => {
       const raw = (r.quote||"").replace(/\\n/g," ");
       const q = esc(raw.slice(0,40)) + (raw.length>40?"…":"");
-      return '<div class="mg-card" id="mg_'+r.id+'">'
-        + '<div class="mg-q">'+q+'</div>'
+      return '<div class="mg-card" id="mg_'+r.id+'" data-vid="'+esc(r.video_id||"")+'">'
+        + '<div class="mg-head"><div class="mg-q">'+q+'</div><span class="mg-status" id="mgSt_'+r.id+'"></span></div>'
         + '<div class="mg-a">— '+esc(r.author)+' · '+esc(r.kind||"normal")+'</div>'
         + '<div class="mg-cur">현재 영상: <b>'+esc(r.video_id||"(없음)")+'</b>'+(r.video_title?' · 검색어: '+esc(r.video_title):'')+'</div>'
         + '<div class="mg-row">'
@@ -1752,6 +1755,7 @@
         + '<div class="mg-row"><button class="mg-btn del" onclick="mgDelete(\''+r.id+'\')">이 콘텐츠 삭제</button></div>'
         + '</div>';
     }).join("");
+    box.innerHTML = html;
   }
 
   window.mgPreview = function(id){
@@ -1795,6 +1799,66 @@
       if (!res.ok || !out.ok){ alert("삭제 실패: "+(out.error||res.status)); return; }
       renderManage();
     } catch(e){ alert("삭제 중 오류가 났어요."); }
+  };
+
+  // ── 재생 불가 영상 자동 검사 (화면 밖 숨은 플레이어로 하나씩 확인) ──
+  let mgChecker=null, mgCheckerReady=false, mgResultCb=null;
+  function mgInitChecker(){
+    return new Promise((resolve)=>{
+      if (mgCheckerReady && mgChecker) return resolve();
+      let box=document.getElementById("mgCheckerInner");
+      if(!box){
+        const wrap=document.createElement("div");
+        wrap.style.cssText="position:fixed;left:-9999px;top:0;width:200px;height:200px;overflow:hidden;";
+        box=document.createElement("div"); box.id="mgCheckerInner";
+        wrap.appendChild(box); document.body.appendChild(wrap);
+      }
+      const make=()=>{
+        mgChecker=new YT.Player("mgCheckerInner",{
+          height:"200", width:"200",
+          events:{
+            onReady:()=>{ mgCheckerReady=true; resolve(); },
+            onError:()=>{ if(mgResultCb) mgResultCb(false); },
+            onStateChange:(e)=>{ if(e.data===YT.PlayerState.CUED && mgResultCb) mgResultCb(true); }
+          }
+        });
+      };
+      if(window.YT && YT.Player) make();
+      else { const t=setInterval(()=>{ if(window.YT&&YT.Player){ clearInterval(t); make(); } },300); }
+    });
+  }
+  function mgCheckOne(vid){
+    return new Promise((resolve)=>{
+      let done=false;
+      const finish=(v)=>{ if(done) return; done=true; mgResultCb=null; clearTimeout(to); resolve(v); };
+      const to=setTimeout(()=>finish("unknown"), 5000);
+      mgResultCb=(ok)=>finish(ok?"ok":"bad");
+      try{ mgChecker.cueVideoById(vid); }catch(e){ finish("bad"); }
+    });
+  }
+  window.mgCheckAll=async function(){
+    const btn=$("mgCheckBtn"); const sum=$("mgSummary");
+    const cards=[...document.querySelectorAll(".mg-card")];
+    if(!cards.length) return;
+    if(btn){ btn.disabled=true; btn.textContent="플레이어 준비 중…"; }
+    await mgInitChecker();
+    let bad=0, unknown=0;
+    for(let i=0;i<cards.length;i++){
+      const c=cards[i];
+      const vid=c.getAttribute("data-vid");
+      const st=c.querySelector(".mg-status");
+      if(btn) btn.textContent="검사 중… ("+(i+1)+"/"+cards.length+")";
+      if(st){ st.textContent="검사 중…"; st.className="mg-status checking"; }
+      let r="bad";
+      if(vid) r=await mgCheckOne(vid);
+      if(st){
+        if(r==="ok"){ st.textContent="✅ 정상"; st.className="mg-status ok"; c.classList.remove("bad"); }
+        else if(r==="bad"){ st.textContent="⚠ 재생 불가"; st.className="mg-status bad"; c.classList.add("bad"); bad++; }
+        else { st.textContent="? 확인 필요"; st.className="mg-status warn"; unknown++; }
+      }
+    }
+    if(btn){ btn.disabled=false; btn.textContent="다시 검사"; }
+    if(sum) sum.textContent="검사 완료 — 재생 불가 "+bad+"개"+(unknown?(", 확인 필요 "+unknown+"개"):"")+". 빨간 카드의 영상을 교체하세요.";
   };
 
   async function loadFromWarehouse(){
