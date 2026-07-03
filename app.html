@@ -300,6 +300,20 @@
   .tab-admin { color:var(--ink-faint); font-size:13px; display:none; }
   .tab-admin.on { color:var(--plum-deep); }
   body.is-admin .tab-admin { display:inline-block; }
+
+  /* 콘텐츠 관리 카드 */
+  .mg-card { background:var(--white); border:1px solid var(--plum-line); border-radius:14px; padding:16px 18px; margin-bottom:12px; }
+  .mg-q { font-size:14px; color:var(--ink); font-weight:600; line-height:1.5; }
+  .mg-a { font-size:12px; color:var(--ink-faint); margin-top:4px; }
+  .mg-cur { font-size:12px; color:var(--ink-soft); margin-top:8px; word-break:break-all; }
+  .mg-row { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; align-items:center; }
+  .mg-row input { flex:1; min-width:180px; font-family:inherit; font-size:13px; padding:8px 10px; border:1px solid var(--plum-line); border-radius:8px; }
+  .mg-btn { font-family:inherit; font-size:12px; padding:8px 12px; border-radius:8px; border:1px solid var(--plum); background:var(--white); color:var(--plum-deep); cursor:pointer; white-space:nowrap; }
+  .mg-btn.save { background:var(--plum); color:#fff; border-color:var(--plum); }
+  .mg-btn.del { border-color:#d9a3a3; color:#a55; }
+  .mg-frame { margin-top:10px; aspect-ratio:16/9; border-radius:10px; overflow:hidden; background:#000; display:none; }
+  .mg-frame.on { display:block; }
+  .mg-frame iframe { width:100%; height:100%; border:0; }
   .admin-banner { font-size:12px; color:var(--plum-deep); background:var(--plum-soft); border-radius:12px; padding:12px 16px; margin-bottom:22px; line-height:1.6; }
   .maker { background:var(--white); border:1px solid var(--plum-line); border-radius:18px; padding:20px 22px; margin-bottom:24px; }
   .maker-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
@@ -329,6 +343,18 @@
   .jbtn.drop:hover, .jbtn.drop.on { background:var(--ink-soft); border-color:var(--ink-soft); color:#fff; }
   .adm-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:50px 0; }
   .adm-loading { text-align:center; color:var(--ink-faint); font-size:14px; padding:40px 0; }
+  .mg-card { background:var(--white); border:1px solid var(--plum-line); border-radius:14px; padding:16px 18px; margin-bottom:12px; }
+  .mg-q { font-size:14px; color:var(--ink); font-weight:600; line-height:1.5; }
+  .mg-a { font-size:12px; color:var(--ink-faint); margin-top:4px; }
+  .mg-cur { font-size:12px; color:var(--ink-soft); margin-top:8px; word-break:break-all; }
+  .mg-row { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; align-items:center; }
+  .mg-row input { flex:1; min-width:180px; font-family:inherit; font-size:13px; padding:8px 10px; border:1px solid var(--plum-line); border-radius:8px; }
+  .mg-btn { font-family:inherit; font-size:12px; padding:8px 12px; border-radius:8px; border:1px solid var(--plum); background:var(--white); color:var(--plum-deep); cursor:pointer; white-space:nowrap; }
+  .mg-btn.save { background:var(--plum); color:#fff; border-color:var(--plum); }
+  .mg-btn.del { border-color:#d9a3a3; color:#a55555; }
+  .mg-frame { margin-top:10px; aspect-ratio:16/9; border-radius:10px; overflow:hidden; background:#000; display:none; }
+  .mg-frame.on { display:block; }
+  .mg-frame iframe { width:100%; height:100%; border:0; }
 
   /* 형제 프로젝트 배너 (리스트형) */
   .family { margin-top:56px; padding-top:32px; border-top:1px solid var(--line); }
@@ -430,6 +456,7 @@
     <button class="tab" data-view="send">보내기</button>
     <button class="tab" data-view="reactions">받은 반응</button>
     <button class="tab tab-admin" data-view="admin">⚙ 콘텐츠 공장</button>
+    <button class="tab tab-admin" data-view="manage">⚙ 콘텐츠 관리</button>
   </div>
   <div class="nav-auth" id="navAuth"></div>
 </nav>
@@ -670,6 +697,14 @@
     <div id="admSets"><div class="adm-empty">위에서 주제를 고르고 "콘텐츠 만들어줘"를 눌러보세요.</div></div>
   </div>
 
+  <!-- 콘텐츠 관리 (관리자) -->
+  <div class="view" id="view-manage">
+    <div class="admin-banner">⚙ 운영자 전용 — 창고에 저장된 콘텐츠를 관리해요. (영상 교체·삭제)</div>
+    <div class="section-title">콘텐츠 관리</div>
+    <div class="section-sub">저장된 콘텐츠의 영상을 실제 재생되는 걸로 교체하거나, 필요 없는 콘텐츠를 지울 수 있어요. 유튜브 주소를 붙여넣고 "미리보기"로 재생을 확인한 뒤 저장하세요.</div>
+    <div id="manageList"><div class="adm-empty">불러오는 중…</div></div>
+  </div>
+
   <div class="footnote">담아둔 글과 마음의 기록은 안전하게 저장돼요.</div>
 </div><!-- /stage -->
 
@@ -841,6 +876,8 @@
       if (t.dataset.view==="saved") renderSaved();
       if (t.dataset.view==="trace") renderTrace();
       if (t.dataset.view==="reactions") renderReactions();
+      if (t.dataset.view==="manage") renderManage();
+      if (t.dataset.view==="manage") renderManage();
       window.scrollTo({ top: 0, behavior: "instant" });
     };
   });
@@ -908,6 +945,89 @@
     if (fb) fb.classList.remove("on");                        // 일단 숨기고, 재생 불가면 onError가 다시 표시
     ytPlayer.cueVideoById(id);                                // 썸네일+재생버튼만 (자동재생 안 함)
   }
+
+  // ── 콘텐츠 관리 (관리자 전용) ──────────────────────────────
+  // 유튜브 주소/ID에서 11자리 영상 ID만 뽑아냄
+  function extractVideoId(url){
+    if(!url) return "";
+    url = String(url).trim();
+    if (/^[\w-]{11}$/.test(url)) return url;
+    const m = url.match(/(?:youtu\.be\/|[?&]v=|embed\/|shorts\/|\/v\/)([\w-]{11})/);
+    return m ? m[1] : "";
+  }
+  function mgEsc(s){
+    return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+  async function renderManage(){
+    const box = $("manageList");
+    if (!box) return;
+    if (!isAdmin()){ box.innerHTML = '<div class="adm-empty">관리자만 볼 수 있어요.</div>'; return; }
+    box.innerHTML = '<div class="adm-loading">불러오는 중…</div>';
+    try {
+      const { data, error } = await odoDB.from("odo_contents").select("*").order("id");
+      if (error || !data || !data.length){ box.innerHTML = '<div class="adm-empty">저장된 콘텐츠가 없어요.</div>'; return; }
+      box.innerHTML = data.map(r => {
+        const raw = (r.quote||"").replace(/\\n/g," ");
+        const q = mgEsc(raw.slice(0,42)) + (raw.length>42 ? "…" : "");
+        const cur = r.video_id ? mgEsc(r.video_id) : "(없음)";
+        const vt = r.video_title ? " · 검색어: " + mgEsc(r.video_title) : "";
+        return '<div class="mg-card" id="mg_'+r.id+'">'
+          + '<div class="mg-q">'+q+'</div>'
+          + '<div class="mg-a">— '+mgEsc(r.author||"")+' · '+mgEsc(r.kind||"normal")+'</div>'
+          + '<div class="mg-cur">현재 영상: <b>'+cur+'</b>'+vt+'</div>'
+          + '<div class="mg-row">'
+          +   '<input type="text" id="mgUrl_'+r.id+'" placeholder="유튜브 주소 붙여넣기">'
+          +   '<button class="mg-btn" onclick="mgPreview(\''+r.id+'\')">미리보기</button>'
+          +   '<button class="mg-btn save" onclick="mgSave(\''+r.id+'\')">영상 저장</button>'
+          + '</div>'
+          + '<div class="mg-frame" id="mgFrame_'+r.id+'"></div>'
+          + '<div class="mg-row"><button class="mg-btn del" onclick="mgDelete(\''+r.id+'\')">이 콘텐츠 삭제</button></div>'
+          + '</div>';
+      }).join("");
+    } catch(e){
+      box.innerHTML = '<div class="adm-empty">불러오지 못했어요.</div>';
+    }
+  }
+  window.mgPreview = function(id){
+    const el = $("mgUrl_"+id);
+    const vid = extractVideoId(el ? el.value : "");
+    const frame = $("mgFrame_"+id);
+    if (!vid){ alert("유튜브 주소를 확인해 주세요."); return; }
+    if (frame){ frame.innerHTML = '<iframe src="https://www.youtube.com/embed/'+vid+'?rel=0" allowfullscreen></iframe>'; frame.classList.add("on"); }
+  };
+  window.mgSave = async function(id){
+    const el = $("mgUrl_"+id);
+    const vid = extractVideoId(el ? el.value : "");
+    if (!vid){ alert("유튜브 주소를 확인해 주세요."); return; }
+    try {
+      const { data: { session } } = await odoDB.auth.getSession();
+      if (!session){ alert("로그인이 필요해요."); return; }
+      const res = await fetch("/api/admin-update-content", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+session.access_token },
+        body: JSON.stringify({ action:"update", id, fields:{ video_id: vid } })
+      });
+      const out = await res.json().catch(()=>({}));
+      if (!res.ok || !out.ok){ alert("저장 실패: "+(out.error||res.status)); return; }
+      alert("영상이 교체됐어요.");
+      renderManage();
+    } catch(e){ alert("저장 중 오류가 났어요."); }
+  };
+  window.mgDelete = async function(id){
+    if (!confirm("이 콘텐츠를 정말 삭제할까요? 되돌릴 수 없어요.")) return;
+    try {
+      const { data: { session } } = await odoDB.auth.getSession();
+      if (!session){ alert("로그인이 필요해요."); return; }
+      const res = await fetch("/api/admin-update-content", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+session.access_token },
+        body: JSON.stringify({ action:"delete", id })
+      });
+      const out = await res.json().catch(()=>({}));
+      if (!res.ok || !out.ok){ alert("삭제 실패: "+(out.error||res.status)); return; }
+      renderManage();
+    } catch(e){ alert("삭제 중 오류가 났어요."); }
+  };
 
   function show(useMood){
     const {p,i}=pick(useMood); current={p,i};
@@ -1595,6 +1715,87 @@
   odoDB.auth.onAuthStateChange((event, session) => {
     if (session && session.user && !loggedIn) checkSession();
   });
+
+  // ===== 콘텐츠 관리 (관리자 전용) =====
+  // 유튜브 주소/ID 어디서든 11자리 영상 ID를 뽑아냄
+  function extractVideoId(url){
+    if(!url) return "";
+    url = String(url).trim();
+    if (/^[\w-]{11}$/.test(url)) return url;
+    const m = url.match(/(?:youtu\.be\/|[?&]v=|embed\/|shorts\/)([\w-]{11})/);
+    return m ? m[1] : "";
+  }
+
+  async function renderManage(){
+    const box = $("manageList");
+    if (!box) return;
+    if (!isAdmin()){ box.innerHTML = '<div class="adm-empty">관리자만 볼 수 있어요.</div>'; return; }
+    box.innerHTML = '<div class="adm-empty">불러오는 중…</div>';
+    let data, error;
+    try { ({ data, error } = await odoDB.from("odo_contents").select("*").order("id")); }
+    catch(e){ error = e; }
+    if (error || !data || !data.length){ box.innerHTML = '<div class="adm-empty">콘텐츠를 불러오지 못했어요.</div>'; return; }
+    const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    box.innerHTML = data.map(r => {
+      const raw = (r.quote||"").replace(/\\n/g," ");
+      const q = esc(raw.slice(0,40)) + (raw.length>40?"…":"");
+      return '<div class="mg-card" id="mg_'+r.id+'">'
+        + '<div class="mg-q">'+q+'</div>'
+        + '<div class="mg-a">— '+esc(r.author)+' · '+esc(r.kind||"normal")+'</div>'
+        + '<div class="mg-cur">현재 영상: <b>'+esc(r.video_id||"(없음)")+'</b>'+(r.video_title?' · 검색어: '+esc(r.video_title):'')+'</div>'
+        + '<div class="mg-row">'
+        +   '<input type="text" id="mgUrl_'+r.id+'" placeholder="유튜브 주소 붙여넣기">'
+        +   '<button class="mg-btn" onclick="mgPreview(\''+r.id+'\')">미리보기</button>'
+        +   '<button class="mg-btn save" onclick="mgSave(\''+r.id+'\')">영상 저장</button>'
+        + '</div>'
+        + '<div class="mg-frame" id="mgFrame_'+r.id+'"></div>'
+        + '<div class="mg-row"><button class="mg-btn del" onclick="mgDelete(\''+r.id+'\')">이 콘텐츠 삭제</button></div>'
+        + '</div>';
+    }).join("");
+  }
+
+  window.mgPreview = function(id){
+    const el = $("mgUrl_"+id);
+    const vid = extractVideoId(el ? el.value : "");
+    const frame = $("mgFrame_"+id);
+    if (!vid){ alert("유튜브 주소를 확인해 주세요."); return; }
+    if (frame){ frame.innerHTML = '<iframe src="https://www.youtube.com/embed/'+vid+'?rel=0" allowfullscreen></iframe>'; frame.classList.add("on"); }
+  };
+
+  window.mgSave = async function(id){
+    const el = $("mgUrl_"+id);
+    const vid = extractVideoId(el ? el.value : "");
+    if (!vid){ alert("유튜브 주소를 확인해 주세요."); return; }
+    try {
+      const { data:{ session } } = await odoDB.auth.getSession();
+      if (!session){ alert("로그인이 필요해요."); return; }
+      const res = await fetch("/api/admin-update-content", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+session.access_token },
+        body: JSON.stringify({ action:"update", id, fields:{ video_id: vid } })
+      });
+      const out = await res.json().catch(()=>({}));
+      if (!res.ok || !out.ok){ alert("저장 실패: "+(out.error||res.status)); return; }
+      alert("영상이 교체됐어요.");
+      renderManage();
+    } catch(e){ alert("저장 중 오류가 났어요."); }
+  };
+
+  window.mgDelete = async function(id){
+    if (!confirm("이 콘텐츠를 정말 삭제할까요? 되돌릴 수 없어요.")) return;
+    try {
+      const { data:{ session } } = await odoDB.auth.getSession();
+      if (!session){ alert("로그인이 필요해요."); return; }
+      const res = await fetch("/api/admin-update-content", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+session.access_token },
+        body: JSON.stringify({ action:"delete", id })
+      });
+      const out = await res.json().catch(()=>({}));
+      if (!res.ok || !out.ok){ alert("삭제 실패: "+(out.error||res.status)); return; }
+      renderManage();
+    } catch(e){ alert("삭제 중 오류가 났어요."); }
+  };
 
   async function loadFromWarehouse(){
     try {
