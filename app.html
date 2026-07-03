@@ -1737,6 +1737,7 @@
     let html = '<div class="mg-top">'
       + '<span id="mgCount">총 <b>'+data.length+'</b>개</span>'
       + '<button class="mg-btn" id="mgCheckBtn" onclick="mgCheckAll()">⚠ 재생 안 되는 영상 찾기</button>'
+      + '<button class="mg-btn save" id="mgFillBtn" onclick="mgFillBad()" style="display:none">정상 영상으로 자동 채우기</button>'
       + '</div>'
       + '<div id="mgSummary" class="mg-summary"></div>';
     html += data.map(r => {
@@ -1843,6 +1844,7 @@
     if(btn){ btn.disabled=true; btn.textContent="플레이어 준비 중…"; }
     await mgInitChecker();
     let bad=0, unknown=0;
+    const goodVids=[], badIds=[];
     for(let i=0;i<cards.length;i++){
       const c=cards[i];
       const vid=c.getAttribute("data-vid");
@@ -1852,13 +1854,46 @@
       let r="bad";
       if(vid) r=await mgCheckOne(vid);
       if(st){
-        if(r==="ok"){ st.textContent="✅ 정상"; st.className="mg-status ok"; c.classList.remove("bad"); }
-        else if(r==="bad"){ st.textContent="⚠ 재생 불가"; st.className="mg-status bad"; c.classList.add("bad"); bad++; }
+        if(r==="ok"){ st.textContent="✅ 정상"; st.className="mg-status ok"; c.classList.remove("bad"); if(vid) goodVids.push(vid); }
+        else if(r==="bad"){ st.textContent="⚠ 재생 불가"; st.className="mg-status bad"; c.classList.add("bad"); badIds.push(c.id.replace("mg_","")); bad++; }
         else { st.textContent="? 확인 필요"; st.className="mg-status warn"; unknown++; }
       }
     }
+    // 중복 제거한 정상 영상 목록
+    window.mgGoodVids = [...new Set(goodVids)];
+    window.mgBadIds = badIds;
     if(btn){ btn.disabled=false; btn.textContent="다시 검사"; }
+    const fillBtn=$("mgFillBtn");
+    if(fillBtn) fillBtn.style.display = (bad>0 && window.mgGoodVids.length>0) ? "" : "none";
     if(sum) sum.textContent="검사 완료 — 재생 불가 "+bad+"개"+(unknown?(", 확인 필요 "+unknown+"개"):"")+". 빨간 카드의 영상을 교체하세요.";
+  };
+
+  // 재생 불가 콘텐츠를, 이미 정상으로 확인된 영상들로 돌려가며 자동 교체
+  window.mgFillBad = async function(){
+    const goods = window.mgGoodVids || [], bads = window.mgBadIds || [];
+    if(!goods.length){ alert("정상 영상이 없어 자동 채우기를 할 수 없어요. 먼저 검사하거나 직접 하나 넣어주세요."); return; }
+    if(!bads.length){ alert("교체할 재생 불가 콘텐츠가 없어요."); return; }
+    if(!confirm("재생 불가 "+bads.length+"개를, 정상 영상 "+goods.length+"개로 돌려가며 채울까요?")) return;
+    const btn=$("mgFillBtn"); if(btn){ btn.disabled=true; btn.textContent="교체 중…"; }
+    let session;
+    try { ({ data:{ session } } = await odoDB.auth.getSession()); } catch(e){}
+    if(!session){ alert("로그인이 필요해요."); if(btn){ btn.disabled=false; btn.textContent="정상 영상으로 자동 채우기"; } return; }
+    let ok=0;
+    for(let i=0;i<bads.length;i++){
+      const vid = goods[i % goods.length];
+      if(btn) btn.textContent="교체 중… ("+(i+1)+"/"+bads.length+")";
+      try{
+        const res=await fetch("/api/admin-update-content",{
+          method:"POST",
+          headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+session.access_token },
+          body:JSON.stringify({ action:"update", id:bads[i], fields:{ video_id:vid } })
+        });
+        const out=await res.json().catch(()=>({}));
+        if(res.ok && out.ok) ok++;
+      }catch(e){}
+    }
+    alert(ok+"개를 정상 영상으로 교체했어요.");
+    renderManage();
   };
 
   async function loadFromWarehouse(){
