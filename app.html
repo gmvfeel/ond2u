@@ -324,6 +324,12 @@
   .mg-status.bad { color:#c62828; background:#ffebee; }
   .mg-status.warn { color:#b26a00; background:#fff3e0; }
   .mg-card.bad { border-color:#e0a0a0; box-shadow:0 0 0 1px #e0a0a0; }
+  /* 회원 관리 */
+  .mb-card { background:var(--white); border:1px solid var(--plum-line); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+  .mb-name { font-size:15px; font-weight:700; color:var(--ink); }
+  .mb-email { font-size:12px; color:var(--ink-soft); margin-top:2px; word-break:break-all; }
+  .mb-meta { font-size:12px; color:var(--ink-faint); margin-top:8px; display:flex; gap:6px; flex-wrap:wrap; }
+  .mb-meta span { background:var(--plum-soft); color:var(--plum-deep); border-radius:6px; padding:2px 8px; }
   .admin-banner { font-size:12px; color:var(--plum-deep); background:var(--plum-soft); border-radius:12px; padding:12px 16px; margin-bottom:22px; line-height:1.6; }
   .maker { background:var(--white); border:1px solid var(--plum-line); border-radius:18px; padding:20px 22px; margin-bottom:24px; }
   .maker-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
@@ -455,6 +461,7 @@
     <button class="tab" data-view="reactions">받은 반응</button>
     <button class="tab tab-admin" data-view="admin">⚙ 콘텐츠 공장</button>
     <button class="tab tab-admin" data-view="manage">⚙ 콘텐츠 관리</button>
+    <button class="tab tab-admin" data-view="members">⚙ 회원 관리</button>
   </div>
   <div class="nav-auth" id="navAuth"></div>
 </nav>
@@ -703,6 +710,14 @@
     <div id="manageList"><div class="adm-empty">불러오는 중…</div></div>
   </div>
 
+  <!-- 회원 관리 (관리자) -->
+  <div class="view" id="view-members">
+    <div class="admin-banner">⚙ 운영자 전용 — 가입한 회원들을 볼 수 있어요.</div>
+    <div class="section-title">회원 관리</div>
+    <div class="section-sub">최근 방문한 순서로 보여줘요. 이름·이메일·마지막 방문·연속기록·보내는 사람 수를 확인할 수 있어요.</div>
+    <div id="membersList"><div class="adm-empty">불러오는 중…</div></div>
+  </div>
+
   <div class="footnote">담아둔 글과 마음의 기록은 안전하게 저장돼요.</div>
 </div><!-- /stage -->
 
@@ -875,7 +890,7 @@
       if (t.dataset.view==="trace") renderTrace();
       if (t.dataset.view==="reactions") renderReactions();
       if (t.dataset.view==="manage") renderManage();
-      if (t.dataset.view==="manage") renderManage();
+      if (t.dataset.view==="members") renderMembers();
       window.scrollTo({ top: 0, behavior: "instant" });
     };
   });
@@ -1801,6 +1816,38 @@
       renderManage();
     } catch(e){ alert("삭제 중 오류가 났어요."); }
   };
+
+  // ===== 회원 관리 (관리자 전용) =====
+  async function renderMembers(){
+    const box = $("membersList");
+    if (!box) return;
+    if (!isAdmin()){ box.innerHTML = '<div class="adm-empty">관리자만 볼 수 있어요.</div>'; return; }
+    box.innerHTML = '<div class="adm-empty">불러오는 중…</div>';
+    let session;
+    try { ({ data:{ session } } = await odoDB.auth.getSession()); } catch(e){}
+    if (!session){ box.innerHTML = '<div class="adm-empty">로그인이 필요해요.</div>'; return; }
+    let out;
+    try {
+      const res = await fetch("/api/admin-list-members", { headers:{ "Authorization":"Bearer "+session.access_token } });
+      out = await res.json().catch(()=>({}));
+    } catch(e){ box.innerHTML = '<div class="adm-empty">불러오지 못했어요.</div>'; return; }
+    if (!out || !out.ok || !Array.isArray(out.members)){ box.innerHTML = '<div class="adm-empty">'+((out&&out.error)||"불러오지 못했어요.")+'</div>'; return; }
+    if (!out.members.length){ box.innerHTML = '<div class="adm-empty">아직 가입한 회원이 없어요.</div>'; return; }
+    const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    let html = '<div class="mg-top"><span id="mgCount">총 <b>'+out.members.length+'</b>명</span></div>';
+    html += out.members.map(u => {
+      const bits = [];
+      bits.push('마지막 방문 '+(u.last_visit || '기록 없음'));
+      bits.push('연속 '+(u.streak||0)+'일');
+      bits.push('보내는 사람 '+(u.recipient_count||0)+'명');
+      return '<div class="mb-card">'
+        + '<div class="mb-name">'+esc(u.display_name||"(이름 없음)")+'</div>'
+        + '<div class="mb-email">'+esc(u.email||"")+'</div>'
+        + '<div class="mb-meta">'+bits.map(b=>'<span>'+esc(b)+'</span>').join("")+'</div>'
+        + '</div>';
+    }).join("");
+    box.innerHTML = html;
+  }
 
   // ── 재생 불가 영상 자동 검사 (화면 밖 숨은 플레이어로 하나씩 확인) ──
   let mgChecker=null, mgCheckerReady=false, mgResultCb=null;
