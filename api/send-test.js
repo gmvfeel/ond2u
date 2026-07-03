@@ -172,7 +172,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId 
     bibleBlock =
       '<div style="margin-top:34px; padding-top:28px; border-top:1px solid #eae7e3;">' +
         '<div style="font-size:11px; letter-spacing:0.08em; color:#5a4a7a; font-weight:700; text-align:center; margin-bottom:16px;">✝ 하나님께서 오늘 주신 말씀입니다</div>' +
-        '<div style="font-size:22px; line-height:1.5; font-weight:800; text-align:center; color:#2b2730; letter-spacing:-0.035em;">' + bQuote + '</div>' +
+        '<div style="font-size:22px; line-height:1.5; font-weight:800; text-align:center; color:#2b2730; letter-spacing:-0.035em; word-break:keep-all;">' + bQuote + '</div>' +
         (bible.quote_en ? '<div style="font-size:14px; font-style:italic; color:#7a7580; text-align:center; margin-top:12px;">' + bible.quote_en + '</div>' : "") +
         '<div style="font-size:13px; color:#7a7580; text-align:center; margin-top:14px;">— ' + (bible.author || "") + '</div>' +
         '<div style="margin-top:20px;">' + bParas + '</div>' +
@@ -183,7 +183,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId 
 '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">' +
 '</head>' +
 '<body style="margin:0; padding:0; background:#f3f1ef; font-family:' + font + '; -webkit-font-smoothing:antialiased;">' +
-'<div style="max-width:560px; margin:0 auto; padding:40px 20px 60px; font-family:' + font + ';">' +
+'<div style="max-width:560px; margin:0 auto; padding:40px 20px 60px; word-break:keep-all; font-family:' + font + ';">' +
 
   '<div style="background:#ffffff; border:1px solid #ddd8d3; border-radius:16px; overflow:hidden; box-shadow:0 10px 40px rgba(70,50,70,.08);">' +
 
@@ -205,7 +205,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId 
       '<div style="width:30px; height:3px; background:#5a4a7a; opacity:.5; margin:0 auto 32px; border-radius:3px;"></div>' +
 
       '<div style="font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:#b0aab6; text-align:center; margin-bottom:16px;">오늘의 한 줄</div>' +
-      '<div style="font-size:26px; line-height:1.5; font-weight:800; text-align:center; color:#2b2730; letter-spacing:-0.035em;">' + brQuote + '</div>' +
+      '<div style="font-size:26px; line-height:1.5; font-weight:800; text-align:center; color:#2b2730; letter-spacing:-0.035em; word-break:keep-all;">' + brQuote + '</div>' +
       (normal.quote_en ? '<div style="font-size:14px; font-style:italic; color:#7a7580; text-align:center; margin-top:12px; line-height:1.5;">' + normal.quote_en + '</div>' : "") +
       '<div style="font-size:13px; color:#7a7580; text-align:center; margin-top:16px;">— ' + (normal.author || "") + '</div>' +
 
