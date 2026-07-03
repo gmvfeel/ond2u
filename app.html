@@ -22,9 +22,9 @@
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: 'Pretendard', -apple-system, sans-serif; background: var(--paper); color: var(--ink);
+    font-family: 'Pretendard', -apple-system, sans-serif; background: var(--white); color: var(--ink);
     -webkit-font-smoothing: antialiased; min-height: 100vh;
-    padding: 40px 22px 90px; letter-spacing: -0.01em; overflow-y: scroll;
+    padding: 40px 22px 90px; letter-spacing: -0.01em; overflow-y: scroll; word-break: keep-all;
   }
   .layout { max-width: 1120px; margin: 0 auto; display: flex; gap: 32px; align-items: flex-start; justify-content: center; }
   .stage { width: 100%; max-width: 600px; flex-shrink: 0; }
@@ -123,6 +123,9 @@
   .care-body { font-size:14px; line-height:1.85; color:var(--ink-2); }
 
   .video-wrap { margin-top:16px; }
+  .video-head { text-align:center; margin-bottom:14px; }
+  .video-head .vh-title { font-size:15px; font-weight:700; color:var(--ink); letter-spacing:-0.02em; }
+  .video-head .vh-sub { font-size:13px; color:var(--plum); margin-top:5px; }
   .player { position:relative; aspect-ratio:16/9; border-radius:18px; overflow:hidden; background:#000; }
   .player iframe { width:100%; height:100%; border:0; display:block; }
   .vcap { margin-top:14px; text-align:center; }
@@ -389,7 +392,7 @@
   .fc-soon { display:inline-block; font-size:9px; color:var(--plum); background:var(--plum-soft); border-radius:20px; padding:1px 6px; margin-left:auto; }
 
   /* 카드 공통 드롭섀도우 (배경에서 살짝 떠 보이게) */
-  .letter-card, .essay, .care, .react-wrap, .mood, .family-list, .player { box-shadow: 0 2px 8px rgba(80,60,70,.05), 0 14px 30px rgba(80,60,70,.07); }
+  .letter-card, .essay, .care, .react-wrap, .mood, .family-list, .player { box-shadow: 0 4px 12px rgba(80,60,70,.09), 0 20px 44px rgba(80,60,70,.13); }
   .family-item:hover .fc-soon { background:var(--white); }
   .family-item.soon { pointer-events:none; opacity:.5; }
 
@@ -534,17 +537,16 @@
       </div>
 
       <div class="video-wrap">
+        <div class="video-head">
+          <div class="vh-title">오늘 추천해 드리는 영상이에요</div>
+          <div class="vh-sub">오늘도 당신의 최고가 되길</div>
+        </div>
         <div class="player">
           <div id="player"></div>
           <div class="video-fallback" id="videoFallback">
             <div class="vf-ic">♪</div>
             <div class="vf-text">잔잔한 음악을 준비 중이에요</div>
           </div>
-        </div>
-        <div class="vcap">
-          <div class="vt" id="videoTitle"></div>
-          <div class="vs" id="videoSub"></div>
-          <a class="fallback" id="fallback" href="#" target="_blank" rel="noopener">유튜브에서 보기 →</a>
         </div>
       </div>
 
@@ -1088,8 +1090,6 @@
       $("careTitle").textContent=p.careTitle||"";
       $("careBody").textContent=p.careBody||"";
       loadVideo(p.videoId);
-      $("fallback").href="https://www.youtube.com/watch?v="+p.videoId;
-      $("videoTitle").textContent=p.videoTitle; $("videoSub").textContent=p.videoSub;
       $("content").classList.remove("fade"); $("content2").classList.remove("fade");
     },450);
   }
