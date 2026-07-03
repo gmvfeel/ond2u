@@ -1439,6 +1439,12 @@
         renderStreak(streak);
       } catch(e){ console.log("연속기록 처리 오류:", e); }
 
+      // 로그인 방식 기록 (구글/카카오/네이버/이메일)
+      try {
+        const prov = (currentUser.app_metadata && currentUser.app_metadata.provider) || "";
+        if (prov) await odoDB.from("odo_users").update({ provider: prov }).eq("id", currentUser.id);
+      } catch(e){}
+
       applyLoggedIn(googleName);
     }
   }
@@ -1836,7 +1842,10 @@
     const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
     let html = '<div class="mg-top"><span id="mgCount">총 <b>'+out.members.length+'</b>명</span></div>';
     html += out.members.map(u => {
+      const provMap = { google:"구글", kakao:"카카오", naver:"네이버", email:"이메일" };
+      const prov = provMap[u.provider] || u.provider || "";
       const bits = [];
+      if (prov) bits.push(prov+" 로그인");
       bits.push('마지막 방문 '+(u.last_visit || '기록 없음'));
       bits.push('연속 '+(u.streak||0)+'일');
       bits.push('보내는 사람 '+(u.recipient_count||0)+'명');
