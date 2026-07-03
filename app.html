@@ -293,8 +293,9 @@
   .reaction .rcquote { font-size:13px; color:var(--ink-soft); margin-top:10px; padding-top:10px; border-top:1px solid var(--line); line-height:1.5; }
 
   /* 콘텐츠 공장 (관리자) */
-  .tab-admin { color:var(--ink-faint); font-size:13px; }
+  .tab-admin { color:var(--ink-faint); font-size:13px; display:none; }
   .tab-admin.on { color:var(--plum-deep); }
+  body.is-admin .tab-admin { display:inline-block; }
   .admin-banner { font-size:12px; color:var(--plum-deep); background:var(--plum-soft); border-radius:12px; padding:12px 16px; margin-bottom:22px; line-height:1.6; }
   .maker { background:var(--white); border:1px solid var(--plum-line); border-radius:18px; padding:20px 22px; margin-bottom:24px; }
   .maker-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
@@ -1135,6 +1136,16 @@
     }
   }
 
+  // 관리자 여부 (UI 표시용 — 실제 저장/조회는 서버가 다시 확인합니다)
+  const ADMIN_EMAILS_UI = ["cs@wixon.co.kr","cser@wixon.co.kr","wixon@naver.com","wixon@wixon.co.kr"];
+  function isAdmin(){
+    return !!(loggedIn && currentUser && currentUser.email &&
+      ADMIN_EMAILS_UI.includes(currentUser.email.toLowerCase()));
+  }
+  function applyAdminUI(){
+    document.body.classList.toggle("is-admin", isAdmin());
+  }
+
   // 로그인 성공 후 화면 전환
   function applyLoggedIn(name){
     loggedIn = true;
@@ -1152,6 +1163,7 @@
     loadRecipients();
     $("logoutBtn").onclick = () => doLogout();
     renderNavAuth();
+    applyAdminUI();
   }
 
   async function doLogout(){
@@ -1160,6 +1172,7 @@
     saved.length = 0; trace.length = 0; recipients.length = 0;
     renderStreak(null);
     updateFromLine();
+    applyAdminUI();
     renderRecipients();
     $("gate").style.display = "block";
     $("sendPanel").style.display = "none";
