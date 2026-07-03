@@ -437,7 +437,7 @@
     <div class="letter-card">
     <div class="greet-row">
       <div class="season" id="season"></div>
-      <div class="from-line" id="fromLine"><span class="from-badge">윤</span> <b>윤기</b>님이 오늘도 보냅니다</div>
+      <div class="from-line" id="fromLine"><span class="from-badge">오</span> <b>오늘도</b>가 전해요</div>
     </div>
     <div class="sig">오늘도 당신의 최고가 될 겁니다. 힘내세요.</div>
     <div class="divider"></div>
@@ -464,7 +464,7 @@
         <div class="essay">
           <div class="etitle" id="essayTitle"></div>
           <div id="essayBody"></div>
-          <div class="esign" id="essaySign">윤기가 드려요. 오늘도 좋은 하루 되세요 ^^</div>
+          <div class="esign" id="essaySign">오늘도가 전해요. 오늘도 좋은 하루 되세요 ^^</div>
         </div>
       </div>
 
@@ -493,9 +493,9 @@
       </div>
 
       <div class="react-wrap">
-        <div class="rq">윤기님이 보낸 오늘의 한 편, 어떠셨어요?</div>
+        <div class="rq">오늘 받은 한 편, 어떠셨어요?</div>
         <div class="react-btns" id="reactBtns"></div>
-        <div class="react-done" id="reactDone">마음이 윤기님에게 전해졌어요 ♡</div>
+        <div class="react-done" id="reactDone">마음이 잘 전해졌어요 ♡</div>
       </div>
     </div>
 
@@ -910,7 +910,7 @@
       objectType: 'feed',
       content: {
         title: q,
-        description: josaGaI(senderName || '윤기') + ' 보내는 편지' + (a ? '  ·  ' + a : ''),
+        description: josaGaI(senderName || '오늘도') + ' 보내는 편지' + (a ? '  ·  ' + a : ''),
         imageUrl: 'https://ond2u.vercel.app/og3.png',
         link: { mobileWebUrl: 'https://ond2u.vercel.app/app.html', webUrl: 'https://ond2u.vercel.app/app.html' }
       },
@@ -1117,11 +1117,22 @@
     return name + (((c-0xAC00)%28!==0) ? "이" : "가");
   }
   function updateFromLine(){
-    const nm = senderName || "윤기";
     const fl = $("fromLine");
-    if (fl) fl.innerHTML = '<span class="from-badge">'+nm.charAt(0)+'</span> <b>'+nm+'</b>님이 오늘도 보냅니다';
     const es = $("essaySign");
-    if (es) es.textContent = josaGaI(nm) + " 드려요. 오늘도 좋은 하루 되세요 ^^";
+    const rq = document.querySelector(".rq");
+    const rd = $("reactDone");
+    if (loggedIn && senderName) {
+      const nm = senderName;
+      if (fl) fl.innerHTML = '<span class="from-badge">'+nm.charAt(0)+'</span> <b>'+nm+'</b>님이 오늘도 보냅니다';
+      if (es) es.textContent = josaGaI(nm) + " 드려요. 오늘도 좋은 하루 되세요 ^^";
+      if (rq) rq.textContent = nm + "님이 보낸 오늘의 한 편, 어떠셨어요?";
+      if (rd) rd.textContent = "마음이 " + nm + "님에게 전해졌어요 ♡";
+    } else {
+      if (fl) fl.innerHTML = '<span class="from-badge">오</span> <b>오늘도</b>가 전해요';
+      if (es) es.textContent = "오늘도가 전해요. 오늘도 좋은 하루 되세요 ^^";
+      if (rq) rq.textContent = "오늘 받은 한 편, 어떠셨어요?";
+      if (rd) rd.textContent = "마음이 잘 전해졌어요 ♡";
+    }
   }
 
   // 로그인 성공 후 화면 전환
@@ -1147,6 +1158,8 @@
     await odoDB.auth.signOut();
     loggedIn = false; currentUser = null; senderName = "";
     saved.length = 0; trace.length = 0; recipients.length = 0;
+    renderStreak(null);
+    updateFromLine();
     renderRecipients();
     $("gate").style.display = "block";
     $("sendPanel").style.display = "none";
@@ -1170,7 +1183,7 @@
   // 보내는 이름 정하기/바꾸기
   async function editSenderName(){
     const cur = senderName || "";
-    const input = prompt("아끼는 사람에게 편지를 보낼 때, 받는 사람 화면에 표시될 이름이에요.\n(예: 윤기, 아빠, 김선생님)", cur);
+    const input = prompt("아끼는 사람에게 편지를 보낼 때, 받는 사람 화면에 표시될 이름이에요.\n(예: 아빠, 엄마, 김선생님)", cur);
     if (input === null) return;            // 취소
     const clean = input.trim();
     if (!clean) { alert("이름을 한 글자 이상 적어주세요."); return; }
@@ -1221,6 +1234,30 @@
             { id: currentUser.id, display_name: googleName, email: currentUser.email }, { onConflict: "id" });
         }
       } catch(e){ console.log("프로필 불러오기 오류:", e); senderName = googleName; }
+
+      // ── 연속 방문 기록 (오늘 처음 들어왔으면 갱신) ──
+      try {
+        const kst = new Date(Date.now() + 9*3600*1000);      // 한국 시각 기준
+        const todayStr = kst.toISOString().slice(0,10);       // 오늘  YYYY-MM-DD
+        const yest = new Date(kst); yest.setDate(yest.getDate()-1);
+        const yestStr = yest.toISOString().slice(0,10);       // 어제
+
+        const { data: vrow } = await odoDB.from("odo_users")
+          .select("last_visit, streak").eq("id", currentUser.id).maybeSingle();
+        let streak = (vrow && vrow.streak) || 0;
+        const last = vrow && vrow.last_visit;
+
+        if (last === todayStr) {
+          if (streak < 1) streak = 1;                          // 오늘 이미 방문
+        } else {
+          streak = (last === yestStr) ? streak + 1 : 1;        // 어제 왔으면 +1, 아니면 새로 시작
+          await odoDB.from("odo_users")
+            .update({ last_visit: todayStr, streak })
+            .eq("id", currentUser.id);
+        }
+        renderStreak(streak);
+      } catch(e){ console.log("연속기록 처리 오류:", e); }
+
       applyLoggedIn(googleName);
     }
   }
@@ -1329,9 +1366,16 @@
   }
 
   /* ── 작은 온기: 연속 기록 · 계절 인사 · 첫 방문 환영 ── */
-  // 연속 기록 (데모: 3일째로 표시)
-  const streakDays = 3;
-  $("streak").innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M12 20c0-5 0-7-3-9"/><path d="M12 11c0-3 2-5 6-5 0 4-2 6-6 5z"/></svg>' + streakDays + "일째 오늘도와 함께하고 있어요";
+  // 연속 기록 (실제 방문 기준 — checkSession에서 계산해 renderStreak를 부릅니다)
+  function renderStreak(days){
+    const el = $("streak");
+    const wrap = el ? el.parentElement : null;   // .streak-wrap
+    if (!days || days < 1) { if (wrap) wrap.style.display = "none"; return; }
+    if (wrap) wrap.style.display = "";
+    el.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M12 20c0-5 0-7-3-9"/><path d="M12 11c0-3 2-5 6-5 0 4-2 6-6 5z"/></svg>' + days + "일째 오늘도와 함께하고 있어요";
+  }
+  // 로그인 전에는 숨겨둡니다 (로그인해야 기록이 시작돼요)
+  renderStreak(null);
 
   // 계절/시간 인사
   (function(){
