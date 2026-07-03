@@ -656,7 +656,7 @@
 
         <div class="me-toggle-row">
           <span>매일 나에게 받기</span>
-          <button class="toggle on" id="meToggle" aria-label="매일 받기 켜기/끄기"><span class="knob"></span></button>
+          <button class="toggle" id="meToggle" aria-label="매일 받기 켜기/끄기"><span class="knob"></span></button>
         </div>
 
         <div class="field" id="meTimeField">
@@ -1282,9 +1282,23 @@
       const { data, error } = await odoDB.from("odo_recipients").select("*").order("created_at", { ascending: true });
       if(error || !data) return;
       recipients.length = 0;
+      const myEmail = currentUser && currentUser.email;
+      let selfRow = null;
       data.forEach(row=>{
+        if(myEmail && row.email === myEmail){ selfRow = row; return; }  // 내 것은 목록에서 빼고 토글로 관리
         recipients.push({ name:row.name, email:row.email, times:row.send_times||["아침 8시"], tone:row.tone, bible:(row.kind==="bible"), rowId:row.id });
       });
+      // "나에게 받기" 상태 복원
+      const meToggleEl = $("meToggle");
+      if(selfRow){
+        meToggleEl.classList.add("on");
+        myPickedTimes = selfRow.send_times || ["아침 8시"];
+      } else {
+        meToggleEl.classList.remove("on");
+      }
+      $("meTimeField").style.opacity = selfRow ? "1" : "0.4";
+      $("meTimeField").style.pointerEvents = selfRow ? "auto" : "none";
+      refreshMeTimeChips();
       renderRecipients();
     } catch(e){ console.log("수신자 불러오기 오류:", e); }
   }
@@ -1547,13 +1561,33 @@
   MY_TIMES.forEach(t => {
     const b=document.createElement("button"); b.className="tchip"+(myPickedTimes.includes(t)?" on":""); b.textContent=t;
     b.onclick=()=>{ if(myPickedTimes.includes(t)){ myPickedTimes=myPickedTimes.filter(x=>x!==t); b.classList.remove("on"); }
-      else { myPickedTimes.push(t); b.classList.add("on"); } };
+      else { myPickedTimes.push(t); b.classList.add("on"); }
+      if($("meToggle").classList.contains("on")) saveSelfRecipient(true);  // 켜진 상태면 바뀐 시각 반영
+    };
     meTimeWrap.appendChild(b);
   });
-  $("meToggle").onclick = () => {
+  // 시각 칩 UI를 myPickedTimes에 맞게 갱신
+  function refreshMeTimeChips(){
+    meTimeWrap.querySelectorAll(".tchip").forEach(b=>{ b.classList.toggle("on", myPickedTimes.includes(b.textContent)); });
+  }
+  // "나에게 받기"를 실제 발송 명단에 반영 (내 이메일을 '나에게'로 넣거나 뺌)
+  async function saveSelfRecipient(on){
+    if(!loggedIn || !currentUser || !currentUser.email) return;
+    const myEmail = currentUser.email;
+    try {
+      // 기존 '나' 행 제거 (중복 방지)
+      await odoDB.from("odo_recipients").delete().eq("sender_id", currentUser.id).eq("email", myEmail);
+      if(on){
+        const times = myPickedTimes.length ? myPickedTimes : ["아침 8시"];
+        await odoDB.from("odo_recipients").insert({ sender_id: currentUser.id, email: myEmail, name: "나에게", send_times: times, kind: "normal" });
+      }
+    } catch(e){ console.log("나에게 받기 저장 오류:", e); }
+  }
+  $("meToggle").onclick = async () => {
     const on = $("meToggle").classList.toggle("on");
     $("meTimeField").style.opacity = on ? "1" : "0.4";
     $("meTimeField").style.pointerEvents = on ? "auto" : "none";
+    await saveSelfRecipient(on);
   };
 
   /* ── 받은 반응 (창고 odo_reactions 실데이터) ── */
