@@ -77,6 +77,7 @@ export default async function handler(req, res) {
       email: u.email || "",
       last_visit: u.last_visit || null,
       streak: u.streak || 0,
+      provider: u.provider || "",
       created_at: u.created_at || null,
       recipient_count: counts[u.id] || 0
     }));
