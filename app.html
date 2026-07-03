@@ -1220,7 +1220,35 @@
     const redirectUri = encodeURIComponent("https://ond2u.vercel.app/api/naver-callback");
     window.location.href = "https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=1b9f9_YPgdsQEBOGd0RU&redirect_uri=" + redirectUri + "&state=" + state;
   };
-  $("loginBtn").onclick = () => alert("지금은 구글 로그인을 이용해 주세요. (이메일 로그인은 준비 중이에요.)");
+  $("loginBtn").onclick = async () => {
+    const email = $("loginEmail").value.trim();
+    const pw = $("loginPw").value;
+    if (!email || !pw) { alert("이메일과 비밀번호를 입력해 주세요."); return; }
+    if (pw.length < 6) { alert("비밀번호는 6자 이상으로 입력해 주세요."); return; }
+    const btn = $("loginBtn");
+    btn.disabled = true; btn.textContent = "잠시만요...";
+    try {
+      // 먼저 로그인 시도
+      let { error } = await odoDB.auth.signInWithPassword({ email, password: pw });
+      if (error) {
+        // 로그인 실패 → 가입 시도
+        const { data: signData, error: signErr } = await odoDB.auth.signUp({ email, password: pw });
+        if (signErr) {
+          if (/already/i.test(signErr.message)) alert("비밀번호가 맞지 않아요. 다시 확인해 주세요.");
+          else alert("가입에 실패했어요: " + signErr.message);
+          return;
+        }
+        // 가입 성공 후 바로 로그인
+        const { error: reErr } = await odoDB.auth.signInWithPassword({ email, password: pw });
+        if (reErr) { alert("가입은 됐어요! 다만 이메일 확인이 필요할 수 있어요. 잠시 후 다시 로그인해 주세요."); return; }
+      }
+      // 성공하면 onAuthStateChange가 자동으로 로그인 화면으로 전환
+    } catch (e) {
+      alert("문제가 생겼어요. 잠시 후 다시 시도해 주세요."); console.log("이메일 로그인 오류:", e);
+    } finally {
+      btn.disabled = false; btn.textContent = "로그인 / 가입하기";
+    }
+  };
 
   /* ── 나에게 보내기 ── */
   const MY_TIMES = ["아침 8시","점심 1시","저녁 9시","밤 11시"];
