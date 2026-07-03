@@ -450,6 +450,19 @@
   .dash-sub b { color:var(--plum); font-weight:700; }
   .dash-refresh { margin-top:16px; font-family:inherit; font-size:13px; font-weight:600; color:var(--plum); background:transparent; border:1px solid var(--plum-line); border-radius:20px; padding:8px 18px; cursor:pointer; }
   .dash-refresh:hover { background:var(--plum-soft); }
+  /* 돌아보기 (월간) */
+  .mn-loading { text-align:center; color:var(--ink-faint); font-size:14px; padding:30px 0; }
+  .mn-sum { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:24px; }
+  .mn-sum .box { background:var(--white); border:1px solid var(--plum-line); border-radius:16px; padding:18px 12px; text-align:center; }
+  .mn-sum .n { font-size:26px; font-weight:800; color:var(--plum-deep); letter-spacing:-0.03em; line-height:1.1; }
+  .mn-sum .lbl { font-size:12px; color:var(--ink-soft); margin-top:6px; }
+  .mn-group-title { font-size:14px; font-weight:700; color:var(--ink); margin:6px 0 12px; }
+  .mn-saved { background:var(--white); border:1px solid var(--plum-line); border-radius:14px; padding:16px 18px; margin-bottom:10px; }
+  .mn-saved .q { font-size:14.5px; line-height:1.7; color:var(--ink); font-weight:600; letter-spacing:-0.01em; }
+  .mn-saved .a { font-size:12px; color:var(--ink-faint); margin-top:8px; }
+  .mn-empty { text-align:center; color:var(--ink-faint); font-size:13.5px; line-height:1.7; padding:24px 16px; background:var(--plum-soft); border-radius:14px; }
+  .mn-foot { text-align:center; font-size:13.5px; font-weight:600; color:var(--plum-deep); background:var(--plum-soft); border-radius:16px; padding:20px; margin-top:20px; line-height:1.7; }
+  .mn-login { text-align:center; color:var(--ink-soft); font-size:14px; line-height:1.8; padding:36px 20px; }
   /* 사용법 - 미니 화면 목업 */
   .mock { background:var(--paper); border:1px solid var(--line-strong); border-radius:12px; padding:16px; }
   .mock-letter { text-align:center; }
@@ -535,6 +548,7 @@
   </div>
   <div class="tabs">
     <button class="tab on" data-view="home">오늘</button>
+    <button class="tab" data-view="monthly">돌아보기</button>
     <button class="tab" data-view="saved">담아둔 글</button>
     <button class="tab" data-view="trace">내 흔적</button>
     <button class="tab" data-view="send">보내기</button>
@@ -763,6 +777,15 @@
     <div class="section-title">받은 반응</div>
     <div class="section-sub">내가 보낸 편지에, 그 사람들이 남긴 마음이에요.</div>
     <div id="reactionList"></div>
+  </div>
+
+  <!-- 돌아보기 (월간) -->
+  <div class="view" id="view-monthly">
+    <div class="section-title" id="mnTitle">이번 달의 오늘도</div>
+    <div class="section-sub" id="mnSub">이번 달, 당신이 쌓아온 마음이에요.</div>
+    <div id="monthlyBody">
+      <div class="mn-loading">불러오는 중이에요…</div>
+    </div>
   </div>
 
   <!-- 사용법 -->
@@ -1066,6 +1089,7 @@
       t.classList.add("on");
       $("view-"+t.dataset.view).classList.add("on", dir);
       if (t.dataset.view==="saved") renderSaved();
+      if (t.dataset.view==="monthly") renderMonthly();
       if (t.dataset.view==="trace") renderTrace();
       if (t.dataset.view==="reactions"){ renderReactions(); markReactionsSeen(); }
       if (t.dataset.view==="manage") renderManage();
@@ -1321,6 +1345,62 @@
   function renderTrace(){
     if(!trace.length){ $("traceList").innerHTML='<div class="trace-empty">아직 기록이 없어요.<br>오늘 탭에서 마음을 남겨보세요.</div>'; return; }
     $("traceList").innerHTML = trace.slice().reverse().map(t=>`<div class="trace-item"><div class="td">${t.date}</div><div class="tm">${t.mood?("<b>"+t.mood+"</b>"+(t.level?" · "+t.level:"")):""}${t.note?(t.mood?" — ":"")+t.note:""}</div></div>`).join("");
+  }
+
+  // ===== 돌아보기 (이번 달 종합) =====
+  async function renderMonthly(){
+    const body = $("monthlyBody");
+    if (!body) return;
+    const now = new Date();
+    const monthLabel = (now.getMonth()+1) + "월";
+    const tt = $("mnTitle"), ss = $("mnSub");
+    if (tt) tt.textContent = monthLabel + "의 오늘도";
+    if (ss) ss.textContent = monthLabel + ", 당신이 쌓아온 마음이에요.";
+
+    if (!loggedIn || !currentUser){
+      body.innerHTML = '<div class="mn-login">로그인하면 이번 달 담은 글과<br>주고받은 마음을 모아 볼 수 있어요.</div>';
+      return;
+    }
+    body.innerHTML = '<div class="mn-loading">불러오는 중이에요…</div>';
+
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    let savedRows = [], moodCount = 0, reactCount = 0;
+    try {
+      const [sv, md, rc] = await Promise.all([
+        odoDB.from("odo_saved").select("content_id, saved_at").gte("saved_at", monthStart).order("saved_at", { ascending:false }),
+        odoDB.from("odo_moods").select("id", { count:"exact", head:true }).gte("created_at", monthStart),
+        odoDB.from("odo_reactions").select("id", { count:"exact", head:true }).eq("sender_id", currentUser.id).gte("created_at", monthStart)
+      ]);
+      savedRows = (sv && sv.data) || [];
+      moodCount = (md && md.count) || 0;
+      reactCount = (rc && rc.count) || 0;
+    } catch(e){
+      body.innerHTML = '<div class="mn-empty">불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>';
+      return;
+    }
+
+    // 담은 글: content_id로 POOL에서 원문 찾기
+    const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const savedCards = savedRows.map(row => {
+      const p = POOL.find(x => x.dbId === row.content_id);
+      if (!p) return "";
+      const q = (p.quote||"").replace(/(\s*(?:<br\s*\/?>|[\r\n])\s*)+/gi, " ");
+      return '<div class="mn-saved"><div class="q">"'+esc(q)+'"</div><div class="a">— '+esc(p.author||"")+'</div></div>';
+    }).filter(Boolean).join("");
+
+    let html = '<div class="mn-sum">'
+      + '<div class="box"><div class="n">'+savedRows.length+'</div><div class="lbl">담은 글</div></div>'
+      + '<div class="box"><div class="n">'+moodCount+'</div><div class="lbl">남긴 마음</div></div>'
+      + '<div class="box"><div class="n">'+reactCount+'</div><div class="lbl">받은 반응</div></div>'
+      + '</div>';
+
+    html += '<div class="mn-group-title">'+monthLabel+'에 담아둔 글</div>';
+    html += savedCards
+      ? savedCards
+      : '<div class="mn-empty">이번 달엔 아직 담은 글이 없어요.<br>오늘 탭에서 마음에 드는 글을 담아보세요.</div>';
+
+    html += '<div class="mn-foot">이렇게 쌓인 하루하루가,<br>언젠가 세상에 단 하나뿐인 위로 책이 됩니다.</div>';
+    body.innerHTML = html;
   }
 
   async function logTrace(){
