@@ -182,6 +182,7 @@
   .trace-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:50px 0; }
 
   .footnote { margin-top:18px; text-align:center; font-size:12px; color:var(--ink-faint); line-height:1.8; }
+  .copyright { text-align:center; padding:36px 20px 40px; font-size:12px; color:var(--ink-faint); letter-spacing:.02em; line-height:1.7; }
 
   @media (max-width: 1080px) {
     .layout { display: block; }
@@ -338,6 +339,7 @@
   /* 카드 공통 드롭섀도우 (배경에서 살짝 떠 보이게) */
   .letter-card, .essay, .care, .react-wrap, .mood, .family-list, .player { box-shadow: 0 2px 8px rgba(80,60,70,.05), 0 14px 30px rgba(80,60,70,.07); }
   .family-item:hover .fc-soon { background:var(--white); }
+  .family-item.soon { pointer-events:none; opacity:.5; }
 
   /* 보내는 사람들 */
   .add-card { background:var(--white); border:1px solid var(--plum-line); border-radius:20px; padding:26px 24px; margin-bottom:28px;
@@ -654,7 +656,7 @@
     <div id="admSets"><div class="adm-empty">위에서 주제를 고르고 "콘텐츠 만들어줘"를 눌러보세요.</div></div>
   </div>
 
-  <div class="footnote">맛보기 데모예요. 담은 글·흔적·명단은 실제로는 창고(Supabase)에 저장돼요.</div>
+  <div class="footnote">담아둔 글과 마음의 기록은 안전하게 저장돼요.</div>
 </div><!-- /stage -->
 
 <aside class="sidebar">
@@ -677,27 +679,31 @@
         <div class="fc-ic" style="--fc-color:#854f0b;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6 8 6"/><path d="M6 10v9h12v-9"/></svg></div>
         <div class="fc-name">핀홈</div>
       </a>
-      <a class="family-item" href="#" target="_blank" rel="noopener" title="순수음악 커뮤니티">
+      <a class="family-item" href="http://opusclam.com/" target="_blank" rel="noopener" title="순수음악 커뮤니티">
         <div class="fc-ic" style="--fc-color:#993556;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></div>
         <div class="fc-name">오퍼스클램</div>
       </a>
-      <a class="family-item" href="#" target="_blank" rel="noopener" title="개인 자산 대시보드">
+      <a class="family-item soon" title="개인 자산 대시보드">
         <div class="fc-ic" style="--fc-color:#3b6d11;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16l3-4 3 2 4-6"/></svg></div>
         <div class="fc-name">한눈에셋</div>
+        <span class="fc-soon">준비 중</span>
       </a>
-      <a class="family-item" href="#" target="_blank" rel="noopener" title="소크라테스식 AI 학습">
+      <a class="family-item soon" title="소크라테스식 AI 학습">
         <div class="fc-ic" style="--fc-color:#185fa5;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-4 3v-3H4z"/><path d="M9 10h6"/></svg></div>
         <div class="fc-name">되묻 SOCRA</div>
+        <span class="fc-soon">준비 중</span>
       </a>
-      <a class="family-item" href="#" target="_blank" rel="noopener" title="부모-자녀 대화 코칭">
+      <a class="family-item soon" title="부모-자녀 대화 코칭">
         <div class="fc-ic" style="--fc-color:#0f6e56;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c0-5 0-8-3-10"/><path d="M12 11c0-3 2-5 6-5 0 4-2 6-6 5z"/><path d="M12 13c0-2.5-1.5-4.5-5-4.5 0 3.5 1.5 5 5 4.5z"/></svg></div>
         <div class="fc-name">시드맵</div>
+        <span class="fc-soon">준비 중</span>
       </a>
-      <a class="family-item" href="#" target="_blank" rel="noopener" title="사기 피해 신고 플랫폼">
+      <a class="family-item soon" title="사기 피해 신고 플랫폼">
         <div class="fc-ic" style="--fc-color:#a32d2d;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg></div>
         <div class="fc-name">치킬 CheatKill</div>
+        <span class="fc-soon">준비 중</span>
       </a>
-      <a class="family-item" href="#" target="_blank" rel="noopener" title="참여형 연재소설 (준비 중)">
+      <a class="family-item soon" title="참여형 연재소설 (준비 중)">
         <div class="fc-ic" style="--fc-color:#5a4a7a;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 9-9-3-3-9 9z"/><path d="M14 6l3 3"/></svg></div>
         <div class="fc-name">GROOVE</div>
         <span class="fc-soon">준비 중</span>
@@ -706,6 +712,8 @@
   </div>
 </aside><!-- /sidebar -->
 </div><!-- /layout -->
+
+<footer class="copyright">© 2026 오늘도 · Alliance WXN ㈜윅슨어소시에이츠. All rights reserved.</footer>
 
 <script>
   const CARE_ICONS = {
