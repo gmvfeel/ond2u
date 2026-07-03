@@ -463,6 +463,22 @@
   .mn-empty { text-align:center; color:var(--ink-faint); font-size:13.5px; line-height:1.7; padding:24px 16px; background:var(--plum-soft); border-radius:14px; }
   .mn-foot { text-align:center; font-size:13.5px; font-weight:600; color:var(--plum-deep); background:var(--plum-soft); border-radius:16px; padding:20px; margin-top:20px; line-height:1.7; }
   .mn-login { text-align:center; color:var(--ink-soft); font-size:14px; line-height:1.8; padding:36px 20px; }
+  /* 마음 흐름 (내 흔적) */
+  .mf-card { background:var(--white); border:1px solid var(--plum-line); border-radius:16px; padding:22px 20px; margin-bottom:22px; }
+  .mf-summary { font-size:15px; line-height:1.6; color:var(--ink); text-align:center; }
+  .mf-summary b { color:var(--plum-deep); font-weight:800; }
+  .mf-bars { margin-top:20px; display:flex; flex-direction:column; gap:9px; }
+  .mf-bar { display:flex; align-items:center; gap:10px; }
+  .mf-name { font-size:12.5px; color:var(--ink-soft); min-width:46px; text-align:right; }
+  .mf-track { flex:1; height:14px; background:var(--plum-soft); border-radius:8px; overflow:hidden; }
+  .mf-fill { display:block; height:100%; background:var(--ink-faint); border-radius:8px; }
+  .mf-fill.pos { background:var(--plum); }
+  .mf-n { font-size:12px; color:var(--ink-faint); min-width:18px; }
+  .mf-recent-label, .mf-list-label { font-size:12px; color:var(--ink-faint); font-weight:600; margin-top:20px; margin-bottom:10px; }
+  .mf-recent { display:flex; flex-wrap:wrap; gap:6px; }
+  .mf-chip { font-size:12px; color:var(--ink-soft); background:var(--paper); border:1px solid var(--line-strong); border-radius:16px; padding:5px 11px; }
+  .mf-chip.pos { color:var(--plum-deep); background:var(--plum-soft); border-color:var(--plum-line); }
+  .mf-list-label { margin-top:0; }
   /* 사용법 - 미니 화면 목업 */
   .mock { background:var(--paper); border:1px solid var(--line-strong); border-radius:12px; padding:16px; }
   .mock-letter { text-align:center; }
@@ -1424,8 +1440,43 @@
   }
 
   function renderTrace(){
-    if(!trace.length){ $("traceList").innerHTML='<div class="trace-empty">아직 기록이 없어요.<br>오늘 탭에서 마음을 남겨보세요.</div>'; return; }
-    $("traceList").innerHTML = trace.slice().reverse().map(t=>`<div class="trace-item"><div class="td">${t.date}</div><div class="tm">${t.mood?("<b>"+t.mood+"</b>"+(t.level?" · "+t.level:"")):""}${t.note?(t.mood?" — ":"")+t.note:""}</div></div>`).join("");
+    const wrap = $("traceList");
+    if(!wrap) return;
+    if(!trace.length){ wrap.innerHTML='<div class="trace-empty">아직 기록이 없어요.<br>오늘 탭에서 마음을 남겨보세요.</div>'; return; }
+
+    const POS = ["의욕","설렘","평온","감사","시작"];
+    const withMood = trace.filter(t=>t.mood);
+    let flowHtml = "";
+    if(withMood.length){
+      // 빈도 집계
+      const cnt = {};
+      withMood.forEach(t=>{ cnt[t.mood]=(cnt[t.mood]||0)+1; });
+      const sorted = Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
+      const top = sorted[0][0], max = sorted[0][1];
+      const topPos = POS.includes(top);
+      const summary = topPos
+        ? '요즘 가장 자주 느낀 마음은 <b>'+top+'</b>이에요. 🌿'
+        : '요즘 가장 자주 보이는 마음은 <b>'+top+'</b>이에요.<br>스스로를 조금 더 살펴봐 주세요.';
+      const bars = sorted.map(([m,n])=>{
+        const w = Math.max(8, Math.round(n/max*100));
+        const pos = POS.includes(m);
+        return '<div class="mf-bar"><span class="mf-name">'+m+'</span>'
+          + '<span class="mf-track"><span class="mf-fill'+(pos?' pos':'')+'" style="width:'+w+'%"></span></span>'
+          + '<span class="mf-n">'+n+'</span></div>';
+      }).join("");
+      const recent = withMood.slice(-10);
+      const chips = recent.map(t=>'<span class="mf-chip'+(POS.includes(t.mood)?' pos':'')+'">'+t.mood+'</span>').join("");
+      flowHtml = '<div class="mf-card">'
+        + '<div class="mf-summary">'+summary+'</div>'
+        + '<div class="mf-bars">'+bars+'</div>'
+        + '<div class="mf-recent-label">최근 흐름</div>'
+        + '<div class="mf-recent">'+chips+'</div>'
+        + '</div>'
+        + '<div class="mf-list-label">전체 기록</div>';
+    }
+
+    const list = trace.slice().reverse().map(t=>'<div class="trace-item"><div class="td">'+t.date+'</div><div class="tm">'+(t.mood?("<b>"+t.mood+"</b>"+(t.level?" · "+t.level:"")):"")+(t.note?(t.mood?" — ":"")+t.note:"")+'</div></div>').join("");
+    wrap.innerHTML = flowHtml + list;
   }
 
   // ===== 돌아보기 (이번 달 종합) =====
