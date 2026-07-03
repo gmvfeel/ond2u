@@ -19,6 +19,7 @@
     --ink: #2b2730; --ink-2: #46414d; --ink-soft: #7a7580; --ink-faint: #b0aab6;
     --white: #ffffff; --paper: #faf9f8; --line: #f0edea; --line-strong: #e3ded9;
     --plum: #423458; --plum-deep: #33283f; --plum-soft: #efecf4; --plum-line: #d8d0e4;
+    --rose: #D97C93; --rose-deep: #c56179; --rose-soft: #fbeef1;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -62,7 +63,7 @@
   .from-line { text-align:center; font-size:13px; color:var(--ink-soft); margin-bottom:14px; display:flex; align-items:center; justify-content:center; gap:7px; }
   .streak { text-align:center; font-size:12px; color:var(--plum); background:var(--plum-soft); border-radius:30px; padding:7px 16px; margin:0 auto 20px; display:inline-block; width:auto; transition:all .2s; }
   .streak b { font-weight:800; }
-  .streak.milestone { color:#fff; background:var(--plum); font-weight:600; box-shadow:0 4px 14px rgba(66,52,88,.28); }
+  .streak.milestone { color:#fff; background:var(--rose); font-weight:600; box-shadow:0 4px 14px rgba(217,124,147,.32); }
   .season { text-align:center; font-size:13px; color:var(--ink-soft); margin-bottom:16px; }
   .greet-row { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
   .greet-row .season, .greet-row .from-line { margin-bottom:0; }
@@ -95,7 +96,7 @@
   .eyebrow { font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:20px; text-align:center; }
   .content { transition: opacity .45s ease; }
   .content.fade { opacity:0; }
-  .letter-card { background:var(--white); border:1px solid var(--plum-line); border-radius:20px; padding:38px 34px 34px; }
+  .letter-card { background:var(--white); border:1.5px solid var(--rose); border-radius:20px; padding:38px 34px 34px; }
 
   .quote { font-family:'Pretendard', sans-serif; font-size:30px; line-height:1.5; font-weight:800; letter-spacing:-0.035em; white-space:pre-line; text-align:center; }
   .quote-en { font-family:'Pretendard', sans-serif; font-size:15px; line-height:1.6; font-weight:500; color:var(--ink-soft); white-space:pre-line; text-align:center; margin-top:14px; font-style:italic; }
@@ -108,8 +109,9 @@
     border:1px solid var(--line-strong); border-radius:30px; padding:9px 18px; cursor:pointer;
     transition:all .18s; display:flex; align-items:center; gap:7px;
   }
-  .save-btn:hover { border-color:var(--plum); color:var(--plum); }
-  .save-btn.saved { background:var(--plum-soft); border-color:var(--plum); color:var(--plum-deep); font-weight:600; }
+  .save-btn:hover { border-color:var(--rose); color:var(--rose); }
+  .save-btn.saved { background:var(--rose-soft); border-color:var(--rose); color:var(--rose-deep); font-weight:600; }
+  .save-btn.saved .heart { color:var(--rose); }
   .save-btn .heart { font-size:15px; }
   .kakao-btn { display:inline-flex; align-items:center; gap:7px; font-family:inherit; font-size:14px; font-weight:600; color:#fff; background:var(--plum); border:none; border-radius:30px; padding:11px 20px; cursor:pointer; transition:filter .16s; }
   .kakao-btn:hover { filter:brightness(0.96); }
@@ -154,8 +156,8 @@
     font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--paper);
     border:1px solid var(--line-strong); border-radius:30px; padding:9px 15px; cursor:pointer; transition:all .16s;
   }
-  .react-btn:hover { border-color:var(--plum); color:var(--plum); }
-  .react-btn.picked { background:var(--plum); border-color:var(--plum); color:#fff; }
+  .react-btn:hover { border-color:var(--rose); color:var(--rose); }
+  .react-btn.picked { background:var(--rose); border-color:var(--rose); color:#fff; }
   .react-done { font-size:13px; color:var(--plum-deep); font-weight:600; margin-top:14px; display:none; }
 
   /* 기분 */
@@ -179,8 +181,8 @@
   .mood input::placeholder { color:var(--ink-faint); }
   .actions { display:flex; gap:11px; margin-top:22px; }
   .btn { font-family:inherit; font-size:15px; font-weight:600; padding:15px; border-radius:30px; cursor:pointer; transition:all .2s; border:1px solid transparent; }
-  .btn-main { background:var(--ink); color:#fff; flex:1.4; }
-  .btn-main:hover { background:var(--plum-deep); }
+  .btn-main { background:var(--rose); color:#fff; flex:1.4; }
+  .btn-main:hover { background:var(--rose-deep); }
   .btn-sub { background:var(--paper); color:var(--ink-soft); border-color:var(--line-strong); flex:1; }
   .btn-sub:hover { border-color:var(--ink-soft); color:var(--ink); }
 
@@ -270,7 +272,7 @@
   .gate-hint { font-size:12px; color:var(--ink-faint); margin-top:18px; line-height:1.6; }
   .welcome-bar { background:var(--plum-soft); border-radius:14px; padding:14px 18px; font-size:13px; color:var(--plum-deep); margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; }
   .welcome-bar .logout { font-family:inherit; font-size:12px; color:var(--plum); background:transparent; border:none; cursor:pointer; text-decoration:underline; }
-  .nav-auth { margin-top:14px; }
+  .nav-auth { margin:16px 0 22px; }
   .nav-login-btn { font-family:inherit; font-size:13px; font-weight:600; color:var(--plum); background:none; border:none; padding:8px 4px; cursor:pointer; text-align:left; }
   .nav-login-btn:hover { text-decoration:underline; }
   .nav-user { font-size:12.5px; color:var(--ink-soft); line-height:1.7; padding:8px 4px; }
@@ -297,15 +299,15 @@
   .send-others-label { font-size:14px; font-weight:700; color:var(--ink); margin:24px 0 14px; }
 
   /* 받은 반응 */
-  .re-sum { background:var(--plum); border-radius:16px; padding:20px 22px; margin-bottom:18px; text-align:center; }
+  .re-sum { background:var(--rose); border-radius:16px; padding:20px 22px; margin-bottom:18px; text-align:center; }
   .re-sum-title { font-size:15px; color:#fff; font-weight:600; letter-spacing:-0.02em; }
   .re-sum-title b { font-size:20px; font-weight:800; }
   .re-sum-chips { margin-top:12px; display:flex; gap:6px; justify-content:center; flex-wrap:wrap; }
   .re-chip { font-size:12px; color:#fff; background:rgba(255,255,255,.18); border-radius:20px; padding:4px 12px; }
   /* 책으로 남기기 예고 */
-  .book-teaser { margin-top:44px; background:var(--plum-soft); border:1px solid var(--plum-line); border-radius:18px; padding:28px 26px; text-align:center; }
-  .bt-badge { display:inline-block; font-size:11px; font-weight:700; color:#fff; background:var(--plum); border-radius:20px; padding:4px 13px; margin-bottom:14px; letter-spacing:0.02em; }
-  .bt-title { font-size:18px; font-weight:800; color:var(--plum-deep); letter-spacing:-0.02em; }
+  .book-teaser { margin-top:44px; background:var(--rose-soft); border:1px solid var(--rose); border-radius:18px; padding:28px 26px; text-align:center; }
+  .bt-badge { display:inline-block; font-size:11px; font-weight:700; color:#fff; background:var(--rose); border-radius:20px; padding:4px 13px; margin-bottom:14px; letter-spacing:0.02em; }
+  .bt-title { font-size:18px; font-weight:800; color:var(--rose-deep); letter-spacing:-0.02em; }
   .bt-body { font-size:14px; line-height:1.75; color:var(--ink-soft); margin-top:10px; }
   .reaction { background:var(--white); border:1px solid var(--plum-line); border-radius:16px; padding:20px 22px; margin-bottom:12px;
     display:flex; align-items:flex-start; gap:14px; }
@@ -463,7 +465,7 @@
   .mn-saved .q { font-size:14.5px; line-height:1.7; color:var(--ink); font-weight:600; letter-spacing:-0.01em; }
   .mn-saved .a { font-size:12px; color:var(--ink-faint); margin-top:8px; }
   .mn-empty { text-align:center; color:var(--ink-faint); font-size:13.5px; line-height:1.7; padding:24px 16px; background:var(--plum-soft); border-radius:14px; }
-  .mn-foot { text-align:center; font-size:13.5px; font-weight:600; color:var(--plum-deep); background:var(--plum-soft); border-radius:16px; padding:20px; margin-top:20px; line-height:1.7; }
+  .mn-foot { text-align:center; font-size:13.5px; font-weight:600; color:var(--rose-deep); background:var(--rose-soft); border-radius:16px; padding:20px; margin-top:20px; line-height:1.7; }
   .mn-login { text-align:center; color:var(--ink-soft); font-size:14px; line-height:1.8; padding:36px 20px; }
   /* 마음 흐름 (내 흔적) */
   .mf-card { background:var(--white); border:1px solid var(--plum-line); border-radius:16px; padding:22px 20px; margin-bottom:22px; }
@@ -564,6 +566,7 @@
     </svg>
     <span class="brand-txt">오늘도 <span class="brand-en">OND2U</span></span>
   </div>
+  <div class="nav-auth" id="navAuth"></div>
   <div class="tabs">
     <button class="tab on" data-view="home">오늘</button>
     <button class="tab" data-view="monthly">돌아보기</button>
@@ -578,7 +581,6 @@
     <button class="tab tab-admin" data-view="members">⚙ 회원 관리</button>
     <button class="tab tab-admin" data-view="sends">⚙ 발송 현황</button>
   </div>
-  <div class="nav-auth" id="navAuth"></div>
 </nav>
 <div class="stage">
 
