@@ -438,6 +438,18 @@
   .gd-hint { display:block; font-size:12.5px; color:var(--ink-faint); margin-top:8px; }
   .gd-visual { margin-top:16px; }
   .guide-foot { text-align:center; font-size:14px; font-weight:600; color:var(--plum-deep); background:var(--plum-soft); border-radius:16px; padding:22px 20px; margin-top:8px; line-height:1.7; }
+  /* 대시보드 */
+  .dash-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; }
+  .dash-loading { grid-column:1 / -1; text-align:center; color:var(--ink-faint); font-size:14px; padding:30px 0; }
+  .dash-card { background:var(--white); border:1px solid var(--plum-line); border-radius:16px; padding:22px 20px; }
+  .dash-card.wide { grid-column:1 / -1; }
+  .dash-label { font-size:13px; color:var(--ink-soft); font-weight:600; }
+  .dash-num { font-size:34px; font-weight:800; color:var(--plum-deep); letter-spacing:-0.03em; line-height:1.1; margin-top:8px; }
+  .dash-num .unit { font-size:16px; font-weight:700; color:var(--ink-soft); margin-left:3px; }
+  .dash-sub { font-size:12.5px; color:var(--ink-faint); margin-top:8px; }
+  .dash-sub b { color:var(--plum); font-weight:700; }
+  .dash-refresh { margin-top:16px; font-family:inherit; font-size:13px; font-weight:600; color:var(--plum); background:transparent; border:1px solid var(--plum-line); border-radius:20px; padding:8px 18px; cursor:pointer; }
+  .dash-refresh:hover { background:var(--plum-soft); }
   /* 사용법 - 미니 화면 목업 */
   .mock { background:var(--paper); border:1px solid var(--line-strong); border-radius:12px; padding:16px; }
   .mock-letter { text-align:center; }
@@ -528,6 +540,7 @@
     <button class="tab" data-view="send">보내기</button>
     <button class="tab" data-view="reactions">받은 반응 <span class="tab-badge" id="reactBadge"></span></button>
     <button class="tab" data-view="guide">사용법</button>
+    <button class="tab tab-admin" data-view="dashboard">⚙ 대시보드</button>
     <button class="tab tab-admin" data-view="admin">⚙ 콘텐츠 공장</button>
     <button class="tab tab-admin" data-view="manage">⚙ 콘텐츠 관리</button>
     <button class="tab tab-admin" data-view="members">⚙ 회원 관리</button>
@@ -816,6 +829,16 @@
     <div class="guide-foot">매일 쌓인 당신의 오늘도는, 언젠가 세상에 단 하나뿐인 위로 책이 됩니다.</div>
   </div>
 
+  <!-- 대시보드 (관리자) -->
+  <div class="view" id="view-dashboard">
+    <div class="section-title">대시보드</div>
+    <div class="section-sub">오늘도가 지금 어떻게 움직이고 있는지 한눈에 볼 수 있어요.</div>
+    <div class="dash-grid" id="dashGrid">
+      <div class="dash-loading">불러오는 중이에요…</div>
+    </div>
+    <button class="dash-refresh" id="dashRefresh">↻ 새로고침</button>
+  </div>
+
   <!-- 콘텐츠 공장 (관리자) -->
   <div class="view" id="view-admin">
     <div class="admin-banner">⚙ 운영자 전용 화면이에요. 실제 서비스에선 파트너님만 볼 수 있게 숨겨둡니다.</div>
@@ -1048,6 +1071,7 @@
       if (t.dataset.view==="manage") renderManage();
       if (t.dataset.view==="members") renderMembers();
       if (t.dataset.view==="sends") renderSends();
+      if (t.dataset.view==="dashboard") renderDashboard();
       window.scrollTo({ top: 0, behavior: "instant" });
     };
   });
@@ -1621,7 +1645,7 @@
 
   // 구글 버튼 → 진짜 로그인. 카카오·네이버는 아직 준비 중 안내.
   $("googleBtn").onclick = () => loginWithGoogle();
-  $("kakaoBtn").onclick = () => loginWithKakao();
+  { const dr = $("dashRefresh"); if (dr) dr.onclick = () => renderDashboard(); }  $("kakaoBtn").onclick = () => loginWithKakao();
   $("naverBtn").onclick = () => {
     const state = Math.random().toString(36).slice(2);
     const redirectUri = encodeURIComponent("https://ond2u.vercel.app/api/naver-callback");
@@ -2040,6 +2064,35 @@
     } catch(e){ alert("삭제 중 오류가 났어요."); }
   };
 
+  // ===== 대시보드 (관리자 전용) =====
+  async function renderDashboard(){
+    const box = $("dashGrid");
+    if (!box) return;
+    if (!isAdmin()){ box.innerHTML = '<div class="dash-loading">관리자만 볼 수 있어요.</div>'; return; }
+    box.innerHTML = '<div class="dash-loading">불러오는 중이에요…</div>';
+    let session;
+    try { ({ data:{ session } } = await odoDB.auth.getSession()); } catch(e){}
+    if (!session){ box.innerHTML = '<div class="dash-loading">로그인이 필요해요.</div>'; return; }
+    let out;
+    try {
+      const res = await fetch("/api/admin-stats", { headers:{ "Authorization":"Bearer "+session.access_token } });
+      out = await res.json().catch(()=>({}));
+    } catch(e){ box.innerHTML = '<div class="dash-loading">불러오지 못했어요.</div>'; return; }
+    if (!out || !out.ok || !out.stats){ box.innerHTML = '<div class="dash-loading">'+((out&&out.error)||"불러오지 못했어요.")+'</div>'; return; }
+    const s = out.stats;
+    const card = (label, num, unit, sub) =>
+      '<div class="dash-card">'
+      + '<div class="dash-label">'+label+'</div>'
+      + '<div class="dash-num">'+num+(unit?'<span class="unit">'+unit+'</span>':'')+'</div>'
+      + (sub?'<div class="dash-sub">'+sub+'</div>':'')
+      + '</div>';
+    box.innerHTML =
+      card("함께하는 사람", (s.members||0), "명", "오늘도를 쓰는 분들이에요")
+      + card("담긴 콘텐츠", (s.contents||0), "개", "지금 준비된 편지들")
+      + card("보낸 편지", (s.sends_total||0), "통", "오늘 <b>"+(s.sends_today||0)+"통</b> 나갔어요")
+      + card("받은 반응", (s.reactions_total||0), "개", "오늘 <b>"+(s.reactions_today||0)+"개</b> 도착했어요");
+  }
+
   // ===== 발송 현황 (관리자 전용) =====
   async function renderSends(){
     const box = $("sendsList");
@@ -2249,7 +2302,11 @@
     try {
       const h = new URLSearchParams(location.hash.slice(1));
       const nt = h.get("naver_token");
-      if (nt) {
+      const nerr = h.get("naver_error");
+      if (nerr) {
+        alert("네이버 로그인에 문제가 생겼어요. 잠시 후 다시 시도해 주세요.");
+        history.replaceState(null, "", location.pathname);
+      } else if (nt) {
         await odoDB.auth.verifyOtp({ token_hash: nt, type: "magiclink" });
         history.replaceState(null, "", location.pathname);
       }
