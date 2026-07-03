@@ -18,7 +18,7 @@
   :root {
     --ink: #2b2730; --ink-2: #46414d; --ink-soft: #7a7580; --ink-faint: #b0aab6;
     --white: #ffffff; --paper: #faf9f8; --line: #f0edea; --line-strong: #e3ded9;
-    --plum: #5a4a7a; --plum-deep: #453961; --plum-soft: #efecf4; --plum-line: #d8d0e4;
+    --plum: #423458; --plum-deep: #33283f; --plum-soft: #efecf4; --plum-line: #d8d0e4;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -539,8 +539,8 @@
 <div class="welcome-overlay" id="welcomeOverlay">
   <div class="welcome-box">
     <svg viewBox="0 0 40 40" width="52" height="52" aria-hidden="true" style="margin-bottom:18px;">
-      <path d="M6 12 h22 a3 3 0 0 1 3 3 v12 a3 3 0 0 1 -3 3 h-22 a3 3 0 0 1 -3 -3 v-12 a3 3 0 0 1 3 -3 z" fill="none" stroke="#5a4a7a" stroke-width="2"/>
-      <path d="M4 14 l13 9 l13 -9" fill="none" stroke="#5a4a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M6 12 h22 a3 3 0 0 1 3 3 v12 a3 3 0 0 1 -3 3 h-22 a3 3 0 0 1 -3 -3 v-12 a3 3 0 0 1 3 -3 z" fill="none" stroke="#423458" stroke-width="2"/>
+      <path d="M4 14 l13 9 l13 -9" fill="none" stroke="#423458" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     <div class="welcome-title">오늘도, 당신에게</div>
     <div class="welcome-body">
@@ -557,8 +557,8 @@
 <nav class="leftnav">
   <div class="brand" id="brandHome" style="cursor:pointer;" title="오늘 화면으로">
     <svg class="brand-mark" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
-      <path d="M6 12 h22 a3 3 0 0 1 3 3 v12 a3 3 0 0 1 -3 3 h-22 a3 3 0 0 1 -3 -3 v-12 a3 3 0 0 1 3 -3 z" fill="none" stroke="#5a4a7a" stroke-width="2"/>
-      <path d="M4 14 l13 9 l13 -9" fill="none" stroke="#5a4a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M6 12 h22 a3 3 0 0 1 3 3 v12 a3 3 0 0 1 -3 3 h-22 a3 3 0 0 1 -3 -3 v-12 a3 3 0 0 1 3 -3 z" fill="none" stroke="#423458" stroke-width="2"/>
+      <path d="M4 14 l13 9 l13 -9" fill="none" stroke="#423458" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     <span class="brand-txt">오늘도 <span class="brand-en">OND2U</span></span>
   </div>
@@ -941,7 +941,7 @@
     <div class="family-label">Alliance WXN의 다른 이야기</div>
     <div class="family-list">
       <a class="family-item" href="https://lpstock.co.kr" target="_blank" rel="noopener" title="클래식·현대음악 LP 음반점">
-        <div class="fc-ic" style="--fc-color:#5a4a7a;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg></div>
+        <div class="fc-ic" style="--fc-color:#423458;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg></div>
         <div class="fc-name">엘피스탁</div>
       </a>
       <a class="family-item" href="https://booklps.vercel.app" target="_blank" rel="noopener" title="희귀 책·음반 통합 검색">
@@ -981,7 +981,7 @@
         <span class="fc-soon">준비 중</span>
       </a>
       <a class="family-item soon" title="참여형 연재소설 (준비 중)">
-        <div class="fc-ic" style="--fc-color:#5a4a7a;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 9-9-3-3-9 9z"/><path d="M14 6l3 3"/></svg></div>
+        <div class="fc-ic" style="--fc-color:#423458;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 9-9-3-3-9 9z"/><path d="M14 6l3 3"/></svg></div>
         <div class="fc-name">GROOVE</div>
         <span class="fc-soon">준비 중</span>
       </a>
@@ -1355,7 +1355,7 @@
       if(quote.length>36){ fs=50; lh=74; }
       if(quote.length>66){ fs=42; lh=62; }
       if(quote.length>100){ fs=36; lh=54; }
-      ctx.fillStyle="#453961"; ctx.font="800 "+fs+"px Pretendard, sans-serif";
+      ctx.fillStyle="#33283f"; ctx.font="800 "+fs+"px Pretendard, sans-serif";
       const maxW=W-pad*2-100;
       const lines=wrapLines(ctx, quote, maxW);
       let y = H/2 - (lines.length-1)*lh/2 - 10;
@@ -1366,7 +1366,7 @@
       ctx.fillText("— "+author, W/2, y+34);
 
       // 하단 워터마크
-      ctx.fillStyle="#5a4a7a"; ctx.font="700 30px Pretendard, sans-serif";
+      ctx.fillStyle="#423458"; ctx.font="700 30px Pretendard, sans-serif";
       ctx.fillText("오늘도 · OND2U", W/2, H-160);
 
       const blob = await new Promise(res=>cv.toBlob(res, "image/png"));
