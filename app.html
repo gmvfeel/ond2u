@@ -108,7 +108,7 @@
   .save-btn:hover { border-color:var(--plum); color:var(--plum); }
   .save-btn.saved { background:var(--plum-soft); border-color:var(--plum); color:var(--plum-deep); font-weight:600; }
   .save-btn .heart { font-size:15px; }
-  .kakao-btn { display:inline-flex; align-items:center; gap:7px; font-family:inherit; font-size:14px; font-weight:600; color:#3c1e1e; background:#FEE500; border:none; border-radius:30px; padding:11px 20px; cursor:pointer; transition:filter .16s; }
+  .kakao-btn { display:inline-flex; align-items:center; gap:7px; font-family:inherit; font-size:14px; font-weight:600; color:#fff; background:var(--plum); border:none; border-radius:30px; padding:11px 20px; cursor:pointer; transition:filter .16s; }
   .kakao-btn:hover { filter:brightness(0.96); }
 
   .essay-wrap { margin-top:16px; }
@@ -424,6 +424,7 @@
   .field input:focus { border-color:var(--plum); }
   .field input::placeholder { color:var(--ink-faint); }
   .time-chips, .tone-chips, .kind-chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .time-note { font-size:12px; color:var(--ink-faint); margin-top:8px; line-height:1.6; }
   .tchip, .tochip, .kchip { font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--paper);
     border:1px solid var(--line-strong); border-radius:30px; padding:9px 15px; cursor:pointer; transition:all .16s; }
   .tchip:hover, .tochip:hover, .kchip:hover { border-color:var(--plum); color:var(--plum); }
@@ -525,7 +526,7 @@
 
       <div class="save-row">
         <button class="save-btn" id="saveBtn"><span class="heart">♡</span> <span id="saveLabel">이 글 담아두기</span></button>
-        <button class="kakao-btn" id="kakaoShareBtn"><svg viewBox="0 0 24 24" width="16" height="16" fill="#3c1e1e"><path d="M12 3.5C6.75 3.5 2.5 6.86 2.5 11c0 2.67 1.79 5.01 4.48 6.33-.18.63-.66 2.4-.76 2.78-.12.47.17.46.36.34.15-.1 2.4-1.63 3.38-2.3.52.07 1.05.11 1.54.11 5.25 0 9.5-3.36 9.5-7.5S17.25 3.5 12 3.5z"/></svg> 카톡으로 보내기</button>
+        <button class="kakao-btn" id="kakaoShareBtn"><svg viewBox="0 0 24 24" width="16" height="16" fill="#fff"><path d="M12 3.5C6.75 3.5 2.5 6.86 2.5 11c0 2.67 1.79 5.01 4.48 6.33-.18.63-.66 2.4-.76 2.78-.12.47.17.46.36.34.15-.1 2.4-1.63 3.38-2.3.52.07 1.05.11 1.54.11 5.25 0 9.5-3.36 9.5-7.5S17.25 3.5 12 3.5z"/></svg> 카톡으로 보내기</button>
       </div>
     </div><!-- /content(명언) -->
     </div><!-- /letter-card -->
@@ -660,8 +661,9 @@
         </div>
 
         <div class="field" id="meTimeField">
-          <label>내가 받을 시각 (여러 개 고를 수 있어요)</label>
+          <label>받는 시각</label>
           <div class="time-chips" id="meTimeChips"></div>
+          <div class="time-note">지금은 매일 아침 8시에 한 통씩 보내드려요. 다른 시간대는 곧 추가될 예정이에요.</div>
         </div>
 
         <div class="me-note">
@@ -682,8 +684,9 @@
           <input id="rEmail" type="email" placeholder="name@example.com" />
         </div>
         <div class="field">
-          <label>보낼 시각 (여러 개 고를 수 있어요)</label>
+          <label>보내는 시각</label>
           <div class="time-chips" id="timeChips"></div>
+          <div class="time-note">지금은 매일 아침 8시에 한 통씩 보내요. 다른 시간대는 곧 추가될 예정이에요.</div>
         </div>
         <div class="field">
           <label>이 사람에게 맞는 결 <span class="opt">(선택)</span></label>
@@ -1228,18 +1231,16 @@
     document.querySelectorAll(".chip,.level").forEach(c=>c.classList.remove("on")); $("moodInput").value=""; show(false); };
 
   /* ── 보내는 사람들 ── */
-  const TIMES = ["아침 8시","점심 1시","저녁 9시","밤 11시"];
+  const TIMES = ["아침 8시"];
   const TONES = ["위로","응원","평온","시작"];
   const recipients = [];
-  let pickedTimes = [];
+  let pickedTimes = ["아침 8시"];
   let pickedTone = null;
   let bibleAlso = false;   // 성경 말씀도 함께 보낼지 (기본 꺼짐)
 
   const timeWrap = $("timeChips");
-  TIMES.forEach(t => { const b=document.createElement("button"); b.className="tchip"; b.textContent=t;
-    b.onclick=()=>{ if(pickedTimes.includes(t)){ pickedTimes=pickedTimes.filter(x=>x!==t); b.classList.remove("on"); }
-      else { pickedTimes.push(t); b.classList.add("on"); } };
-    timeWrap.appendChild(b); });
+  TIMES.forEach(t => { const b=document.createElement("button"); b.type="button"; b.className="tchip on"; b.textContent=t;
+    timeWrap.appendChild(b); });   // 현재는 아침 8시 하나만 (항상 선택 상태)
 
   // 성경 말씀 함께 보내기 체크박스 토글
   $("bibleCheck").onclick = () => {
@@ -1555,20 +1556,16 @@
   };
 
   /* ── 나에게 보내기 ── */
-  const MY_TIMES = ["아침 8시","점심 1시","저녁 9시","밤 11시"];
+  const MY_TIMES = ["아침 8시"];
   let myPickedTimes = ["아침 8시"];
   const meTimeWrap = $("meTimeChips");
   MY_TIMES.forEach(t => {
-    const b=document.createElement("button"); b.className="tchip"+(myPickedTimes.includes(t)?" on":""); b.textContent=t;
-    b.onclick=()=>{ if(myPickedTimes.includes(t)){ myPickedTimes=myPickedTimes.filter(x=>x!==t); b.classList.remove("on"); }
-      else { myPickedTimes.push(t); b.classList.add("on"); }
-      if($("meToggle").classList.contains("on")) saveSelfRecipient(true);  // 켜진 상태면 바뀐 시각 반영
-    };
-    meTimeWrap.appendChild(b);
+    const b=document.createElement("button"); b.type="button"; b.className="tchip on"; b.textContent=t;
+    meTimeWrap.appendChild(b);   // 현재는 아침 8시 하나만 (항상 선택 상태)
   });
   // 시각 칩 UI를 myPickedTimes에 맞게 갱신
   function refreshMeTimeChips(){
-    meTimeWrap.querySelectorAll(".tchip").forEach(b=>{ b.classList.toggle("on", myPickedTimes.includes(b.textContent)); });
+    meTimeWrap.querySelectorAll(".tchip").forEach(b=>{ b.classList.add("on"); });
   }
   // "나에게 받기"를 실제 발송 명단에 반영 (내 이메일을 '나에게'로 넣거나 뺌)
   async function saveSelfRecipient(on){
