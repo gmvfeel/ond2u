@@ -330,6 +330,20 @@
   .mb-email { font-size:12px; color:var(--ink-soft); margin-top:2px; word-break:break-all; }
   .mb-meta { font-size:12px; color:var(--ink-faint); margin-top:8px; display:flex; gap:6px; flex-wrap:wrap; }
   .mb-meta span { background:var(--plum-soft); color:var(--plum-deep); border-radius:6px; padding:2px 8px; }
+  /* 발송 현황 */
+  .sd-sum { display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  .sd-sum .box { flex:1; min-width:90px; background:var(--white); border:1px solid var(--plum-line); border-radius:12px; padding:14px; text-align:center; }
+  .sd-sum .box .n { font-size:22px; font-weight:800; color:var(--plum-deep); }
+  .sd-sum .box .n.fail { color:#c62828; }
+  .sd-sum .box .lbl { font-size:11px; color:var(--ink-faint); margin-top:4px; }
+  .sd-card { background:var(--white); border:1px solid var(--plum-line); border-radius:12px; padding:12px 15px; margin-bottom:8px; }
+  .sd-top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .sd-route { font-size:13px; color:var(--ink); font-weight:600; }
+  .sd-badge { font-size:11px; padding:2px 8px; border-radius:6px; white-space:nowrap; }
+  .sd-badge.ok { color:#2e7d32; background:#e8f5e9; }
+  .sd-badge.fail { color:#c62828; background:#ffebee; }
+  .sd-q { font-size:12px; color:var(--ink-soft); margin-top:6px; }
+  .sd-time { font-size:11px; color:var(--ink-faint); margin-top:6px; }
   .admin-banner { font-size:12px; color:var(--plum-deep); background:var(--plum-soft); border-radius:12px; padding:12px 16px; margin-bottom:22px; line-height:1.6; }
   .maker { background:var(--white); border:1px solid var(--plum-line); border-radius:18px; padding:20px 22px; margin-bottom:24px; }
   .maker-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
@@ -462,6 +476,7 @@
     <button class="tab tab-admin" data-view="admin">⚙ 콘텐츠 공장</button>
     <button class="tab tab-admin" data-view="manage">⚙ 콘텐츠 관리</button>
     <button class="tab tab-admin" data-view="members">⚙ 회원 관리</button>
+    <button class="tab tab-admin" data-view="sends">⚙ 발송 현황</button>
   </div>
   <div class="nav-auth" id="navAuth"></div>
 </nav>
@@ -718,6 +733,14 @@
     <div id="membersList"><div class="adm-empty">불러오는 중…</div></div>
   </div>
 
+  <!-- 발송 현황 (관리자) -->
+  <div class="view" id="view-sends">
+    <div class="admin-banner">⚙ 운영자 전용 — 편지가 언제 누구에게 나갔는지 볼 수 있어요.</div>
+    <div class="section-title">발송 현황</div>
+    <div class="section-sub">최근 발송 기록이에요. 성공·실패와 어떤 글이 나갔는지 확인할 수 있어요. (기록은 이 기능을 켠 이후 발송분부터 쌓여요.)</div>
+    <div id="sendsList"><div class="adm-empty">불러오는 중…</div></div>
+  </div>
+
   <div class="footnote">담아둔 글과 마음의 기록은 안전하게 저장돼요.</div>
 </div><!-- /stage -->
 
@@ -891,6 +914,7 @@
       if (t.dataset.view==="reactions") renderReactions();
       if (t.dataset.view==="manage") renderManage();
       if (t.dataset.view==="members") renderMembers();
+      if (t.dataset.view==="sends") renderSends();
       window.scrollTo({ top: 0, behavior: "instant" });
     };
   });
@@ -1822,6 +1846,48 @@
       renderManage();
     } catch(e){ alert("삭제 중 오류가 났어요."); }
   };
+
+  // ===== 발송 현황 (관리자 전용) =====
+  async function renderSends(){
+    const box = $("sendsList");
+    if (!box) return;
+    if (!isAdmin()){ box.innerHTML = '<div class="adm-empty">관리자만 볼 수 있어요.</div>'; return; }
+    box.innerHTML = '<div class="adm-empty">불러오는 중…</div>';
+    let session;
+    try { ({ data:{ session } } = await odoDB.auth.getSession()); } catch(e){}
+    if (!session){ box.innerHTML = '<div class="adm-empty">로그인이 필요해요.</div>'; return; }
+    let out;
+    try {
+      const res = await fetch("/api/admin-list-sends", { headers:{ "Authorization":"Bearer "+session.access_token } });
+      out = await res.json().catch(()=>({}));
+    } catch(e){ box.innerHTML = '<div class="adm-empty">불러오지 못했어요.</div>'; return; }
+    if (!out || !out.ok || !Array.isArray(out.sends)){ box.innerHTML = '<div class="adm-empty">'+((out&&out.error)||"불러오지 못했어요.")+'</div>'; return; }
+    const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    const fmt = iso => {
+      if(!iso) return "";
+      try { const d=new Date(new Date(iso).getTime()+9*3600*1000); return d.toISOString().slice(0,16).replace("T"," "); } catch(e){ return ""; }
+    };
+    let html = '<div class="sd-sum">'
+      + '<div class="box"><div class="n">'+(out.today_success||0)+'</div><div class="lbl">오늘 성공</div></div>'
+      + '<div class="box"><div class="n fail">'+(out.today_fail||0)+'</div><div class="lbl">오늘 실패</div></div>'
+      + '<div class="box"><div class="n">'+(out.total||0)+'</div><div class="lbl">최근 기록</div></div>'
+      + '</div>';
+    if (!out.sends.length){
+      box.innerHTML = html + '<div class="adm-empty">아직 발송 기록이 없어요. 편지가 나가면 여기 쌓여요.</div>';
+      return;
+    }
+    html += out.sends.map(s => {
+      const ok = s.status === "success";
+      const who = esc(s.sender_name||"?") + " → " + esc(s.recipient_name || s.recipient_email || "?");
+      return '<div class="sd-card">'
+        + '<div class="sd-top"><span class="sd-route">'+who+'</span><span class="sd-badge '+(ok?"ok":"fail")+'">'+(ok?"성공":"실패")+'</span></div>'
+        + (s.content_quote ? '<div class="sd-q">"'+esc(s.content_quote)+'"</div>' : '')
+        + (!ok && s.error ? '<div class="sd-q" style="color:#c62828;">'+esc(String(s.error).slice(0,80))+'</div>' : '')
+        + '<div class="sd-time">'+fmt(s.created_at)+' · '+esc(s.recipient_email||"")+'</div>'
+        + '</div>';
+    }).join("");
+    box.innerHTML = html;
+  }
 
   // ===== 회원 관리 (관리자 전용) =====
   async function renderMembers(){
