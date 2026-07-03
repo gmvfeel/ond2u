@@ -10,7 +10,8 @@
   :root {
     --ink:#2b2730; --ink-2:#46414d; --ink-soft:#6f6a76; --ink-faint:#a8a2af;
     --white:#ffffff; --paper:#faf9fc; --line:#eae7ef; --line-strong:#ddd6e4;
-    --plum:#5a4a7a; --plum-deep:#453961; --plum-soft:#efecf4; --plum-line:#d8d0e4;
+    --plum:#423458; --plum-deep:#33283f; --plum-soft:#efecf4; --plum-line:#d8d0e4;
+    --rose:#D97C93; --rose-deep:#c56179; --rose-soft:#fbeef1;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   html { scroll-behavior:smooth; }
@@ -31,11 +32,11 @@
   .hero-inner { max-width:980px; margin:0 auto; padding:0 24px; display:grid; grid-template-columns:1fr 340px; gap:56px; align-items:center; width:100%; }
   .hero-copy .eyebrow { font-size:13px; letter-spacing:0.24em; color:var(--plum); margin-bottom:22px; opacity:0; animation:fadeUp .8s ease .1s forwards; }
   .hero-copy h1 { font-size:42px; font-weight:800; letter-spacing:-0.04em; line-height:1.35; margin-bottom:26px; opacity:0; animation:fadeUp .8s ease .25s forwards; }
-  .hero-copy h1 .accent { color:var(--plum); }
+  .hero-copy h1 .accent { color:var(--rose); }
   .hero-copy .lead { font-size:17px; color:var(--ink-soft); line-height:1.9; margin-bottom:38px; opacity:0; animation:fadeUp .8s ease .4s forwards; }
-  .hero-copy .cta { display:inline-flex; align-items:center; gap:9px; font-size:16px; font-weight:600; color:#fff; background:var(--ink);
-    border:none; border-radius:34px; padding:17px 38px; cursor:pointer; text-decoration:none; transition:all .25s; opacity:0; animation:fadeUp .8s ease .55s forwards; }
-  .hero-copy .cta:hover { background:var(--plum-deep); transform:translateY(-2px); box-shadow:0 12px 30px rgba(90,74,122,.22); }
+  .hero-copy .cta { display:inline-flex; align-items:center; gap:9px; font-size:16px; font-weight:600; color:#fff; background:var(--rose);
+    border:none; border-radius:34px; padding:17px 38px; cursor:pointer; text-decoration:none; transition:all .25s; opacity:0; animation:fadeUp .8s ease .55s forwards; box-shadow:0 6px 18px rgba(217,124,147,.3); }
+  .hero-copy .cta:hover { background:var(--rose-deep); transform:translateY(-2px); box-shadow:0 12px 30px rgba(217,124,147,.34); }
   .hero-copy .cta-sub { font-size:13px; color:var(--ink-faint); margin-top:16px; opacity:0; animation:fadeUp .8s ease .7s forwards; }
 
   .hero .star { position:absolute; color:var(--plum-line); opacity:0; animation:twinkle 4s ease-in-out infinite; }
@@ -44,7 +45,7 @@
   .hero .star.s3 { top:68%; left:6%; animation-delay:2.4s; }
   .hero .star.s4 { top:80%; left:38%; animation-delay:3.1s; }
 
-  .letter-card { background:var(--white); border:1px solid var(--plum-line); border-radius:22px; padding:28px 26px;
+  .letter-card { background:var(--white); border:1.5px solid var(--rose); border-radius:22px; padding:28px 26px;
     box-shadow:0 24px 60px rgba(90,74,122,.14); opacity:0; animation:cardRise 1s cubic-bezier(.2,.7,.3,1) .5s forwards; position:relative; }
   .letter-card .lc-from { display:flex; align-items:center; gap:9px; font-size:12px; color:var(--ink-soft); margin-bottom:18px; }
   .lc-from .av { width:26px; height:26px; border-radius:50%; background:var(--plum); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
@@ -57,7 +58,7 @@
   .lc-care .ci svg { width:17px; height:17px; }
   .lc-care .ct { font-size:11px; color:var(--plum); }
   .lc-care .cb { font-size:13px; font-weight:700; color:var(--plum-deep); margin-top:1px; }
-  .letter-card .lc-badge { position:absolute; top:-13px; right:22px; background:var(--ink); color:#fff; font-size:11px; font-weight:600; padding:5px 13px; border-radius:20px; }
+  .letter-card .lc-badge { position:absolute; top:-13px; right:22px; background:var(--rose); color:#fff; font-size:11px; font-weight:600; padding:5px 13px; border-radius:20px; }
 
   .letter-card .lc-quote, .letter-card .lc-en, .letter-card .lc-author, .letter-card .lc-care { transition:opacity .5s ease; }
   .letter-card.swapping .lc-quote, .letter-card.swapping .lc-en, .letter-card.swapping .lc-author, .letter-card.swapping .lc-care { opacity:0; }
@@ -99,9 +100,9 @@
   .final .env-float { width:64px; height:64px; margin:0 auto 26px; color:var(--plum); animation:floaty 4s ease-in-out infinite; }
   .final h2 { font-size:30px; font-weight:800; letter-spacing:-0.035em; line-height:1.4; color:var(--plum-deep); margin-bottom:18px; }
   .final p { font-size:16px; color:var(--ink-2); line-height:1.9; margin-bottom:38px; }
-  .final .cta { display:inline-flex; align-items:center; gap:9px; font-size:16px; font-weight:600; color:#fff; background:var(--ink);
-    border:none; border-radius:34px; padding:17px 40px; cursor:pointer; text-decoration:none; transition:all .25s; }
-  .final .cta:hover { background:var(--plum-deep); transform:translateY(-2px); box-shadow:0 12px 30px rgba(90,74,122,.22); }
+  .final .cta { display:inline-flex; align-items:center; gap:9px; font-size:16px; font-weight:600; color:#fff; background:var(--rose);
+    border:none; border-radius:34px; padding:17px 40px; cursor:pointer; text-decoration:none; transition:all .25s; box-shadow:0 6px 18px rgba(217,124,147,.3); }
+  .final .cta:hover { background:var(--rose-deep); transform:translateY(-2px); box-shadow:0 12px 30px rgba(217,124,147,.34); }
 
   .family { padding:80px 0; border-top:1px solid var(--line); }
   .family-label { text-align:center; font-size:12px; letter-spacing:0.16em; color:var(--ink-faint); margin-bottom:32px; }
@@ -166,8 +167,8 @@
     <div class="inner">
       <div class="logo">
         <svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true">
-          <path d="M6 12 h22 a3 3 0 0 1 3 3 v12 a3 3 0 0 1 -3 3 h-22 a3 3 0 0 1 -3 -3 v-12 a3 3 0 0 1 3 -3 z" fill="none" stroke="#5a4a7a" stroke-width="2"/>
-          <path d="M4 14 l13 9 l13 -9" fill="none" stroke="#5a4a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 12 h22 a3 3 0 0 1 3 3 v12 a3 3 0 0 1 -3 3 h-22 a3 3 0 0 1 -3 -3 v-12 a3 3 0 0 1 3 -3 z" fill="none" stroke="#423458" stroke-width="2"/>
+          <path d="M4 14 l13 9 l13 -9" fill="none" stroke="#423458" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         오늘도 <span class="en">OND2U</span>
       </div>
@@ -219,9 +220,9 @@
         <div class="about-illust reveal">
           <svg viewBox="0 0 240 240" fill="none" aria-hidden="true">
             <circle cx="120" cy="120" r="96" stroke="#efecf4" stroke-width="18"/>
-            <path d="M60 96 h120 a8 8 0 0 1 8 8 v56 a8 8 0 0 1 -8 8 h-120 a8 8 0 0 1 -8 -8 v-56 a8 8 0 0 1 8 -8 z" stroke="#5a4a7a" stroke-width="2.5" stroke-linejoin="round"/>
-            <path d="M54 100 l66 46 l66 -46" stroke="#5a4a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M120 58 l3.5 11 12 .5 -9.5 7.5 3.5 11.5 -9.5-7 -9.5 7 3.5-11.5 -9.5-7.5 12-.5z" fill="#5a4a7a" opacity=".85"/>
+            <path d="M60 96 h120 a8 8 0 0 1 8 8 v56 a8 8 0 0 1 -8 8 h-120 a8 8 0 0 1 -8 -8 v-56 a8 8 0 0 1 8 -8 z" stroke="#423458" stroke-width="2.5" stroke-linejoin="round"/>
+            <path d="M54 100 l66 46 l66 -46" stroke="#423458" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M120 58 l3.5 11 12 .5 -9.5 7.5 3.5 11.5 -9.5-7 -9.5 7 3.5-11.5 -9.5-7.5 12-.5z" fill="#423458" opacity=".85"/>
             <circle cx="184" cy="70" r="4" fill="#d8d0e4"/>
             <circle cx="58" cy="66" r="3" fill="#d8d0e4"/>
           </svg>
@@ -306,7 +307,7 @@
       <div class="family-label">ALLIANCE WXN의 다른 이야기</div>
       <div class="family-grid">
         <a class="family-card" href="https://lpstock.co.kr" target="_blank" rel="noopener">
-          <div class="fc-ic" style="color:#5a4a7a;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg></div>
+          <div class="fc-ic" style="color:#423458;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg></div>
           <div><div class="fc-name">엘피스탁</div><div class="fc-desc">클래식·현대음악 LP 음반점</div></div>
         </a>
         <a class="family-card" href="https://booklps.vercel.app" target="_blank" rel="noopener">
