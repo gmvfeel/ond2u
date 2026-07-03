@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     if (!normalPool.length) throw new Error("창고에 일반 콘텐츠가 없어요.");
     const biblePool = await fetchContents(SB_URL, SB_SERVICE, "bible");
 
-    const cfg = { RESEND_KEY, FROM, fromName, normalPool, biblePool };
+    const cfg = { RESEND_KEY, FROM, fromName, normalPool, biblePool, SB_URL, SB_SERVICE };
 
     if (all) {
       // ── 전체 발송: 수신자 명단 전원에게 ──
@@ -71,26 +71,45 @@ export default async function handler(req, res) {
 }
 
 // 수신자 한 명에게 발송 (콘텐츠 풀에서 랜덤으로 뽑아 메일 만들어 Resend로)
-async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, to, toName, wantBible, senderId }) {
+async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, to, toName, wantBible, senderId, SB_URL, SB_SERVICE }) {
   const pickN = normalPool[Math.floor(Math.random() * normalPool.length)];
   let pickB = null;
   if (wantBible && biblePool.length) pickB = biblePool[Math.floor(Math.random() * biblePool.length)];
 
   const html = buildEmail({ fromName, toName, normal: pickN, bible: pickB, recipientEmail: to, senderId });
+  const quote = (pickN.quote || "").replace(/\\n/g, " ").slice(0, 80);
+  const logBase = { sender_id: senderId || null, sender_name: fromName, recipient_email: to, recipient_name: toName || "", content_quote: quote };
 
-  const r = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: "오늘도 <" + FROM + ">",
-      to: [to],
-      subject: fromName + "님이 오늘도 보냅니다",
-      html
-    })
-  });
-  const data = await r.json();
-  if (!r.ok) throw new Error("Resend 발송 실패: " + JSON.stringify(data));
-  return data.id;
+  try {
+    const r = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: "오늘도 <" + FROM + ">",
+        to: [to],
+        subject: fromName + "님이 오늘도 보냅니다",
+        html
+      })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error("Resend 발송 실패: " + JSON.stringify(data));
+    await logSend(SB_URL, SB_SERVICE, { ...logBase, status: "success", resend_id: data.id || "" });
+    return data.id;
+  } catch (e) {
+    await logSend(SB_URL, SB_SERVICE, { ...logBase, status: "fail", error: String(e && e.message || e) });
+    throw e;
+  }
+}
+
+// 발송 기록을 창고(odo_sends)에 남김 — 실패해도 발송 자체엔 영향 없음
+async function logSend(url, key, row) {
+  try {
+    await fetch(url + "/rest/v1/odo_sends", {
+      method: "POST",
+      headers: { "apikey": key, "Authorization": "Bearer " + key, "Content-Type": "application/json", "Prefer": "return=minimal" },
+      body: JSON.stringify(row)
+    });
+  } catch (e) { /* 로그 실패는 조용히 무시 */ }
 }
 
 // 수신자 명단 전체 읽기
