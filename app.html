@@ -47,6 +47,7 @@
   .tab:last-child { border-bottom:1px solid var(--line); }
   .tab:hover { color:var(--plum); }
   .tab.on { color:var(--plum-deep); font-weight:700; }
+  .tab-badge { display:none; font-size:11px; font-weight:700; color:#fff; background:#e05555; border-radius:20px; padding:1px 7px; margin-left:4px; vertical-align:middle; }
 
   .view { display:none; }
   .view.on { display:block; }
@@ -480,7 +481,7 @@
     <button class="tab" data-view="saved">담아둔 글</button>
     <button class="tab" data-view="trace">내 흔적</button>
     <button class="tab" data-view="send">보내기</button>
-    <button class="tab" data-view="reactions">받은 반응</button>
+    <button class="tab" data-view="reactions">받은 반응 <span class="tab-badge" id="reactBadge"></span></button>
     <button class="tab tab-admin" data-view="admin">⚙ 콘텐츠 공장</button>
     <button class="tab tab-admin" data-view="manage">⚙ 콘텐츠 관리</button>
     <button class="tab tab-admin" data-view="members">⚙ 회원 관리</button>
@@ -918,7 +919,7 @@
       $("view-"+t.dataset.view).classList.add("on");
       if (t.dataset.view==="saved") renderSaved();
       if (t.dataset.view==="trace") renderTrace();
-      if (t.dataset.view==="reactions") renderReactions();
+      if (t.dataset.view==="reactions"){ renderReactions(); markReactionsSeen(); }
       if (t.dataset.view==="manage") renderManage();
       if (t.dataset.view==="members") renderMembers();
       if (t.dataset.view==="sends") renderSends();
@@ -1361,6 +1362,7 @@
     $("logoutBtn").onclick = () => doLogout();
     renderNavAuth();
     applyAdminUI();
+    checkNewReactions();
   }
 
   async function doLogout(){
@@ -1453,7 +1455,8 @@
         const yestStr = yest.toISOString().slice(0,10);       // 어제
 
         const { data: vrow } = await odoDB.from("odo_users")
-          .select("last_visit, streak").eq("id", currentUser.id).maybeSingle();
+          .select("last_visit, streak, last_reaction_seen").eq("id", currentUser.id).maybeSingle();
+        window.lastReactionSeen = (vrow && vrow.last_reaction_seen) || null;
         let streak = (vrow && vrow.streak) || 0;
         const last = vrow && vrow.last_visit;
 
@@ -1533,6 +1536,29 @@
   };
 
   /* ── 받은 반응 (창고 odo_reactions 실데이터) ── */
+  // 새 반응 개수를 세어 "받은 반응" 탭에 뱃지 표시
+  async function checkNewReactions(){
+    const badge = $("reactBadge");
+    if (!badge || !currentUser) return;
+    try {
+      let q = odoDB.from("odo_reactions").select("id", { count:"exact", head:true }).eq("sender_id", currentUser.id);
+      if (window.lastReactionSeen) q = q.gt("created_at", window.lastReactionSeen);
+      const { count } = await q;
+      if (count && count > 0){ badge.textContent = count > 9 ? "9+" : String(count); badge.style.display = "inline-block"; }
+      else { badge.style.display = "none"; }
+    } catch(e){}
+  }
+
+  // 받은 반응 탭을 열면 "지금까지 다 봤음"으로 기록 + 뱃지 제거
+  async function markReactionsSeen(){
+    const badge = $("reactBadge");
+    if (badge) badge.style.display = "none";
+    if (!currentUser) return;
+    const now = new Date().toISOString();
+    window.lastReactionSeen = now;
+    try { await odoDB.from("odo_users").update({ last_reaction_seen: now }).eq("id", currentUser.id); } catch(e){}
+  }
+
   async function renderReactions(){
     const box = $("reactionList");
     const escR = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
