@@ -275,6 +275,21 @@
   .welcome-bar { background:var(--plum-soft); border-radius:14px; padding:14px 18px; font-size:13px; color:var(--plum-deep); margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; }
   .welcome-bar .logout { font-family:inherit; font-size:12px; color:var(--plum); background:transparent; border:none; cursor:pointer; text-decoration:underline; }
   .nav-auth { display:flex; justify-content:center; margin-bottom:22px; }
+  /* 즉시 발송 패널 */
+  .send-panel { margin-top:26px; background:var(--white); border:1px solid var(--plum-line); border-radius:16px; padding:20px; }
+  .sp-title { font-size:15px; font-weight:800; color:var(--ink); }
+  .sp-desc { font-size:13px; color:var(--ink-soft); margin-top:6px; line-height:1.6; }
+  .sp-btns { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+  .sp-btn { font-family:inherit; font-size:13.5px; font-weight:600; border-radius:22px; padding:11px 20px; cursor:pointer; transition:all .2s; border:1px solid transparent; }
+  .sp-btn:disabled { opacity:.55; cursor:default; }
+  .sp-me { color:var(--plum); background:var(--plum-soft); border-color:var(--plum-line); }
+  .sp-me:hover:not(:disabled) { background:var(--plum); color:#fff; }
+  .sp-all { color:#fff; background:var(--rose); }
+  .sp-all:hover:not(:disabled) { background:var(--rose-deep); }
+  .sp-result { margin-top:14px; font-size:13px; line-height:1.6; min-height:1px; }
+  .sp-result.ok { color:#2f8f5b; }
+  .sp-result.err { color:#c0392b; }
+  .sp-result.wait { color:var(--ink-soft); }
   /* 오늘의 추천 (WXN 서비스) */
   .daily-pick { margin-top:22px; background:var(--white); border:1px solid var(--rose); border-radius:14px; padding:16px 16px 15px; box-shadow:0 3px 12px rgba(217,124,147,.12); }
   .dp-badge { display:inline-block; font-size:10px; font-weight:700; letter-spacing:0.02em; color:#fff; background:var(--rose); border-radius:12px; padding:3px 10px; margin-bottom:11px; }
@@ -892,6 +907,16 @@
       <div class="dash-loading">불러오는 중이에요…</div>
     </div>
     <button class="dash-refresh" id="dashRefresh">↻ 새로고침</button>
+
+    <div class="send-panel">
+      <div class="sp-title">✉️ 즉시 발송</div>
+      <div class="sp-desc">아침 8시 자동 발송을 기다리지 않고, 지금 바로 편지를 보낼 수 있어요.</div>
+      <div class="sp-btns">
+        <button class="sp-btn sp-me" id="sendMeBtn">나에게 테스트 1통</button>
+        <button class="sp-btn sp-all" id="sendAllBtn">명단 전체 지금 발송</button>
+      </div>
+      <div class="sp-result" id="sendResult"></div>
+    </div>
   </div>
 
   <!-- 콘텐츠 공장 (관리자) -->
@@ -1896,7 +1921,10 @@
 
   // 구글 버튼 → 진짜 로그인. 카카오·네이버는 아직 준비 중 안내.
   $("googleBtn").onclick = () => loginWithGoogle();
-  { const dr = $("dashRefresh"); if (dr) dr.onclick = () => renderDashboard(); }  $("kakaoBtn").onclick = () => loginWithKakao();
+  { const dr = $("dashRefresh"); if (dr) dr.onclick = () => renderDashboard(); }
+  { const b = $("sendMeBtn"); if (b) b.onclick = () => adminSend("me"); }
+  { const b = $("sendAllBtn"); if (b) b.onclick = () => adminSend("all"); }
+  $("kakaoBtn").onclick = () => loginWithKakao();
   $("naverBtn").onclick = () => {
     const state = Math.random().toString(36).slice(2);
     const redirectUri = encodeURIComponent("https://ond2u.vercel.app/api/naver-callback");
@@ -2325,6 +2353,51 @@
   };
 
   // ===== 대시보드 (관리자 전용) =====
+  // 관리자 즉시 발송 (나에게 1통 / 명단 전체)
+  async function adminSend(mode){
+    const resultEl = $("sendResult");
+    const meBtn = $("sendMeBtn"), allBtn = $("sendAllBtn");
+    if (!resultEl) return;
+    let token = "", myEmail = "";
+    try {
+      const { data } = await odoDB.auth.getSession();
+      token = (data && data.session && data.session.access_token) || "";
+      myEmail = (data && data.session && data.session.user && data.session.user.email) || "";
+    } catch (e) {}
+    if (!token) { resultEl.className = "sp-result err"; resultEl.textContent = "로그인이 필요해요."; return; }
+
+    let url = "/api/send-test";
+    if (mode === "me") {
+      if (!myEmail) { resultEl.className = "sp-result err"; resultEl.textContent = "내 이메일을 찾을 수 없어요."; return; }
+      url += "?to=" + encodeURIComponent(myEmail);
+    } else {
+      if (!confirm("명단에 있는 모든 사람에게 지금 편지를 발송할까요?\n(실제로 발송됩니다)")) return;
+      url += "?all=1";
+    }
+
+    if (meBtn) meBtn.disabled = true;
+    if (allBtn) allBtn.disabled = true;
+    resultEl.className = "sp-result wait";
+    resultEl.textContent = "보내는 중이에요…";
+    try {
+      const r = await fetch(url, { headers: { "Authorization": "Bearer " + token } });
+      const j = await r.json();
+      if (j && j.ok) {
+        resultEl.className = "sp-result ok";
+        resultEl.textContent = "✅ " + (j.message || "보냈어요!") + (mode === "me" ? " (" + myEmail + ")" : "");
+      } else {
+        resultEl.className = "sp-result err";
+        resultEl.textContent = "⚠️ " + ((j && j.error) || "발송에 실패했어요.");
+      }
+    } catch (e) {
+      resultEl.className = "sp-result err";
+      resultEl.textContent = "⚠️ 요청 실패: " + (e && e.message || e);
+    } finally {
+      if (meBtn) meBtn.disabled = false;
+      if (allBtn) allBtn.disabled = false;
+    }
+  }
+
   async function renderDashboard(){
     const box = $("dashGrid");
     if (!box) return;
