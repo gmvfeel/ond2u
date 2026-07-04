@@ -50,6 +50,13 @@
   .tab.on { color:var(--plum-deep); font-weight:700; background:var(--plum-soft); }
   .tab.on svg { opacity:1; }
   .tab-sec { font-size:11px; font-weight:700; color:var(--ink-faint); letter-spacing:.06em; padding:15px 12px 5px; user-select:none; }
+  .tab-div { height:1px; background:var(--line); margin:12px 10px 8px; }
+  .ops-tabs { display:flex; gap:4px 8px; flex-wrap:wrap; margin:16px 0 22px; border-bottom:1px solid var(--line); }
+  .ops-tab { font-family:inherit; font-size:14px; color:var(--ink-soft); background:none; border:none; padding:9px 6px; margin-bottom:-1px; border-bottom:2px solid transparent; cursor:pointer; transition:all .15s; }
+  .ops-tab:hover { color:var(--plum); }
+  .ops-tab.on { color:var(--plum-deep); font-weight:700; border-bottom-color:var(--plum); }
+  .ops-panel { display:none; }
+  .ops-panel.on { display:block; }
   .tab-badge { display:none; font-size:11px; font-weight:700; color:#fff; background:#e05555; border-radius:20px; padding:1px 7px; margin-left:4px; vertical-align:middle; }
 
   .view { display:none; }
@@ -216,7 +223,7 @@
     .leftnav .tabs { flex-direction: row; flex-wrap: wrap; gap: 6px; }
     .tab { width: auto; border: 1px solid var(--line); border-radius: 20px; padding: 8px 14px; font-size: 13px; background: var(--white); white-space: nowrap; justify-content:center; }
     .tab svg { width:15px; height:15px; margin-right:6px; opacity:.85; }
-    .tab-sec { display:none !important; }
+    .tab-sec, .tab-div { display:none !important; }
     .tab:last-child { border-bottom: 1px solid var(--line); }
     .tab.on { background: var(--plum); color: #fff; border-color: var(--plum); font-weight: 600; }
     .stage { max-width: 600px; margin: 0 auto; }
@@ -613,12 +620,8 @@
     <div class="tab-sec">안내</div>
     <button class="tab" data-view="guide"><svg viewBox="0 0 24 24"><path d="M12 7C10.4 5.4 7.9 5 4.5 5v13c3.4 0 5.9.4 7.5 2 1.6-1.6 4.1-2 7.5-2V5c-3.4 0-5.9.4-7.5 2zM12 7v13"/></svg>오늘도 가이드</button>
 
-    <div class="tab-sec tab-sec-admin">운영</div>
-    <button class="tab tab-admin" data-view="dashboard"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.3"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.3"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.3"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.3"/></svg>대시보드</button>
-    <button class="tab tab-admin" data-view="admin"><svg viewBox="0 0 24 24"><path d="M11 3.5l1.7 4.3 4.3 1.7-4.3 1.7L11 15.5l-1.7-4.3L5 9.5l4.3-1.7zM18 14l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/></svg>콘텐츠 공장</button>
-    <button class="tab tab-admin" data-view="manage"><svg viewBox="0 0 24 24"><path d="M8.5 6.5h11M8.5 12h11M8.5 17.5h11M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01"/></svg>콘텐츠 관리</button>
-    <button class="tab tab-admin" data-view="members"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c0-3.1 2.4-5.2 5.5-5.2s5.5 2.1 5.5 5.2"/><path d="M16.5 5.3a3.2 3.2 0 0 1 0 5.9M18 14.6c1.9.6 3.3 2.4 3.3 4.9"/></svg>회원 관리</button>
-    <button class="tab tab-admin" data-view="sends"><svg viewBox="0 0 24 24"><path d="M3.5 20.5h17M6.5 20.5v-6M11 20.5v-11M15.5 20.5v-8M20 20.5v-4"/></svg>발송 현황</button>
+    <div class="tab-div tab-sec-admin"></div>
+    <button class="tab tab-admin" data-view="ops"><svg viewBox="0 0 24 24"><path d="M4 6h9M18 6h2M4 12h2M11 12h9M4 18h12"/><circle cx="15.5" cy="6" r="1.9"/><circle cx="8" cy="12" r="1.9"/><circle cx="18" cy="18" r="1.9"/></svg>운영</button>
   </div>
 </nav>
 <div class="stage">
@@ -912,9 +915,17 @@
     <div class="guide-foot">매일 쌓인 당신의 오늘도는, 언젠가 세상에 단 하나뿐인 위로 책이 됩니다.</div>
   </div>
 
-  <!-- 대시보드 (관리자) -->
-  <div class="view" id="view-dashboard">
-    <div class="section-title">대시보드</div>
+  <!-- 운영 (관리자) -->
+  <div class="view" id="view-ops">
+    <div class="section-title">운영</div>
+    <div class="ops-tabs">
+      <button class="ops-tab on" data-ops="dashboard">대시보드</button>
+      <button class="ops-tab" data-ops="admin">콘텐츠 공장</button>
+      <button class="ops-tab" data-ops="manage">콘텐츠 관리</button>
+      <button class="ops-tab" data-ops="members">회원 관리</button>
+      <button class="ops-tab" data-ops="sends">발송 현황</button>
+    </div>
+    <div class="ops-panel on" id="ops-dashboard">
     <div class="section-sub">오늘도가 지금 어떻게 움직이고 있는지 한눈에 볼 수 있어요.</div>
     <div class="dash-grid" id="dashGrid">
       <div class="dash-loading">불러오는 중이에요…</div>
@@ -929,13 +940,9 @@
         <button class="sp-btn sp-all" id="sendAllBtn">명단 전체 지금 발송</button>
       </div>
       <div class="sp-result" id="sendResult"></div>
-    </div>
-  </div>
-
-  <!-- 콘텐츠 공장 (관리자) -->
-  <div class="view" id="view-admin">
+    </div></div>
+    <div class="ops-panel" id="ops-admin">
     <div class="admin-banner">⚙ 운영자 전용 화면이에요. 실제 서비스에선 파트너님만 볼 수 있게 숨겨둡니다.</div>
-    <div class="section-title">콘텐츠 공장</div>
     <div class="section-sub">"만들어줘"를 누르면 AI가 명언·에세이·영상 검색어를 세트로 차려와요. 통과시킨 것만 창고에 쌓입니다.</div>
 
     <div class="maker">
@@ -959,31 +966,19 @@
 
     <div class="approved-bar" id="admApprovedBar" style="display:none">✓ 창고에 저장된 콘텐츠 <b id="admApprovedCount">0</b>세트</div>
 
-    <div id="admSets"><div class="adm-empty">위에서 주제를 고르고 "콘텐츠 만들어줘"를 눌러보세요.</div></div>
-  </div>
-
-  <!-- 콘텐츠 관리 (관리자) -->
-  <div class="view" id="view-manage">
+    <div id="admSets"><div class="adm-empty">위에서 주제를 고르고 "콘텐츠 만들어줘"를 눌러보세요.</div></div></div>
+    <div class="ops-panel" id="ops-manage">
     <div class="admin-banner">⚙ 운영자 전용 — 창고에 저장된 콘텐츠를 관리해요. (영상 교체·삭제)</div>
-    <div class="section-title">콘텐츠 관리</div>
     <div class="section-sub">저장된 콘텐츠의 영상을 실제 재생되는 걸로 교체하거나, 필요 없는 콘텐츠를 지울 수 있어요. 유튜브 주소를 붙여넣고 "미리보기"로 재생을 확인한 뒤 저장하세요.</div>
-    <div id="manageList"><div class="adm-empty">불러오는 중…</div></div>
-  </div>
-
-  <!-- 회원 관리 (관리자) -->
-  <div class="view" id="view-members">
+    <div id="manageList"><div class="adm-empty">불러오는 중…</div></div></div>
+    <div class="ops-panel" id="ops-members">
     <div class="admin-banner">⚙ 운영자 전용 — 가입한 회원들을 볼 수 있어요.</div>
-    <div class="section-title">회원 관리</div>
     <div class="section-sub">최근 방문한 순서로 보여줘요. 이름·이메일·마지막 방문·연속기록·보내는 사람 수를 확인할 수 있어요.</div>
-    <div id="membersList"><div class="adm-empty">불러오는 중…</div></div>
-  </div>
-
-  <!-- 발송 현황 (관리자) -->
-  <div class="view" id="view-sends">
+    <div id="membersList"><div class="adm-empty">불러오는 중…</div></div></div>
+    <div class="ops-panel" id="ops-sends">
     <div class="admin-banner">⚙ 운영자 전용 — 편지가 언제 누구에게 나갔는지 볼 수 있어요.</div>
-    <div class="section-title">발송 현황</div>
     <div class="section-sub">최근 발송 기록이에요. 성공·실패와 어떤 글이 나갔는지 확인할 수 있어요. (기록은 이 기능을 켠 이후 발송분부터 쌓여요.)</div>
-    <div id="sendsList"><div class="adm-empty">불러오는 중…</div></div>
+    <div id="sendsList"><div class="adm-empty">불러오는 중…</div></div></div>
   </div>
 
   <div class="footnote">담아둔 글과 마음의 기록은 안전하게 저장돼요.</div>
@@ -1164,12 +1159,26 @@
       if (t.dataset.view==="monthly") renderMonthly();
       if (t.dataset.view==="trace") renderTrace();
       if (t.dataset.view==="reactions"){ renderReactions(); markReactionsSeen(); }
-      if (t.dataset.view==="manage") renderManage();
-      if (t.dataset.view==="members") renderMembers();
-      if (t.dataset.view==="sends") renderSends();
-      if (t.dataset.view==="dashboard") renderDashboard();
+      if (t.dataset.view==="ops") openOps("dashboard");
       window.scrollTo({ top: 0, behavior: "instant" });
     };
+  });
+
+  // 운영 서브탭 전환
+  function openOps(key){
+    document.querySelectorAll(".ops-tab").forEach(x=>x.classList.remove("on"));
+    document.querySelectorAll(".ops-panel").forEach(x=>x.classList.remove("on"));
+    const tb=document.querySelector('.ops-tab[data-ops="'+key+'"]');
+    const pn=document.getElementById("ops-"+key);
+    if(tb) tb.classList.add("on");
+    if(pn) pn.classList.add("on");
+    if(key==="dashboard") renderDashboard();
+    if(key==="manage") renderManage();
+    if(key==="members") renderMembers();
+    if(key==="sends") renderSends();
+  }
+  document.querySelectorAll(".ops-tab").forEach(t=>{
+    t.onclick=()=>{ openOps(t.dataset.ops); window.scrollTo({top:0,behavior:"instant"}); };
   });
 
   // 로고 클릭 → "오늘" 탭으로 이동
