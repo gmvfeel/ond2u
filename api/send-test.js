@@ -261,10 +261,19 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId 
       (normal.video_id ?
       spacer(32) +
       '<div style="font-size:10px; letter-spacing:0.16em; color:#b0aab6; margin-bottom:12px;">\uC624\uB298\uC758 \uC601\uC0C1</div>' +
-      '<a href="https://www.youtube.com/watch?v=' + normal.video_id + '" style="display:block; text-decoration:none;">' +
-        '<img src="https://img.youtube.com/vi/' + normal.video_id + '/hqdefault.jpg" width="544" style="display:block; width:100%; max-width:544px; border:1px solid #eae7e3; border-bottom:none; border-radius:12px 12px 0 0;" alt="">' +
-        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background:#ffffff; border:1px solid #eae7e3; border-top:none; border-radius:0 0 12px 12px;"><tr><td style="padding:13px 16px;"><div style="font-size:14px; font-weight:600; color:#2b2730;">' + (normal.video_title || "\uC624\uB298\uC758 \uC601\uC0C1") + '</div><div style="font-size:12px; color:#b0aab6; margin-top:3px;">\uB20C\uB7EC\uC11C \uC7AC\uC0DD</div></td></tr></table>' +
-      '</a>' : "") +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #eae7e3; border-radius:12px; overflow:hidden;">' +
+        '<tr><td style="padding:0; font-size:0; line-height:0;">' +
+          '<a href="https://www.youtube.com/watch?v=' + normal.video_id + '" style="display:block; text-decoration:none;">' +
+            '<img src="https://img.youtube.com/vi/' + normal.video_id + '/hqdefault.jpg" width="600" style="display:block; width:100%; max-width:100%; height:auto; border:0;" alt="">' +
+          '</a>' +
+        '</td></tr>' +
+        '<tr><td bgcolor="#ffffff" style="background:#ffffff; padding:13px 16px;">' +
+          '<a href="https://www.youtube.com/watch?v=' + normal.video_id + '" style="text-decoration:none;">' +
+            '<div style="font-size:14px; font-weight:600; color:#2b2730;">' + (normal.video_title || "\uC624\uB298\uC758 \uC601\uC0C1") + '</div>' +
+            '<div style="font-size:12px; color:#b0aab6; margin-top:3px;">\uB20C\uB7EC\uC11C \uC7AC\uC0DD</div>' +
+          '</a>' +
+        '</td></tr>' +
+      '</table>' : "") +
 
       bibleBlock +
 
