@@ -213,7 +213,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId 
 '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f3f1ef" style="background:#f3f1ef;"><tr>' +
 '<td align="center" style="padding:36px 12px 56px; font-family:' + font + '; word-break:keep-all;">' +
 
-  '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px; background:#ffffff; border:1px solid #ddd8d3; border-radius:16px; overflow:hidden;">' +
+  '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px; background:#ffffff; border:2px solid #d97c93; border-radius:16px; overflow:hidden;">' +
 
     // 헤더
     '<tr><td bgcolor="#ffffff" style="padding:18px 24px; border-bottom:1px solid #eae7e3;">' +
