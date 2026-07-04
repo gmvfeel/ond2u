@@ -275,6 +275,13 @@
   .welcome-bar { background:var(--plum-soft); border-radius:14px; padding:14px 18px; font-size:13px; color:var(--plum-deep); margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; }
   .welcome-bar .logout { font-family:inherit; font-size:12px; color:var(--plum); background:transparent; border:none; cursor:pointer; text-decoration:underline; }
   .nav-auth { display:flex; justify-content:center; margin-bottom:22px; }
+  /* 오늘의 추천 (WXN 서비스) */
+  .daily-pick { margin-top:22px; background:var(--white); border:1px solid var(--rose); border-radius:14px; padding:16px 16px 15px; box-shadow:0 3px 12px rgba(217,124,147,.12); }
+  .dp-badge { display:inline-block; font-size:10px; font-weight:700; letter-spacing:0.02em; color:#fff; background:var(--rose); border-radius:12px; padding:3px 10px; margin-bottom:11px; }
+  .dp-name { font-size:15px; font-weight:800; color:var(--ink); letter-spacing:-0.02em; }
+  .dp-desc { font-size:12px; line-height:1.6; color:var(--ink-soft); margin-top:6px; }
+  .dp-link { display:inline-block; margin-top:12px; font-size:12px; font-weight:600; color:var(--rose-deep); text-decoration:none; }
+  .dp-link:hover { text-decoration:underline; }
   .nav-login-btn { font-family:inherit; font-size:13px; font-weight:600; color:#fff; background:var(--rose); border:1px solid var(--rose); border-radius:20px; padding:7px 18px; cursor:pointer; box-shadow:0 3px 10px rgba(217,124,147,.28); }
   .nav-login-btn:hover { background:var(--rose-deep); border-color:var(--rose-deep); }
   .nav-user { font-size:12.5px; color:var(--ink-soft); display:flex; align-items:center; gap:10px; white-space:nowrap; background:var(--white); border:1px solid var(--line-strong); border-radius:20px; padding:6px 8px 6px 14px; box-shadow:0 2px 8px rgba(80,60,70,.06); }
@@ -996,6 +1003,7 @@
       </a>
     </div>
   </div>
+  <div class="daily-pick" id="dailyPick"></div>
 </aside><!-- /sidebar -->
 </div><!-- /layout -->
 
@@ -1759,6 +1767,28 @@
     $("gate").style.display = "block";
     $("sendPanel").style.display = "none";
     renderNavAuth();
+  }
+
+  // 오늘의 WXN 서비스 추천 (날짜 기반 로테이션)
+  function renderDailyPick(){
+    const el = $("dailyPick");
+    if (!el) return;
+    const PICKS = [
+      { name:"엘피스탁", url:"https://lpstock.co.kr", desc:"클래식과 현대음악, 12,000장의 LP가 기다리는 곳" },
+      { name:"부클립스", url:"https://booklps.vercel.app", desc:"절판된 책과 희귀 음반을 한 번에 검색해요" },
+      { name:"엘파그", url:"https://lpaug.vercel.app", desc:"LP 입문? 턴테이블부터 앰프까지 친절한 가이드" },
+      { name:"핀홈", url:"https://pinhome-five.vercel.app", desc:"우리 회사에 맞는 정책자금·지원금을 찾아드려요" },
+      { name:"오퍼스클램", url:"http://opusclam.com/", desc:"순수음악을 사랑하는 사람들의 커뮤니티" }
+    ];
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const dayOfYear = Math.floor((now - start) / 86400000);
+    const p = PICKS[dayOfYear % PICKS.length];
+    el.innerHTML =
+      '<div class="dp-badge">오늘의 추천</div>'
+      + '<div class="dp-name">' + p.name + '</div>'
+      + '<div class="dp-desc">' + p.desc + '</div>'
+      + '<a class="dp-link" href="' + p.url + '" target="_blank" rel="noopener">구경하러 가기 →</a>';
   }
 
   // 왼쪽 메뉴 아래 로그인/사용자 영역
@@ -2543,6 +2573,7 @@
     } catch (e) { console.log("네이버 세션 설정 오류:", e); }
     await checkSession();       // 그다음 로그인 확인 + 담은글/기분 불러오기
     renderNavAuth();            // 왼쪽 메뉴 로그인/사용자 영역 표시
+    renderDailyPick();          // 오늘의 WXN 서비스 추천
   })();
 </script>
 </body>
