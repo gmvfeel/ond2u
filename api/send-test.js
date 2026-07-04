@@ -13,16 +13,34 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
 
+  const SB_URL = process.env.ODO_SUPABASE_URL;
+  const SB_SERVICE = process.env.ODO_SERVICE_KEY;
   const SECRET = process.env.CRON_SECRET;
   const authHeader = req.headers.authorization || "";
   const isCron = !!SECRET && authHeader === "Bearer " + SECRET;   // Vercel Cron이 자동으로 붙이는 헤더
   const keyOk  = !!SECRET && (req.query.key || "") === SECRET;    // 주소창 수동 호출 ?key=
-  if (!isCron && !keyOk)
+
+  // 관리자 로그인 세션으로도 발송 허용 (화면의 발송 버튼용)
+  let isAdmin = false;
+  if (!isCron && !keyOk && SB_URL && SB_SERVICE) {
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (token) {
+      try {
+        const uRes = await fetch(SB_URL + "/auth/v1/user", {
+          headers: { "Authorization": "Bearer " + token, "apikey": SB_SERVICE }
+        });
+        const user = await uRes.json();
+        const email = ((user && user.email) || "").toLowerCase();
+        const admins = (process.env.ADMIN_EMAILS || "")
+          .split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
+        if (email && admins.includes(email)) isAdmin = true;
+      } catch (e) {}
+    }
+  }
+  if (!isCron && !keyOk && !isAdmin)
     return res.status(401).json({ ok: false, error: "열쇠가 맞지 않아요." });
 
   const RESEND_KEY = process.env.RESEND_API_KEY;
-  const SB_URL = process.env.ODO_SUPABASE_URL;
-  const SB_SERVICE = process.env.ODO_SERVICE_KEY;
   const FROM = process.env.ODO_FROM_EMAIL || "letter@ond2u.com";
 
   if (!RESEND_KEY || !SB_URL || !SB_SERVICE)
