@@ -23,7 +23,7 @@ export default async function handler(req, res) {
   const RESEND_KEY = process.env.RESEND_API_KEY;
   const SB_URL = process.env.ODO_SUPABASE_URL;
   const SB_SERVICE = process.env.ODO_SERVICE_KEY;
-  const FROM = process.env.ODO_FROM_EMAIL || "onboarding@resend.dev";
+  const FROM = process.env.ODO_FROM_EMAIL || "letter@ond2u.com";
 
   if (!RESEND_KEY || !SB_URL || !SB_SERVICE)
     return res.status(500).json({ ok: false, error: "서버 설정(환경변수)이 아직 안 됐어요." });
@@ -85,7 +85,7 @@ async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, to, 
       method: "POST",
       headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "오늘도 <" + FROM + ">",
+        from: '"오늘도/OND2U" <' + FROM + ">",
         to: [to],
         subject: fromName + "님이 오늘도 보냅니다",
         html
