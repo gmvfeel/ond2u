@@ -169,111 +169,125 @@ function careEmoji(k){
 
 function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId }) {
   const nl = s => (s || "").replace(/\\n/g, "\n");
-  // 반응 버튼이 눌리면 이 주소로 이동 → api/react 가 창고에 기록
   const rParam = encodeURIComponent(recipientEmail || "");
   const sParam = encodeURIComponent(senderId || "");
   const qParam = encodeURIComponent(nl(normal.quote).replace(/\n/g, " ").slice(0, 60));
   const reactUrl = em => "https://ond2u.vercel.app/api/react?e=" + encodeURIComponent(em) + "&r=" + rParam + "&s=" + sParam + "&q=" + qParam;
   const brQuote = nl(normal.quote).replace(/\n/g, "<br>");
   const essayParas = nl(normal.essay).split("\n\n").filter(Boolean)
-    .map(p => '<p style="font-size:14px; line-height:1.95; color:#e9e5f0; margin:0 0 13px;">' + p.replace(/\n/g,"<br>") + '</p>').join("");
+    .map(p => '<p style="font-size:14px; line-height:1.9; color:#e9e5f0; margin:0 0 13px;">' + p.replace(/\n/g, "<br>") + '</p>').join("");
   const careIc = careEmoji(normal.care_icon);
   const badge = fromName.charAt(0);
-  const toLine = toName ? ("받는 사람<br>" + toName) : "받는 사람";
   const font = "'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif";
+  const spacer = h => '<div style="height:' + h + 'px; line-height:' + h + 'px; font-size:0;">&nbsp;</div>';
+
+  // 색상 (앱과 통일)
+  const PLUM = "#423458", PLUM_DEEP = "#33283f", PLUM_SOFT = "#efecf4", ROSE = "#d97c93";
 
   let bibleBlock = "";
   if (bible) {
     const bQuote = nl(bible.quote).replace(/\n/g, "<br>");
     const bParas = nl(bible.essay).split("\n\n").filter(Boolean)
-      .map(p => '<p style="font-size:14px; line-height:1.95; color:#46414d; margin:0 0 13px;">' + p.replace(/\n/g,"<br>") + '</p>').join("");
+      .map(p => '<p style="font-size:14px; line-height:1.9; color:#46414d; margin:0 0 13px;">' + p.replace(/\n/g, "<br>") + '</p>').join("");
     bibleBlock =
-      '<div style="margin-top:34px; padding-top:28px; border-top:1px solid #eae7e3;">' +
-        '<div style="font-size:11px; letter-spacing:0.08em; color:#5a4a7a; font-weight:700; text-align:center; margin-bottom:16px;">✝ 하나님께서 오늘 주신 말씀입니다</div>' +
+      spacer(30) +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-top:28px; border-top:1px solid #eae7e3;">' +
+        '<div style="font-size:11px; letter-spacing:0.08em; color:' + PLUM + '; font-weight:700; text-align:center; margin-bottom:16px;">\u271D \uD558\uB098\uB2D8\uAED8\uC11C \uC624\uB298 \uC8FC\uC2E0 \uB9D0\uC500\uC785\uB2C8\uB2E4</div>' +
         '<div style="font-size:22px; line-height:1.5; font-weight:800; text-align:center; color:#2b2730; letter-spacing:-0.035em; word-break:keep-all;">' + bQuote + '</div>' +
         (bible.quote_en ? '<div style="font-size:14px; font-style:italic; color:#7a7580; text-align:center; margin-top:12px;">' + bible.quote_en + '</div>' : "") +
-        '<div style="font-size:13px; color:#7a7580; text-align:center; margin-top:14px;">— ' + (bible.author || "") + '</div>' +
+        '<div style="font-size:13px; color:#7a7580; text-align:center; margin-top:14px;">\u2014 ' + (bible.author || "") + '</div>' +
         '<div style="margin-top:20px;">' + bParas + '</div>' +
-      '</div>';
+      '</td></tr></table>';
   }
 
   return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
 '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">' +
 '</head>' +
-'<body style="margin:0; padding:0; background:#f3f1ef; font-family:' + font + '; -webkit-font-smoothing:antialiased;">' +
-'<div style="max-width:560px; margin:0 auto; padding:40px 20px 60px; word-break:keep-all; font-family:' + font + ';">' +
+'<body style="margin:0; padding:0; background:#f3f1ef; font-family:' + font + ';">' +
+'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f3f1ef" style="background:#f3f1ef;"><tr>' +
+'<td align="center" style="padding:36px 12px 56px; font-family:' + font + '; word-break:keep-all;">' +
 
-  '<div style="background:#ffffff; border:1px solid #ddd8d3; border-radius:16px; overflow:hidden; box-shadow:0 10px 40px rgba(70,50,70,.08);">' +
+  '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px; background:#ffffff; border:1px solid #ddd8d3; border-radius:16px; overflow:hidden;">' +
 
-    '<div style="padding:18px 24px; border-bottom:1px solid #eae7e3;">' +
-      '<div style="font-size:16px; font-weight:700; color:#2b2730; margin-bottom:12px;">오늘도 · 당신을 위한 한 편</div>' +
-      '<table width="100%" cellpadding="0" cellspacing="0"><tr>' +
-        '<td style="width:44px; vertical-align:middle;"><div style="width:38px; height:38px; border-radius:50%; background:#5a4a7a; color:#fff; text-align:center; line-height:38px; font-weight:700; font-size:15px;">' + badge + '</div></td>' +
-        '<td style="vertical-align:middle;"><div style="font-size:13px; font-weight:600; color:#2b2730;">' + fromName + ' <span style="color:#b0aab6; font-weight:400;">님이 보냄</span></div><div style="font-size:12px; color:#b0aab6;">오늘도 &lt;OND2U&gt;</div></td>' +
-        '<td style="vertical-align:middle; text-align:right; font-size:12px; color:#b0aab6; line-height:1.5;">' + toLine + '</td>' +
+    // 헤더
+    '<tr><td bgcolor="#ffffff" style="padding:18px 24px; border-bottom:1px solid #eae7e3;">' +
+      '<div style="font-size:16px; font-weight:700; color:#2b2730; margin-bottom:12px;">\uC624\uB298\uB3C4 \u00B7 \uB2F9\uC2E0\uC744 \uC704\uD55C \uD55C \uD3B8</div>' +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>' +
+        '<td width="44" style="vertical-align:middle;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="38" height="38" bgcolor="' + PLUM + '" align="center" style="background:' + PLUM + '; border-radius:50%; color:#ffffff; font-weight:700; font-size:15px; line-height:38px;">' + badge + '</td></tr></table></td>' +
+        '<td style="vertical-align:middle;"><div style="font-size:13px; font-weight:600; color:#2b2730;">' + fromName + ' <span style="color:#b0aab6; font-weight:400;">\uB2D8\uC774 \uBCF4\uB0C4</span></div><div style="font-size:12px; color:#b0aab6;">\uC624\uB298\uB3C4 &lt;OND2U&gt;</div></td>' +
+        '<td style="vertical-align:middle; text-align:right; font-size:12px; color:#b0aab6; line-height:1.5;">' + (toName ? "\uBC1B\uB294 \uC0AC\uB78C<br>" + toName : "\uBC1B\uB294 \uC0AC\uB78C") + '</td>' +
       '</tr></table>' +
-    '</div>' +
+    '</td></tr>' +
 
-    '<div style="padding:36px 32px 30px;">' +
-      '<div style="text-align:center; font-size:20px; font-weight:800; letter-spacing:-0.04em; color:#2b2730; margin-bottom:22px;">오늘도 <span style="font-size:11px; font-weight:600; color:#5a4a7a; letter-spacing:0.08em;">OND2U</span></div>' +
+    // 본문
+    '<tr><td bgcolor="#ffffff" style="padding:36px 28px 30px;">' +
+      '<div style="text-align:center; font-size:20px; font-weight:800; letter-spacing:-0.04em; color:#2b2730; margin-bottom:22px;">\uC624\uB298\uB3C4 <span style="font-size:11px; font-weight:600; color:' + PLUM + '; letter-spacing:0.08em;">OND2U</span></div>' +
+      '<div style="text-align:center; font-size:13px; color:#7a7580; margin:0 0 12px;"><b style="color:#2b2730;">' + fromName + '</b>\uB2D8\uC774 \uC624\uB298\uB3C4 \uBCF4\uB0C5\uB2C8\uB2E4</div>' +
+      '<div style="text-align:center; font-size:14px; font-weight:600; color:' + PLUM + '; margin-bottom:14px;">\uC624\uB298\uB3C4 \uB2F9\uC2E0\uC758 \uCD5C\uACE0\uAC00 \uB420 \uAC81\uB2C8\uB2E4. \uD798\uB0B4\uC138\uC694.</div>' +
+      '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 32px;"><tr><td width="30" height="3" bgcolor="' + PLUM + '" style="background:' + PLUM + '; font-size:0; line-height:3px; border-radius:3px;">&nbsp;</td></tr></table>' +
 
-      '<div style="text-align:center; font-size:13px; color:#7a7580; margin:0 0 12px;"><span style="display:inline-block; width:22px; height:22px; border-radius:50%; background:#5a4a7a; color:#fff; line-height:22px; font-size:11px; font-weight:700; vertical-align:middle;">' + badge + '</span> <b style="color:#2b2730;">' + fromName + '</b>님이 오늘도 보냅니다</div>' +
-
-      '<div style="text-align:center; font-size:14px; font-weight:600; color:#5a4a7a; margin-bottom:14px;">오늘도 당신의 최고가 될 겁니다. 힘내세요.</div>' +
-      '<div style="width:30px; height:3px; background:#5a4a7a; opacity:.5; margin:0 auto 32px; border-radius:3px;"></div>' +
-
-      '<div style="font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:#b0aab6; text-align:center; margin-bottom:16px;">오늘의 한 줄</div>' +
-      '<div style="font-size:26px; line-height:1.5; font-weight:800; text-align:center; color:#2b2730; letter-spacing:-0.035em; word-break:keep-all;">' + brQuote + '</div>' +
+      '<div style="font-size:10px; letter-spacing:0.18em; color:#b0aab6; text-align:center; margin-bottom:16px;">\uC624\uB298\uC758 \uD55C \uC904</div>' +
+      '<div style="font-size:25px; line-height:1.5; font-weight:800; text-align:center; color:#2b2730; letter-spacing:-0.035em; word-break:keep-all;">' + brQuote + '</div>' +
       (normal.quote_en ? '<div style="font-size:14px; font-style:italic; color:#7a7580; text-align:center; margin-top:12px; line-height:1.5;">' + normal.quote_en + '</div>' : "") +
-      '<div style="font-size:13px; color:#7a7580; text-align:center; margin-top:16px;">— ' + (normal.author || "") + '</div>' +
+      '<div style="font-size:13px; color:#7a7580; text-align:center; margin-top:16px;">\u2014 ' + (normal.author || "") + '</div>' +
 
-      '<div style="margin-top:30px; background:#5a4a7a; border-radius:14px; padding:26px 24px;">' +
+      // 에세이 카드 (보라 배경)
+      spacer(30) +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="' + PLUM + '" style="background:' + PLUM + '; border-radius:14px;"><tr><td style="padding:26px 24px;">' +
         (normal.essay_title ? '<div style="font-size:16px; font-weight:700; color:#ffffff; margin-bottom:14px;">' + normal.essay_title + '</div>' : "") +
         essayParas +
-        '<div style="margin-top:20px; text-align:right; font-size:14px; font-weight:500; color:#ffffff;">' + josaGaI(fromName) + ' 드려요. 오늘도 좋은 하루 되세요 ^^</div>' +
-      '</div>' +
+        '<div style="margin-top:20px; text-align:right; font-size:14px; font-weight:500; color:#ffffff;">' + josaGaI(fromName) + ' \uB4DC\uB824\uC694. \uC624\uB298\uB3C4 \uC88B\uC740 \uD558\uB8E8 \uB418\uC138\uC694 ^^</div>' +
+      '</td></tr></table>' +
 
+      // 처방 카드 (연보라)
       (normal.care_title ?
-      '<div style="margin-top:30px; background:#efecf4; border-radius:14px; padding:20px 22px;">' +
-        '<table cellpadding="0" cellspacing="0"><tr>' +
-          '<td style="width:48px; vertical-align:middle;"><div style="width:36px; height:36px; border-radius:10px; background:#fff; text-align:center; line-height:36px; font-size:19px;">' + careIc + '</div></td>' +
-          '<td style="vertical-align:middle;"><div style="font-size:10px; letter-spacing:0.1em; color:#5a4a7a;">오늘의 작은 처방</div><div style="font-size:15px; font-weight:700; color:#453961; margin-top:2px;">' + normal.care_title + '</div></td>' +
+      spacer(30) +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="' + PLUM_SOFT + '" style="background:' + PLUM_SOFT + '; border-radius:14px;"><tr><td style="padding:20px 22px;">' +
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
+          '<td width="48" style="vertical-align:middle;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="36" height="36" bgcolor="#ffffff" align="center" style="background:#ffffff; border-radius:10px; font-size:19px; line-height:36px;">' + careIc + '</td></tr></table></td>' +
+          '<td style="vertical-align:middle;"><div style="font-size:10px; letter-spacing:0.1em; color:' + PLUM + ';">\uC624\uB298\uC758 \uC791\uC740 \uCC98\uBC29</div><div style="font-size:15px; font-weight:700; color:' + PLUM_DEEP + '; margin-top:2px;">' + normal.care_title + '</div></td>' +
         '</tr></table>' +
         '<div style="font-size:13px; line-height:1.8; color:#46414d; margin-top:11px;">' + (normal.care_body || "") + '</div>' +
-      '</div>' : "") +
+      '</td></tr></table>' : "") +
 
+      // 영상
       (normal.video_id ?
-      '<div style="margin-top:32px;">' +
-        '<div style="font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:#b0aab6; margin-bottom:12px;">오늘의 영상</div>' +
-        '<a href="https://www.youtube.com/watch?v=' + normal.video_id + '" style="display:block; text-decoration:none; border:1px solid #eae7e3; border-radius:12px; overflow:hidden;">' +
-          '<img src="https://img.youtube.com/vi/' + normal.video_id + '/hqdefault.jpg" width="100%" style="display:block; width:100%;" alt="">' +
-          '<div style="padding:13px 16px;"><div style="font-size:14px; font-weight:600; color:#2b2730;">' + (normal.video_title || "오늘의 영상") + '</div><div style="font-size:12px; color:#b0aab6; margin-top:3px;">눌러서 재생</div></div>' +
-        '</a>' +
-      '</div>' : "") +
+      spacer(32) +
+      '<div style="font-size:10px; letter-spacing:0.16em; color:#b0aab6; margin-bottom:12px;">\uC624\uB298\uC758 \uC601\uC0C1</div>' +
+      '<a href="https://www.youtube.com/watch?v=' + normal.video_id + '" style="display:block; text-decoration:none;">' +
+        '<img src="https://img.youtube.com/vi/' + normal.video_id + '/hqdefault.jpg" width="544" style="display:block; width:100%; max-width:544px; border:1px solid #eae7e3; border-bottom:none; border-radius:12px 12px 0 0;" alt="">' +
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background:#ffffff; border:1px solid #eae7e3; border-top:none; border-radius:0 0 12px 12px;"><tr><td style="padding:13px 16px;"><div style="font-size:14px; font-weight:600; color:#2b2730;">' + (normal.video_title || "\uC624\uB298\uC758 \uC601\uC0C1") + '</div><div style="font-size:12px; color:#b0aab6; margin-top:3px;">\uB20C\uB7EC\uC11C \uC7AC\uC0DD</div></td></tr></table>' +
+      '</a>' : "") +
 
       bibleBlock +
 
-      '<div style="margin-top:32px; padding:22px; background:#efecf4; border-radius:14px; text-align:center;">' +
-        '<div style="font-size:13px; color:#453961; margin-bottom:14px;">이 편지, ' + (toName ? toName + " 마음" : "당신 마음") + '엔 어떠셨어요?</div>' +
-        '<div>' +
-          '<a href="' + reactUrl("위로됐어요") + '" style="display:inline-block; font-size:13px; color:#453961; background:#fff; border:1px solid #5a4a7a; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">위로됐어요 \u2661</a>' +
-          '<a href="' + reactUrl("힘이 나요") + '" style="display:inline-block; font-size:13px; color:#453961; background:#fff; border:1px solid #5a4a7a; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">힘이 나요</a>' +
-          '<a href="' + reactUrl("고마워요") + '" style="display:inline-block; font-size:13px; color:#453961; background:#fff; border:1px solid #5a4a7a; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">고마워요</a>' +
-        '</div>' +
-      '</div>' +
+      // 반응 (로즈 포인트)
+      spacer(32) +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="' + PLUM_SOFT + '" style="background:' + PLUM_SOFT + '; border-radius:14px;"><tr><td align="center" style="padding:22px;">' +
+        '<div style="font-size:13px; color:' + PLUM_DEEP + '; margin-bottom:14px;">\uC774 \uD3B8\uC9C0, ' + (toName ? toName + " \uB9C8\uC74C" : "\uB2F9\uC2E0 \uB9C8\uC74C") + '\uC5D4 \uC5B4\uB5A0\uC168\uC5B4\uC694?</div>' +
+        '<a href="' + reactUrl("\uC704\uB85C\uB410\uC5B4\uC694") + '" style="display:inline-block; font-size:13px; color:' + PLUM_DEEP + '; background:#ffffff; border:1px solid ' + ROSE + '; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">\uC704\uB85C\uB410\uC5B4\uC694 \u2661</a>' +
+        '<a href="' + reactUrl("\uD798\uC774 \uB098\uC694") + '" style="display:inline-block; font-size:13px; color:' + PLUM_DEEP + '; background:#ffffff; border:1px solid ' + ROSE + '; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">\uD798\uC774 \uB098\uC694</a>' +
+        '<a href="' + reactUrl("\uACE0\uB9C8\uC6CC\uC694") + '" style="display:inline-block; font-size:13px; color:' + PLUM_DEEP + '; background:#ffffff; border:1px solid ' + ROSE + '; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">\uACE0\uB9C8\uC6CC\uC694</a>' +
+      '</td></tr></table>' +
 
-      '<div style="margin-top:30px; text-align:center;">' +
-        '<a href="https://ond2u.vercel.app/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#fff; background:#2b2730; text-decoration:none; padding:13px 28px; border-radius:30px;">오늘도에서 더 보기 \u2192</a>' +
-      '</div>' +
-    '</div>' +
+      // CTA
+      spacer(30) +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
+        '<a href="https://ond2u.com/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:#2b2730; text-decoration:none; padding:13px 28px; border-radius:30px;">\uC624\uB298\uB3C4\uC5D0\uC11C \uB354 \uBCF4\uAE30 \u2192</a>' +
+      '</td></tr></table>' +
+    '</td></tr>' +
 
-    '<div style="padding:22px 32px; border-top:1px solid #eae7e3; background:#f3f1ef; text-align:center;">' +
-      '<div style="font-size:12px; color:#7a7580; line-height:1.7;"><b style="color:#453961;">' + fromName + '</b>님이 ' + (toName ? toName + "를" : "당신을") + ' 생각하며 보내는 편지예요.</div>' +
-      '<div style="font-size:11px; color:#b0aab6; margin-top:10px;">이제 그만 받고 싶으시면 <a href="#" style="color:#b0aab6;">여기</a>를 눌러주세요. 언제든 괜찮아요.</div>' +
-    '</div>' +
-  '</div>' +
+    // 푸터
+    '<tr><td bgcolor="#f3f1ef" style="padding:22px 28px; border-top:1px solid #eae7e3; text-align:center;">' +
+      '<div style="font-size:12px; color:#7a7580; line-height:1.7;"><b style="color:' + PLUM_DEEP + ';">' + fromName + '</b>\uB2D8\uC774 ' + (toName ? toName + "\uB97C" : "\uB2F9\uC2E0\uC744") + ' \uC0DD\uAC01\uD558\uBA70 \uBCF4\uB0B4\uB294 \uD3B8\uC9C0\uC608\uC694.</div>' +
+      '<div style="font-size:11px; color:#b0aab6; margin-top:10px;">\uC774\uC81C \uADF8\uB9CC \uBC1B\uACE0 \uC2F6\uC73C\uC2DC\uBA74 <a href="#" style="color:#b0aab6;">\uC5EC\uAE30</a>\uB97C \uB20C\uB7EC\uC8FC\uC138\uC694. \uC5B8\uC81C\uB4E0 \uAD1C\uCC2E\uC544\uC694.</div>' +
+    '</td></tr>' +
 
-  '<div style="text-align:center; font-size:12px; color:#b0aab6; margin-top:20px;">오늘도 · OND2U</div>' +
-'</div>' +
+  '</table>' +
+
+  spacer(20) +
+  '<div style="text-align:center; font-size:12px; color:#b0aab6;">\uC624\uB298\uB3C4 \u00B7 OND2U</div>' +
+
+'</td></tr></table>' +
 '</body></html>';
 }
