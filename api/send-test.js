@@ -178,7 +178,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId 
     .map(p => '<p style="font-size:14px; line-height:1.9; color:#e9e5f0; margin:0 0 13px;">' + p.replace(/\n/g, "<br>") + '</p>').join("");
   const careIc = careEmoji(normal.care_icon);
   const badge = fromName.charAt(0);
-  const font = "'Pretendard','Malgun Gothic','\uB9D1\uC740 \uACE0\uB515','Apple SD Gothic Neo','Segoe UI',sans-serif";
+  const font = "'Pretendard','Gulim','\uAD74\uB9BC',sans-serif";
   const spacer = h => '<div style="height:' + h + 'px; line-height:' + h + 'px; font-size:0;">&nbsp;</div>';
   // 반응 버튼 (아웃룩 호환: 각 버튼을 개별 table 셀로 만들어 margin 없이도 간격 확보)
   const reactBtn = (url, label, textColor, borderColor) =>
@@ -207,7 +207,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId 
 
   return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
 '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">' +
-'<!--[if mso]><style type="text/css">body,table,td,div,p,span,a,b,h1,h2,h3 { font-family:\'Malgun Gothic\',\'\\B9D1\\C740 \\ACE0\\B515\',sans-serif !important; letter-spacing:0 !important; }</style><![endif]-->' +
+'<!--[if mso]><style type="text/css">body,table,td,div,p,span,a,b,h1,h2,h3 { font-family:\'Gulim\',\'\uAD74\uB9BC\',sans-serif !important; letter-spacing:0 !important; }</style><![endif]-->' +
 '</head>' +
 '<body style="margin:0; padding:0; background:#f3f1ef; font-family:' + font + ';">' +
 '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f3f1ef" style="background:#f3f1ef;"><tr>' +
