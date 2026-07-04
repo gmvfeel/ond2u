@@ -178,8 +178,13 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId 
     .map(p => '<p style="font-size:14px; line-height:1.9; color:#e9e5f0; margin:0 0 13px;">' + p.replace(/\n/g, "<br>") + '</p>').join("");
   const careIc = careEmoji(normal.care_icon);
   const badge = fromName.charAt(0);
-  const font = "'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif";
+  const font = "'Pretendard','Malgun Gothic','\uB9D1\uC740 \uACE0\uB515','Apple SD Gothic Neo','Segoe UI',sans-serif";
   const spacer = h => '<div style="height:' + h + 'px; line-height:' + h + 'px; font-size:0;">&nbsp;</div>';
+  // 반응 버튼 (아웃룩 호환: 각 버튼을 개별 table 셀로 만들어 margin 없이도 간격 확보)
+  const reactBtn = (url, label, textColor, borderColor) =>
+    '<td bgcolor="#ffffff" style="background:#ffffff; border:1px solid ' + borderColor + '; border-radius:30px;">' +
+      '<a href="' + url + '" style="display:block; font-size:13px; color:' + textColor + '; text-decoration:none; padding:9px 15px; white-space:nowrap;">' + label + '</a>' +
+    '</td>';
 
   // 색상 (앱과 통일)
   const PLUM = "#423458", PLUM_DEEP = "#33283f", PLUM_SOFT = "#efecf4", ROSE = "#d97c93";
@@ -202,7 +207,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId 
 
   return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
 '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">' +
-'<!--[if mso]><style>* { font-family:\'Malgun Gothic\',\'\\B9D1\\C740 \\ACE0\\B515\',sans-serif !important; letter-spacing:normal !important; }</style><![endif]-->' +
+'<!--[if mso]><style type="text/css">body,table,td,div,p,span,a,b,h1,h2,h3 { font-family:\'Malgun Gothic\',\'\\B9D1\\C740 \\ACE0\\B515\',sans-serif !important; letter-spacing:0 !important; }</style><![endif]-->' +
 '</head>' +
 '<body style="margin:0; padding:0; background:#f3f1ef; font-family:' + font + ';">' +
 '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f3f1ef" style="background:#f3f1ef;"><tr>' +
@@ -263,13 +268,17 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId 
 
       bibleBlock +
 
-      // 반응 (로즈 포인트)
+      // 반응 (로즈 포인트) — 아웃룩 호환: 버튼을 table 셀로 분리해 간격 확보
       spacer(32) +
       '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="' + PLUM_SOFT + '" style="background:' + PLUM_SOFT + '; border-radius:14px;"><tr><td align="center" style="padding:22px;">' +
-        '<div style="font-size:13px; color:' + PLUM_DEEP + '; margin-bottom:14px;">\uC774 \uD3B8\uC9C0, ' + (toName ? toName + " \uB9C8\uC74C" : "\uB2F9\uC2E0 \uB9C8\uC74C") + '\uC5D4 \uC5B4\uB5A0\uC168\uC5B4\uC694?</div>' +
-        '<a href="' + reactUrl("\uC704\uB85C\uB410\uC5B4\uC694") + '" style="display:inline-block; font-size:13px; color:' + PLUM_DEEP + '; background:#ffffff; border:1px solid ' + ROSE + '; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">\uC704\uB85C\uB410\uC5B4\uC694 \u2661</a>' +
-        '<a href="' + reactUrl("\uD798\uC774 \uB098\uC694") + '" style="display:inline-block; font-size:13px; color:' + PLUM_DEEP + '; background:#ffffff; border:1px solid ' + ROSE + '; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">\uD798\uC774 \uB098\uC694</a>' +
-        '<a href="' + reactUrl("\uACE0\uB9C8\uC6CC\uC694") + '" style="display:inline-block; font-size:13px; color:' + PLUM_DEEP + '; background:#ffffff; border:1px solid ' + ROSE + '; border-radius:30px; padding:8px 14px; text-decoration:none; margin:3px;">\uACE0\uB9C8\uC6CC\uC694</a>' +
+        '<div style="font-size:13px; color:' + PLUM_DEEP + '; margin-bottom:16px;">\uC774 \uD3B8\uC9C0, ' + (toName ? toName + " \uB9C8\uC74C" : "\uB2F9\uC2E0 \uB9C8\uC74C") + '\uC5D4 \uC5B4\uB5A0\uC168\uC5B4\uC694?</div>' +
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr>' +
+          reactBtn(reactUrl("\uC704\uB85C\uB410\uC5B4\uC694"), "\uC704\uB85C\uB410\uC5B4\uC694 \u2661", PLUM_DEEP, ROSE) +
+          '<td width="7" style="font-size:0; line-height:0;">&nbsp;</td>' +
+          reactBtn(reactUrl("\uD798\uC774 \uB098\uC694"), "\uD798\uC774 \uB098\uC694", PLUM_DEEP, ROSE) +
+          '<td width="7" style="font-size:0; line-height:0;">&nbsp;</td>' +
+          reactBtn(reactUrl("\uACE0\uB9C8\uC6CC\uC694"), "\uACE0\uB9C8\uC6CC\uC694", PLUM_DEEP, ROSE) +
+        '</tr></table>' +
       '</td></tr></table>' +
 
       // CTA
