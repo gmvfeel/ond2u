@@ -213,7 +213,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId 
 '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f3f1ef" style="background:#f3f1ef;"><tr>' +
 '<td align="center" style="padding:36px 12px 56px; font-family:' + font + '; word-break:keep-all;">' +
 
-  '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px; background:#ffffff; border:2px solid #d97c93; border-radius:16px; overflow:hidden;">' +
+  '<table role="presentation" width="680" cellpadding="0" cellspacing="0" border="0" style="width:680px; max-width:680px; background:#ffffff; border:2px solid #d97c93; border-radius:16px; overflow:hidden;">' +
 
     // 헤더
     '<tr><td bgcolor="#ffffff" style="padding:18px 24px; border-bottom:1px solid #eae7e3;">' +
@@ -264,7 +264,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId 
       '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #eae7e3; border-radius:12px; overflow:hidden;">' +
         '<tr><td style="padding:0; font-size:0; line-height:0;">' +
           '<a href="https://www.youtube.com/watch?v=' + normal.video_id + '" style="display:block; text-decoration:none;">' +
-            '<img src="https://img.youtube.com/vi/' + normal.video_id + '/hqdefault.jpg" width="600" style="display:block; width:100%; max-width:100%; height:auto; border:0;" alt="">' +
+            '<img src="https://img.youtube.com/vi/' + normal.video_id + '/hqdefault.jpg" width="624" style="display:block; width:100%; max-width:100%; height:auto; border:0;" alt="">' +
           '</a>' +
         '</td></tr>' +
         '<tr><td bgcolor="#ffffff" style="background:#ffffff; padding:13px 16px;">' +
