@@ -46,8 +46,9 @@
     border:none; border-radius:10px; padding:11px 12px; cursor:pointer; transition:all .16s; text-align:left; width:100%; display:flex; align-items:center;
   }
   .tab svg { width:18px; height:18px; margin-right:11px; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; opacity:.82; }
-  .tab:hover { color:var(--plum); background:var(--plum-soft); }
-  .tab.on { color:var(--plum-deep); font-weight:700; background:var(--plum-soft); }
+  .tab:hover { color:var(--rose); }
+  .tab:hover svg { opacity:1; }
+  .tab.on { color:var(--rose); font-weight:700; }
   .tab.on svg { opacity:1; }
   .tab-sec { font-size:11px; font-weight:700; color:var(--ink-faint); letter-spacing:.06em; padding:15px 12px 5px; user-select:none; }
   .tab-div { height:1px; background:var(--line); margin:12px 10px 8px; }
@@ -225,7 +226,7 @@
     .tab svg { width:15px; height:15px; margin-right:6px; opacity:.85; }
     .tab-sec, .tab-div { display:none !important; }
     .tab:last-child { border-bottom: 1px solid var(--line); }
-    .tab.on { background: var(--plum); color: #fff; border-color: var(--plum); font-weight: 600; }
+    .tab.on { background: var(--rose); color: #fff; border-color: var(--rose); font-weight: 600; }
     .stage { max-width: 600px; margin: 0 auto; }
     .sidebar { width: 100%; max-width: 600px; margin: 40px auto 0; position: static; padding-top: 32px; border-top: 1px solid var(--line); }
     .sidebar .family-list { display:grid; grid-template-columns:1fr 1fr; gap:5px; background:transparent; border:none; box-shadow:none; border-radius:0; overflow:visible; }
