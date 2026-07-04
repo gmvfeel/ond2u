@@ -1359,15 +1359,16 @@
     if (!window.Kakao || !Kakao.isInitialized()) { alert("카카오톡 공유를 불러오지 못했어요. 잠시 후 다시 시도해 주세요."); return; }
     const q = ($("quote") ? $("quote").innerText : "").replace(/\s+/g,' ').trim();
     const a = ($("author") ? $("author").innerText : "").trim();
+    const shareUrl = 'https://ond2u.vercel.app/app.html' + (senderName ? ('?from=' + encodeURIComponent(senderName)) : '');
     Kakao.Share.sendDefault({
       objectType: 'feed',
       content: {
         title: q,
         description: josaGaI(senderName || '오늘도') + ' 보내는 편지' + (a ? '  ·  ' + a : ''),
         imageUrl: 'https://ond2u.vercel.app/og3.png',
-        link: { mobileWebUrl: 'https://ond2u.vercel.app/app.html', webUrl: 'https://ond2u.vercel.app/app.html' }
+        link: { mobileWebUrl: shareUrl, webUrl: shareUrl }
       },
-      buttons: [{ title: '오늘의 편지 보기', link: { mobileWebUrl: 'https://ond2u.vercel.app/app.html', webUrl: 'https://ond2u.vercel.app/app.html' } }]
+      buttons: [{ title: '오늘의 편지 보기', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } }]
     });
   }; }
 
@@ -1745,6 +1746,8 @@
   let loggedIn = false;
   let currentUser = null;
   let senderName = "";   // 편지에 찍힐 "보내는 이름"
+  let sharedFrom = "";   // 카톡 링크(?from=)로 열렸을 때 보낸 사람 이름
+  try { const _sf = new URLSearchParams(location.search).get('from'); if (_sf) sharedFrom = _sf.trim().slice(0,40).replace(/[<>&"']/g,''); } catch(e){}
 
   // 오늘 탭 "보낸 사람" 표시를 senderName으로 갱신
   function josaGaI(name){
@@ -1758,8 +1761,8 @@
     const es = $("essaySign");
     const rq = document.querySelector(".rq");
     const rd = $("reactDone");
-    if (loggedIn && senderName) {
-      const nm = senderName;
+    const nm = sharedFrom || ((loggedIn && senderName) ? senderName : "");
+    if (nm) {
       if (fl) fl.innerHTML = '<span class="from-badge">'+nm.charAt(0)+'</span> <b>'+nm+'</b>님이 오늘도 보냅니다';
       if (es) es.textContent = josaGaI(nm) + " 드려요. 오늘도 좋은 하루 되세요 ^^";
       if (rq) rq.textContent = nm + "님이 보낸 오늘의 한 편, 어떠셨어요?";
@@ -2665,6 +2668,7 @@
       }
     } catch (e) { console.log("네이버 세션 설정 오류:", e); }
     await checkSession();       // 그다음 로그인 확인 + 담은글/기분 불러오기
+    updateFromLine();           // 카톡 링크(?from=)로 열렸으면 보낸 사람 표시
     renderNavAuth();            // 왼쪽 메뉴 로그인/사용자 영역 표시
     renderDailyPick();          // 오늘의 WXN 서비스 추천
   })();
