@@ -123,6 +123,14 @@
   .save-btn:hover { border-color:var(--rose); color:var(--rose); }
   .save-btn.saved { background:var(--rose-soft); border-color:var(--rose); color:var(--rose-deep); font-weight:600; }
   .save-btn.saved .heart { color:var(--rose); }
+
+  /* 로그인 안내 토스트 + 배너 */
+  .odo-toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px); z-index:3000; width:auto; max-width:calc(100% - 32px); background:var(--plum-deep); color:#fff; font-size:13px; line-height:1.55; border-radius:14px; padding:14px 18px; box-shadow:0 10px 30px rgba(0,0,0,.22); opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; text-align:center; }
+  .odo-toast.show { opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
+  .odo-toast b { font-weight:700; }
+  .odo-toast a { display:inline-block; color:#fff; font-weight:700; text-decoration:underline; text-underline-offset:2px; cursor:pointer; margin-top:6px; white-space:nowrap; }
+  .save-guest-note { background:var(--rose-soft); border:1px solid var(--rose); border-radius:14px; padding:14px 16px; margin-bottom:16px; font-size:13px; line-height:1.65; color:var(--rose-deep); }
+  .save-guest-note a { color:var(--rose-deep); font-weight:700; text-decoration:underline; text-underline-offset:2px; cursor:pointer; white-space:nowrap; }
   .save-btn .heart { font-size:15px; }
   .kakao-btn { display:inline-flex; align-items:center; gap:7px; font-family:inherit; font-size:14px; font-weight:600; color:#fff; background:var(--plum); border:none; border-radius:30px; padding:11px 20px; cursor:pointer; transition:filter .16s; }
   .kakao-btn:hover { filter:brightness(0.96); }
@@ -1492,6 +1500,20 @@
   }
   { const sib=$("shareImgBtn"); if(sib) sib.onclick=()=>makeShareImage(); }
 
+  window.odoGoLogin = function(){
+    const tab = document.querySelector('.tab[data-view="send"]');
+    if(tab) tab.click();
+    const t = document.getElementById("odoToast"); if(t) t.classList.remove("show");
+    window.scrollTo({ top:0, behavior:"instant" });
+  };
+  function showToast(html, ms){
+    const t = document.getElementById("odoToast");
+    if(!t) return;
+    t.innerHTML = html;
+    t.classList.add("show");
+    clearTimeout(window._toastT);
+    window._toastT = setTimeout(()=>{ t.classList.remove("show"); }, ms||7000);
+  }
   $("saveBtn").onclick = async () => {
     if(!current) return;
     const sb=$("saveBtn");
@@ -1515,6 +1537,9 @@
           .insert({ user_id: currentUser.id, content_id: current.p.dbId }).select().maybeSingle();
         if(!error && data) item.rowId = data.id;
         else if(error) console.log("담기 저장 오류:", error);
+      }
+      if(!loggedIn){
+        showToast('이 글은 <b>이번 방문에만</b> 담겨요. 로그인하면 언제 다시 와도 담아둔 글이 그대로 있어요.<br><a onclick="odoGoLogin()">로그인 / 가입하고 계속 보관하기 →</a>');
       }
     }
   };
@@ -1540,8 +1565,9 @@
   }
 
   function renderSaved(){
+    const guestNote = (!loggedIn && saved.length) ? '<div class="save-guest-note">아직 로그인하지 않으셨어요. 지금 담은 글은 <b>이번 방문에만</b> 보여요 — 다시 오면 사라져요. <a onclick="odoGoLogin()">로그인하고 계속 보관하기 →</a></div>' : '';
     if(!saved.length){ $("savedList").innerHTML='<div class="saved-empty">아직 담아둔 글이 없어요.<br>오늘 탭에서 마음에 드는 글을 담아보세요.</div>'; return; }
-    $("savedList").innerHTML = saved.map(s=>`<div class="saved-item"><div class="sdate">${s.date?s.date+" 담음":"담아둔 글"}</div><div class="sq">${s.quote.replace(/(\s*(?:<br\s*\/?>|[\r\n])\s*)+/gi,"<br>")}</div><div class="sa">— ${s.author}</div></div>`).join("");
+    $("savedList").innerHTML = guestNote + saved.map(s=>`<div class="saved-item"><div class="sdate">${s.date?s.date+" 담음":"담아둔 글"}</div><div class="sq">${s.quote.replace(/(\s*(?:<br\s*\/?>|[\r\n])\s*)+/gi,"<br>")}</div><div class="sa">— ${s.author}</div></div>`).join("");
   }
 
   function renderTrace(){
@@ -2713,5 +2739,6 @@
     renderDailyPick();          // 오늘의 WXN 서비스 추천
   })();
 </script>
+<div class="odo-toast" id="odoToast"></div>
 </body>
 </html>
