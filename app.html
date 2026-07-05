@@ -1352,8 +1352,7 @@
     $("reactBtns").appendChild(b); });
 
   function pick(useMood){
-    let cand = POOL.map((p,i)=>({p,i})).filter(c=>c.p.kind!=="bible");
-    if(!cand.length) cand = POOL.map((p,i)=>({p,i}));
+    let cand = POOL.map((p,i)=>({p,i}));
     if(useMood && selectedMood){ const tags=MOOD_MAP[selectedMood]||[selectedMood];
       const f=cand.filter(c=>c.p.mood.some(m=>tags.includes(m))); if(f.length)cand=f; }
     let ch,g=0; do{ ch=cand[Math.floor(Math.random()*cand.length)]; g++; } while(cand.length>1&&ch.i===lastIndex&&g<10);
