@@ -19,7 +19,7 @@
     --ink: #2b2730; --ink-2: #46414d; --ink-soft: #7a7580; --ink-faint: #b0aab6;
     --white: #ffffff; --paper: #faf9f8; --line: #f0edea; --line-strong: #e3ded9;
     --plum: #423458; --plum-deep: #33283f; --plum-soft: #efecf4; --plum-line: #d8d0e4;
-    --rose: #D97C93; --rose-deep: #c56179; --rose-soft: #fbeef1;
+    --rose: #D97C93; --rose-deep: #c56179; --rose-soft: #fbeef1; --rose-line: #ecc4d0;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -136,6 +136,15 @@
   .kakao-btn:hover { filter:brightness(0.96); }
 
   .essay-wrap { margin-top:16px; }
+  .fs-ctrl { display:flex; align-items:center; justify-content:flex-end; gap:6px; margin-bottom:10px; }
+  .fs-ctrl .fs-lbl { font-size:12px; color:var(--ink-faint); margin-right:2px; }
+  .fs-ctrl .fs-btn { font-family:inherit; color:var(--ink-soft); background:var(--paper); border:1px solid var(--line-strong); border-radius:9px; width:32px; height:32px; line-height:1; cursor:pointer; padding:0; transition:all .16s; }
+  .fs-ctrl .fs-btn:hover { border-color:var(--rose); color:var(--rose); }
+  .fs-ctrl .fs-btn.on { background:var(--rose-soft); border-color:var(--rose); color:var(--rose-deep); font-weight:700; }
+  .reading-l .essay p { font-size:16.5px; line-height:1.75; }
+  .reading-xl .essay p { font-size:19px; line-height:1.8; }
+  .reading-l .care-body { font-size:16px; }
+  .reading-xl .care-body { font-size:18px; }
   .essay { background:var(--plum); border:none; border-radius:20px; padding:34px 32px;
     box-shadow:0 1px 2px rgba(80,60,70,.06), 0 12px 32px rgba(80,60,70,.12); }
   .essay .etitle { font-size:18px; font-weight:700; margin-bottom:18px; letter-spacing:-0.02em; color:#fff; }
@@ -180,7 +189,7 @@
   .react-done { font-size:13px; color:var(--plum-deep); font-weight:600; margin-top:14px; display:none; }
 
   /* 기분 */
-  .mood { margin-top:18px; padding:32px 28px; background:var(--white); border:1px solid var(--plum-line); border-radius:20px; }
+  .mood { margin-top:18px; padding:32px 28px; background:var(--white); border:1px solid var(--rose-line); border-radius:20px; }
   .mood .ask { font-size:16px; color:var(--ink-soft); margin-bottom:18px; text-align:center; }
   .mood .ask span { color:var(--ink-faint); font-size:13.5px; }
   .mood .sublabel { font-size:14px; color:var(--ink-soft); margin:20px 0 12px; text-align:center; border-top:1px solid var(--line); padding-top:20px; }
@@ -190,9 +199,12 @@
   .mtile.on { background:var(--rose-soft); border-color:var(--rose); }
   .mtile .mtic { width:38px; height:38px; flex:none; border-radius:50%; background:var(--plum-soft); color:var(--plum); display:flex; align-items:center; justify-content:center; }
   .mtile.bright .mtic { background:var(--rose-soft); color:var(--rose-deep); }
+  .mtile.on .mtic { background:var(--rose); color:#fff; }
   .mtile .mtt { flex:1; font-size:15px; color:var(--ink); }
   .mtile .mtchev { color:var(--ink-faint); font-size:20px; line-height:1; }
   .mtile .mts { display:block; font-size:12px; color:var(--ink-faint); margin-top:3px; }
+  @keyframes moodReveal { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  .mreveal { animation: moodReveal .3s ease; }
   .msub { margin-top:14px; padding-top:16px; border-top:1px solid var(--line); }
   .msub-label { font-size:14px; color:var(--ink-soft); text-align:center; margin-bottom:11px; }
   .msub-label span { color:var(--ink-faint); font-size:12px; }
@@ -200,7 +212,7 @@
   .chip { font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--paper);
     border:1px solid var(--line-strong); border-radius:30px; padding:9px 16px; cursor:pointer; transition:all .16s; }
   .chip:hover { border-color:var(--rose); color:var(--rose); }
-  .chip.on { background:var(--rose); border-color:var(--rose); color:#fff; }
+  .chip.on { background:var(--rose-soft); border-color:var(--rose); color:var(--rose-deep); font-weight:600; }
   .levels { display:flex; gap:9px; }
   .level { font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--paper);
     border:1px solid var(--line-strong); border-radius:30px; padding:10px 0; cursor:pointer; transition:all .16s; flex:1; text-align:center; }
@@ -534,6 +546,19 @@
   .mn-sum .box { background:var(--white); border:1px solid var(--plum-line); border-radius:16px; padding:18px 12px; text-align:center; }
   .mn-sum .n { font-size:26px; font-weight:800; color:var(--plum-deep); letter-spacing:-0.03em; line-height:1.1; }
   .mn-sum .lbl { font-size:12px; color:var(--ink-soft); margin-top:6px; }
+  .mn-cal-wrap { background:var(--white); border:1px solid var(--rose-line); border-radius:16px; padding:16px 16px 14px; margin-bottom:20px; }
+  .mn-cal { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+  .cal-dow { text-align:center; font-size:11px; color:var(--ink-faint); padding:2px 0 6px; }
+  .cal-cell { aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:12.5px; color:var(--ink-soft); background:var(--paper); border-radius:9px; }
+  .cal-empty { background:transparent; }
+  .cal-today { box-shadow:0 0 0 2px var(--rose); font-weight:700; color:var(--rose-deep); }
+  .cal-heavy { background:#d9d5e6; color:#4a4360; }
+  .cal-anx { background:#f1d3c2; color:#8a5236; }
+  .cal-bright { background:#f7c2d0; color:#a34e67; }
+  .cal-legend { display:flex; gap:16px; justify-content:center; margin-top:14px; font-size:12px; color:var(--ink-soft); }
+  .cal-legend span { display:inline-flex; align-items:center; gap:5px; }
+  .cal-legend .lg { width:11px; height:11px; border-radius:3px; display:inline-block; }
+  .lg-heavy { background:#d9d5e6; } .lg-anx { background:#f1d3c2; } .lg-bright { background:#f7c2d0; }
   .mn-group-title { font-size:14px; font-weight:700; color:var(--ink); margin:6px 0 12px; }
   .mn-saved { background:var(--white); border:1px solid var(--plum-line); border-radius:14px; padding:16px 18px; margin-bottom:10px; }
   .mn-saved .q { font-size:14.5px; line-height:1.7; color:var(--ink); font-weight:600; letter-spacing:-0.01em; }
@@ -693,6 +718,12 @@
 
     <div class="content" id="content2">
       <div class="essay-wrap">
+        <div class="fs-ctrl">
+          <span class="fs-lbl">글씨 크기</span>
+          <button class="fs-btn" data-fs="m" style="font-size:13px" aria-label="보통 글씨">가</button>
+          <button class="fs-btn" data-fs="l" style="font-size:15px" aria-label="크게">가</button>
+          <button class="fs-btn" data-fs="xl" style="font-size:18px" aria-label="더 크게">가</button>
+        </div>
         <div class="essay">
           <div class="etitle" id="essayTitle"></div>
           <div id="essayBody"></div>
@@ -1270,7 +1301,7 @@
     const wrap=$("chips"); wrap.innerHTML="";
     items.forEach(m => { const b=document.createElement("button"); b.className="chip"; b.textContent=m;
       b.onclick=()=>{ if(selectedMood===m){selectedMood=null;b.classList.remove("on");}
-        else{selectedMood=m;document.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));b.classList.add("on");}};
+        else{selectedMood=m;document.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));b.classList.add("on");} updateGiveLabel(); };
       wrap.appendChild(b); });
   }
   MOOD_GROUPS.forEach(g => {
@@ -1280,9 +1311,11 @@
       document.querySelectorAll(".mtile").forEach(x=>x.classList.remove("on"));
       t.classList.add("on");
       selectedMood=g.items[0];
+      updateGiveLabel();
       renderSubChips(g.items);
-      $("moodSub").style.display="block";
-      $("moodMore").style.display="block";
+      const reveal=(el)=>{ el.style.display="block"; el.classList.remove("mreveal"); void el.offsetWidth; el.classList.add("mreveal"); };
+      reveal($("moodSub"));
+      reveal($("moodMore"));
     };
     $("mtiles").appendChild(t);
   });
@@ -1295,7 +1328,8 @@
     $("reactBtns").appendChild(b); });
 
   function pick(useMood){
-    let cand = POOL.map((p,i)=>({p,i}));
+    let cand = POOL.map((p,i)=>({p,i})).filter(c=>c.p.kind!=="bible");
+    if(!cand.length) cand = POOL.map((p,i)=>({p,i}));
     if(useMood && selectedMood){ const tags=MOOD_MAP[selectedMood]||[selectedMood];
       const f=cand.filter(c=>c.p.mood.some(m=>tags.includes(m))); if(f.length)cand=f; }
     let ch,g=0; do{ ch=cand[Math.floor(Math.random()*cand.length)]; g++; } while(cand.length>1&&ch.i===lastIndex&&g<10);
@@ -1673,15 +1707,15 @@
     body.innerHTML = '<div class="mn-loading">불러오는 중이에요…</div>';
 
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    let savedRows = [], moodCount = 0, reactCount = 0;
+    let savedRows = [], moodRows = [], moodCount = 0, reactCount = 0;
     try {
       const [sv, md, rc] = await Promise.all([
         odoDB.from("odo_saved").select("content_id, saved_at").gte("saved_at", monthStart).order("saved_at", { ascending:false }),
-        odoDB.from("odo_moods").select("id", { count:"exact", head:true }).gte("created_at", monthStart),
+        odoDB.from("odo_moods").select("mood, created_at").gte("created_at", monthStart).order("created_at", { ascending:true }),
         odoDB.from("odo_reactions").select("id", { count:"exact", head:true }).eq("sender_id", currentUser.id).gte("created_at", monthStart)
       ]);
       savedRows = (sv && sv.data) || [];
-      moodCount = (md && md.count) || 0;
+      moodRows = (md && md.data) || []; moodCount = moodRows.length;
       reactCount = (rc && rc.count) || 0;
     } catch(e){
       body.innerHTML = '<div class="mn-empty">불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>';
@@ -1697,7 +1731,33 @@
       return '<div class="mn-saved"><div class="q">"'+esc(q)+'"</div><div class="a">— '+esc(p.author||"")+'</div></div>';
     }).filter(Boolean).join("");
 
-    let html = '<div class="mn-sum">'
+    // 마음 달력 (그날 남긴 마음의 그룹별 색)
+    const groupOf = (mood)=>{ for(const gg of MOOD_GROUPS){ if(gg.items.includes(mood)) return gg.k; } return null; };
+    const dayMood = {};
+    moodRows.forEach(r=>{
+      if(!r.mood) return;
+      const dt = new Date(new Date(r.created_at).getTime()+9*3600*1000);
+      if(dt.getUTCFullYear()===now.getFullYear() && dt.getUTCMonth()===now.getMonth()){
+        const g = groupOf(r.mood); if(g) dayMood[dt.getUTCDate()] = g;
+      }
+    });
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+    const firstDow = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+    const todayDate = now.getDate();
+    const dowArr = ["일","월","화","수","목","금","토"];
+    let calCells = "";
+    for(let b=0;b<firstDow;b++) calCells += '<div class="cal-cell cal-empty"></div>';
+    for(let d=1; d<=daysInMonth; d++){
+      const g = dayMood[d];
+      const cls = "cal-cell" + (g?(" cal-"+g):"") + (d===todayDate?" cal-today":"");
+      calCells += '<div class="'+cls+'">'+d+'</div>';
+    }
+    const calHtml = '<div class="mn-cal-wrap"><div class="mn-cal">'
+      + dowArr.map(x=>'<div class="cal-dow">'+x+'</div>').join("")
+      + calCells + '</div>'
+      + '<div class="cal-legend"><span><i class="lg lg-heavy"></i>무거움</span><span><i class="lg lg-anx"></i>조급함</span><span><i class="lg lg-bright"></i>밝음</span></div></div>';
+
+    let html = calHtml + '<div class="mn-sum">'
       + '<div class="box"><div class="n">'+savedRows.length+'</div><div class="lbl">담은 글</div></div>'
       + '<div class="box"><div class="n">'+moodCount+'</div><div class="lbl">남긴 마음</div></div>'
       + '<div class="box"><div class="n">'+reactCount+'</div><div class="lbl">받은 반응</div></div>'
@@ -1740,8 +1800,23 @@
     } catch(e){ console.log("기분 불러오기 오류:", e); }
   }
 
+  function updateGiveLabel(){ const b=$("giveBtn"); if(b) b.textContent = selectedMood ? "이 마음에 맞는 한 편" : "오늘의 한 편"; }
   $("giveBtn").onclick=()=>{ logTrace(); show(true); };
   $("randomBtn").onclick=()=>{ show(true); };
+
+  // 읽기 글씨 크기 (보통/크게/더크게) — 선택 저장
+  (function(){
+    const host = $("view-home") || document.body;
+    function applyFS(fs){
+      host.classList.remove("reading-m","reading-l","reading-xl");
+      host.classList.add("reading-"+fs);
+      document.querySelectorAll(".fs-btn").forEach(b=>b.classList.toggle("on", b.dataset.fs===fs));
+      try{ localStorage.setItem("odo_fontsize", fs); }catch(e){}
+    }
+    document.querySelectorAll(".fs-btn").forEach(b=>{ b.onclick=()=>applyFS(b.dataset.fs); });
+    let savedFS="m"; try{ savedFS=localStorage.getItem("odo_fontsize")||"m"; }catch(e){}
+    applyFS(savedFS);
+  })();
 
   /* ── 보내는 사람들 ── */
   const TIMES = ["아침 8시"];
@@ -2740,6 +2815,7 @@
       const fixNL = s => (s || "").replace(/\\n/g, "\n");
       const loaded = data.map(r => ({
         dbId: r.id,
+        kind: r.kind || "normal",
         quote: fixNL(r.quote),
         en: r.quote_en,
         author: r.author,
