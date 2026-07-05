@@ -449,6 +449,31 @@
   .mgs-none { background:var(--paper); border-color:var(--line-strong); color:var(--ink-soft); }
   .mgs-bible { background:var(--plum-soft); border-color:var(--plum-line); color:var(--plum-deep); }
   .mg-summary .mgs-note { flex-basis:100%; font-size:11px; color:var(--ink-faint); margin-top:2px; }
+  /* 음식 관리 */
+  .fd-form { background:var(--white); border:1px solid var(--plum-line); border-radius:14px; padding:16px 18px; margin-bottom:18px; }
+  .fd-kind { display:flex; gap:8px; margin-bottom:12px; }
+  .fd-kbtn { font-family:inherit; font-size:13px; padding:8px 14px; border-radius:20px; border:1px solid var(--plum-line); background:var(--white); color:var(--ink-soft); cursor:pointer; transition:all .15s; }
+  .fd-kbtn.on { background:var(--plum); color:#fff; border-color:var(--plum); }
+  .fd-grid { display:flex; gap:8px; margin-bottom:9px; flex-wrap:wrap; }
+  .fd-grid input { flex:1; min-width:120px; }
+  .fd-form input, .fd-form select { font-family:inherit; font-size:13px; padding:9px 11px; border:1px solid var(--plum-line); border-radius:8px; color:var(--ink); }
+  .fd-emoji { max-width:76px; flex:0 0 auto !important; text-align:center; }
+  .fd-full { display:block; width:100%; box-sizing:border-box; margin-bottom:9px; }
+  .fd-select { width:100%; box-sizing:border-box; background:var(--white); }
+  .fd-add { font-family:inherit; font-size:14px; font-weight:600; color:#fff; background:var(--plum); border:none; border-radius:10px; padding:11px; width:100%; cursor:pointer; margin-top:4px; }
+  .fd-add:hover { background:var(--plum-deep); }
+  .fd-msg { font-size:12.5px; color:var(--plum); margin-top:8px; min-height:16px; }
+  .fd-count { font-size:14px; color:var(--ink); margin-bottom:10px; }
+  .fd-item { display:flex; align-items:flex-start; gap:12px; background:var(--white); border:1px solid var(--plum-line); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+  .fd-item .fd-emo { font-size:22px; flex-shrink:0; line-height:1.2; }
+  .fd-item .fd-info { flex:1; min-width:0; }
+  .fd-item .fd-nm { font-size:14px; font-weight:700; color:var(--ink); }
+  .fd-item .fd-meta { font-size:12px; color:var(--ink-faint); margin-top:3px; }
+  .fd-item .fd-ds { font-size:12.5px; color:var(--ink-soft); margin-top:6px; line-height:1.5; }
+  .fd-item .fd-del { font-family:inherit; font-size:12px; padding:6px 10px; border-radius:8px; border:1px solid #d9a3a3; color:#a55; background:var(--white); cursor:pointer; white-space:nowrap; flex-shrink:0; }
+  .fd-tag { display:inline-block; font-size:11px; border-radius:12px; padding:2px 8px; margin-right:5px; }
+  .fd-tag.season { background:#fbeee6; color:#8a5236; }
+  .fd-tag.mood { background:var(--plum-soft); color:var(--plum-deep); }
   .mg-head { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
   .mg-status { font-size:11px; white-space:nowrap; padding:2px 7px; border-radius:6px; }
   .mg-status.checking { color:var(--ink-faint); }
@@ -1146,6 +1171,7 @@
       <button class="ops-tab" data-ops="manage">콘텐츠 관리</button>
       <button class="ops-tab" data-ops="members">회원 관리</button>
       <button class="ops-tab" data-ops="sends">발송 현황</button>
+      <button class="ops-tab" data-ops="foods">음식 관리</button>
     </div>
     <div class="ops-panel on" id="ops-dashboard">
     <div class="section-sub">오늘도가 지금 어떻게 움직이고 있는지 한눈에 볼 수 있어요.</div>
@@ -1201,6 +1227,36 @@
     <div class="admin-banner">⚙ 운영자 전용 — 편지가 언제 누구에게 나갔는지 볼 수 있어요.</div>
     <div class="section-sub">최근 발송 기록이에요. 성공·실패와 어떤 글이 나갔는지 확인할 수 있어요. (기록은 이 기능을 켠 이후 발송분부터 쌓여요.)</div>
     <div id="sendsList"><div class="adm-empty">불러오는 중…</div></div></div>
+    <div class="ops-panel" id="ops-foods">
+    <div class="admin-banner">⚙ 운영자 전용 — "오늘 이 음식 어때요?"에 나오는 음식을 관리해요.</div>
+    <div class="section-sub">절기(날짜)나 기분에 맞는 음식을 추가·삭제할 수 있어요. 절기가 있는 날엔 절기 음식이 먼저 나와요.</div>
+
+    <div class="fd-form">
+      <div class="fd-kind">
+        <button type="button" class="fd-kbtn on" data-kind="season">절기 (날짜)</button>
+        <button type="button" class="fd-kbtn" data-kind="mood">기분</button>
+      </div>
+      <div class="fd-grid">
+        <input id="fdName" type="text" placeholder="음식 이름 (예: 삼계탕)" />
+        <input id="fdEmoji" type="text" placeholder="🍲" maxlength="4" class="fd-emoji" />
+      </div>
+      <input id="fdDescr" type="text" class="fd-full" placeholder="한 줄 설명 (예: 무더위엔 뜨끈한 국물로 기운을 채워요.)" />
+      <div id="fdSeasonFields" class="fd-grid">
+        <input id="fdStart" type="text" placeholder="시작 MM-DD (예: 07-01)" />
+        <input id="fdEnd" type="text" placeholder="끝 MM-DD (예: 08-20)" />
+      </div>
+      <div id="fdMoodField" class="fd-full" style="display:none;">
+        <select id="fdGroup" class="fd-select">
+          <option value="heavy">무거움 (지침·번아웃·슬픔·외로움)</option>
+          <option value="anx">조급함 (불안·초조·막막·화남·미룸)</option>
+          <option value="bright">밝음 (의욕·설렘·평온·감사·시작)</option>
+        </select>
+      </div>
+      <button class="fd-add" id="fdAddBtn">＋ 음식 추가</button>
+      <div class="fd-msg" id="fdMsg"></div>
+    </div>
+
+    <div id="foodAdminList"><div class="adm-empty">불러오는 중…</div></div></div>
   </div>
 
   <div class="footnote">담아둔 글과 마음의 기록은 안전하게 저장돼요.</div>
@@ -1398,6 +1454,7 @@
     if(key==="manage") renderManage();
     if(key==="members") renderMembers();
     if(key==="sends") renderSends();
+    if(key==="foods") renderFoodsAdmin();
   }
   document.querySelectorAll(".ops-tab").forEach(t=>{
     t.onclick=()=>{ openOps(t.dataset.ops); window.scrollTo({top:0,behavior:"instant"}); };
@@ -2780,6 +2837,79 @@
       renderManage();
     } catch(e){ alert("삭제 중 오류가 났어요."); }
   };
+
+  // ===== 음식 관리 (관리자 전용) =====
+  const FD_GROUP_LABEL = { heavy:"무거움", anx:"조급함", bright:"밝음" };
+  async function renderFoodsAdmin(){
+    const list = $("foodAdminList"); if(!list) return;
+
+    // 폼 토글 + 추가 버튼 연결
+    const kbtns = document.querySelectorAll(".fd-kbtn");
+    let curKind = "season";
+    const applyKind = (k)=>{
+      curKind = k;
+      kbtns.forEach(b=>b.classList.toggle("on", b.dataset.kind===k));
+      const sf=$("fdSeasonFields"), mf=$("fdMoodField");
+      if(sf) sf.style.display = (k==="season")?"":"none";
+      if(mf) mf.style.display = (k==="mood")?"":"none";
+    };
+    kbtns.forEach(b=> b.onclick=()=>applyKind(b.dataset.kind));
+    applyKind("season");
+
+    $("fdAddBtn").onclick = async ()=>{
+      const name = $("fdName").value.trim();
+      if(!name){ $("fdMsg").textContent="음식 이름을 입력해 주세요."; return; }
+      const payload = { kind:curKind, name, emoji:$("fdEmoji").value.trim()||null, descr:$("fdDescr").value.trim()||null, active:true };
+      if(curKind==="season"){
+        const s=$("fdStart").value.trim(), e=$("fdEnd").value.trim();
+        if(!/^\d{2}-\d{2}$/.test(s) || !/^\d{2}-\d{2}$/.test(e)){ $("fdMsg").textContent="절기는 MM-DD 형식으로 입력해 주세요. (예: 07-01)"; return; }
+        payload.start_md=s; payload.end_md=e;
+      } else {
+        payload.mood_group = $("fdGroup").value;
+      }
+      $("fdMsg").textContent="추가 중…";
+      const { error } = await odoDB.from("odo_foods").insert(payload);
+      if(error){ $("fdMsg").textContent="추가 실패 — 권한(RLS)을 확인해 주세요."; console.log("음식 추가 오류:", error); return; }
+      ["fdName","fdEmoji","fdDescr","fdStart","fdEnd"].forEach(id=>{ if($(id)) $(id).value=""; });
+      $("fdMsg").textContent="추가됐어요! ✓";
+      renderFoodsAdmin();
+    };
+
+    // 목록 불러오기
+    list.innerHTML = '<div class="adm-empty">불러오는 중…</div>';
+    let rows = [];
+    try {
+      const { data, error } = await odoDB.from("odo_foods").select("*").order("kind", { ascending:true }).order("start_md", { ascending:true });
+      if(error) throw error;
+      rows = data || [];
+    } catch(e){
+      list.innerHTML = '<div class="adm-empty">불러오지 못했어요. 테이블/권한(RLS)을 확인해 주세요.</div>';
+      console.log("음식 목록 오류:", e); return;
+    }
+    FOODS = rows.filter(r=>r.active!==false);   // 앞면 카드도 최신으로
+
+    if(!rows.length){ list.innerHTML = '<div class="adm-empty">아직 등록된 음식이 없어요. 위에서 추가해 보세요.</div>'; return; }
+
+    const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    list.innerHTML = '<div class="fd-count">총 <b>'+rows.length+'</b>개</div>' + rows.map(r=>{
+      const tag = r.kind==="season" ? '<span class="fd-tag season">절기</span>' : '<span class="fd-tag mood">기분</span>';
+      const meta = r.kind==="season" ? ((r.start_md||"?")+" ~ "+(r.end_md||"?")) : (FD_GROUP_LABEL[r.mood_group]||r.mood_group||"-");
+      return '<div class="fd-item"><span class="fd-emo">'+(esc(r.emoji)||"🍽")+'</span>'
+        + '<div class="fd-info"><div class="fd-nm">'+tag+esc(r.name)+'</div>'
+        + '<div class="fd-meta">'+esc(meta)+(r.active===false?" · 숨김":"")+'</div>'
+        + (r.descr?'<div class="fd-ds">'+esc(r.descr)+'</div>':"")
+        + '</div><button class="fd-del" data-id="'+r.id+'">삭제</button></div>';
+    }).join("");
+
+    list.querySelectorAll(".fd-del").forEach(btn=>{
+      btn.onclick = async ()=>{
+        if(!confirm("이 음식을 삭제할까요?")) return;
+        const { error } = await odoDB.from("odo_foods").delete().eq("id", btn.getAttribute("data-id"));
+        if(error){ alert("삭제 실패 — 권한(RLS)을 확인해 주세요."); console.log("음식 삭제 오류:", error); return; }
+        renderFoodsAdmin();
+      };
+    });
+  }
 
   // ===== 대시보드 (관리자 전용) =====
   // 관리자 즉시 발송 (나에게 1통 / 명단 전체)
