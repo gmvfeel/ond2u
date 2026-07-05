@@ -4,6 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>오늘도 OND2U</title>
+<meta name="description" content="매일 한 편의 위로가 도착해요. 좋은 글과 짧은 에세이, 작은 처방까지 — 아끼는 사람에게 대신 보낼 수도 있어요." />
+<link rel="canonical" href="https://ond2u.com/app.html" />
+<meta name="theme-color" content="#423458" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="오늘도 OND2U" />
+<meta property="og:locale" content="ko_KR" />
+<meta property="og:title" content="오늘도, 당신에게" />
+<meta property="og:description" content="매일 한 편의 위로가 도착해요. 좋은 글과 짧은 에세이, 작은 처방까지 — 아끼는 사람에게 대신 보낼 수도 있어요." />
+<meta property="og:url" content="https://ond2u.com/app.html" />
+<meta property="og:image" content="https://ond2u.com/og3.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="오늘도, 당신에게" />
+<meta name="twitter:description" content="매일 한 편의 위로가 도착해요. 아끼는 사람에게 대신 보낼 수도 있어요." />
+<meta name="twitter:image" content="https://ond2u.com/og3.png" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23efe7f4'/%3E%3Cpath d='M9 14 h22 a3 3 0 0 1 3 3 v10 a3 3 0 0 1 -3 3 h-22 a3 3 0 0 1 -3 -3 v-10 a3 3 0 0 1 3 -3 z' fill='none' stroke='%235a4a7a' stroke-width='2.2'/%3E%3Cpath d='M7 16 l13 8 l13 -8' fill='none' stroke='%235a4a7a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -136,11 +150,12 @@
   .kakao-btn:hover { filter:brightness(0.96); }
 
   .essay-wrap { margin-top:16px; }
-  .fs-ctrl { display:flex; align-items:center; justify-content:flex-end; gap:6px; margin-bottom:10px; }
+  .fs-ctrl { display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-bottom:10px; }
   .fs-ctrl .fs-lbl { font-size:12px; color:var(--ink-faint); margin-right:2px; }
-  .fs-ctrl .fs-btn { font-family:inherit; color:var(--ink-soft); background:var(--paper); border:1px solid var(--line-strong); border-radius:9px; width:32px; height:32px; line-height:1; cursor:pointer; padding:0; transition:all .16s; }
-  .fs-ctrl .fs-btn:hover { border-color:var(--rose); color:var(--rose); }
-  .fs-ctrl .fs-btn.on { background:var(--rose-soft); border-color:var(--rose); color:var(--rose-deep); font-weight:700; }
+  .fs-ctrl .fs-step { font-family:inherit; font-size:16px; color:var(--ink-soft); background:var(--paper); border:1px solid var(--line-strong); border-radius:9px; width:32px; height:32px; line-height:1; cursor:pointer; padding:0; transition:all .16s; display:flex; align-items:center; justify-content:center; }
+  .fs-ctrl .fs-step:hover:not(:disabled) { border-color:var(--rose); color:var(--rose); }
+  .fs-ctrl .fs-step:disabled { opacity:.4; cursor:default; }
+  .fs-ctrl .fs-now { min-width:26px; text-align:center; color:var(--rose-deep); font-weight:700; line-height:1; }
   .reading-l .essay p { font-size:16.5px; line-height:1.75; }
   .reading-xl .essay p { font-size:19px; line-height:1.8; }
   .reading-l .care-body { font-size:16px; }
@@ -415,7 +430,16 @@
   .mg-frame iframe { width:100%; height:100%; border:0; }
   .mg-top { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
   .mg-top #mgCount { font-size:14px; color:var(--ink); }
-  .mg-summary { font-size:13px; color:var(--plum-deep); margin-bottom:12px; }
+  .mg-summary { display:flex; flex-wrap:wrap; align-items:center; gap:7px; font-size:13px; color:var(--plum-deep); margin-bottom:14px; }
+  .mg-summary .mgs-lbl { font-size:12px; color:var(--ink-faint); margin-right:2px; }
+  .mg-summary .mgs-chip { display:inline-flex; align-items:center; gap:5px; font-size:12.5px; border-radius:16px; padding:5px 11px; border:1px solid; }
+  .mg-summary .mgs-chip b { font-weight:700; }
+  .mgs-heavy { background:#eef0f6; border-color:#d9d5e6; color:#4a4360; }
+  .mgs-anx { background:#fbeee6; border-color:#f1d3c2; color:#8a5236; }
+  .mgs-bright { background:var(--rose-soft); border-color:#f1c4d0; color:#a34e67; }
+  .mgs-none { background:var(--paper); border-color:var(--line-strong); color:var(--ink-soft); }
+  .mgs-bible { background:var(--plum-soft); border-color:var(--plum-line); color:var(--plum-deep); }
+  .mg-summary .mgs-note { flex-basis:100%; font-size:11px; color:var(--ink-faint); margin-top:2px; }
   .mg-head { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
   .mg-status { font-size:11px; white-space:nowrap; padding:2px 7px; border-radius:6px; }
   .mg-status.checking { color:var(--ink-faint); }
@@ -720,9 +744,9 @@
       <div class="essay-wrap">
         <div class="fs-ctrl">
           <span class="fs-lbl">글씨 크기</span>
-          <button class="fs-btn" data-fs="m" style="font-size:13px" aria-label="보통 글씨">가</button>
-          <button class="fs-btn" data-fs="l" style="font-size:15px" aria-label="크게">가</button>
-          <button class="fs-btn" data-fs="xl" style="font-size:18px" aria-label="더 크게">가</button>
+          <button class="fs-step" id="fsMinus" aria-label="글씨 작게">−</button>
+          <span class="fs-now" id="fsNow">가</span>
+          <button class="fs-step" id="fsPlus" aria-label="글씨 크게">+</button>
         </div>
         <div class="essay">
           <div class="etitle" id="essayTitle"></div>
@@ -1804,16 +1828,25 @@
   $("giveBtn").onclick=()=>{ logTrace(); show(true); };
   $("randomBtn").onclick=()=>{ show(true); };
 
-  // 읽기 글씨 크기 (보통/크게/더크게) — 선택 저장
+  // 읽기 글씨 크기 (− 가 + 스텝퍼) — 선택 저장
   (function(){
     const host = $("view-home") || document.body;
+    const order = ["m","l","xl"];
+    const glyphPx = { m:15, l:17.5, xl:20 };
+    let idx = 0;
     function applyFS(fs){
+      idx = order.indexOf(fs); if(idx<0) idx=0;
       host.classList.remove("reading-m","reading-l","reading-xl");
-      host.classList.add("reading-"+fs);
-      document.querySelectorAll(".fs-btn").forEach(b=>b.classList.toggle("on", b.dataset.fs===fs));
-      try{ localStorage.setItem("odo_fontsize", fs); }catch(e){}
+      host.classList.add("reading-"+order[idx]);
+      const now=$("fsNow"); if(now) now.style.fontSize = glyphPx[order[idx]]+"px";
+      const mn=$("fsMinus"), pl=$("fsPlus");
+      if(mn) mn.disabled = (idx===0);
+      if(pl) pl.disabled = (idx===order.length-1);
+      try{ localStorage.setItem("odo_fontsize", order[idx]); }catch(e){}
     }
-    document.querySelectorAll(".fs-btn").forEach(b=>{ b.onclick=()=>applyFS(b.dataset.fs); });
+    const mn=$("fsMinus"), pl=$("fsPlus");
+    if(mn) mn.onclick=()=>{ if(idx>0) applyFS(order[idx-1]); };
+    if(pl) pl.onclick=()=>{ if(idx<order.length-1) applyFS(order[idx+1]); };
     let savedFS="m"; try{ savedFS=localStorage.getItem("odo_fontsize")||"m"; }catch(e){}
     applyFS(savedFS);
   })();
@@ -2493,12 +2526,30 @@
     catch(e){ error = e; }
     if (error || !data || !data.length){ box.innerHTML = '<div class="adm-empty">콘텐츠를 불러오지 못했어요.</div>'; return; }
     const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    const MG_GROUPS = [
+      { k:"무거움", cls:"heavy", items:["지침","번아웃","슬픔","외로움"] },
+      { k:"조급함", cls:"anx", items:["불안","초조","막막","화남","미룸"] },
+      { k:"밝음", cls:"bright", items:["의욕","설렘","평온","감사","시작"] }
+    ];
+    const mgCounts = {}; MG_GROUPS.forEach(g=>mgCounts[g.k]=0);
+    let mgNoTag=0, mgBible=0;
+    data.forEach(r=>{
+      if(r.kind==="bible") mgBible++;
+      const tags = Array.isArray(r.mood_tags) ? r.mood_tags : [];
+      if(!tags.length){ mgNoTag++; return; }
+      MG_GROUPS.forEach(g=>{ if(tags.some(t=>g.items.includes(t))) mgCounts[g.k]++; });
+    });
+    const mgSum = '<span class="mgs-lbl">감정 분포</span>'
+      + MG_GROUPS.map(g=>'<span class="mgs-chip mgs-'+g.cls+'">'+g.k+' <b>'+mgCounts[g.k]+'</b></span>').join("")
+      + (mgNoTag?'<span class="mgs-chip mgs-none">태그없음 <b>'+mgNoTag+'</b></span>':'')
+      + '<span class="mgs-chip mgs-bible">✝ 성경 <b>'+mgBible+'</b></span>'
+      + '<span class="mgs-note">여러 감정에 걸친 글은 각 그룹에 중복 집계돼요.</span>';
     let html = '<div class="mg-top">'
       + '<span id="mgCount">총 <b>'+data.length+'</b>개</span>'
       + '<button class="mg-btn" id="mgCheckBtn" onclick="mgCheckAll()">⚠ 재생 안 되는 영상 찾기</button>'
       + '<button class="mg-btn save" id="mgFillBtn" onclick="mgFillBad()" style="display:none">정상 영상으로 자동 채우기</button>'
       + '</div>'
-      + '<div id="mgSummary" class="mg-summary"></div>';
+      + '<div id="mgSummary" class="mg-summary">'+mgSum+'</div>';
     html += data.map(r => {
       const raw = (r.quote||"").replace(/\\n/g," ");
       const q = esc(raw.slice(0,40)) + (raw.length>40?"…":"");
