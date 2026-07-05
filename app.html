@@ -190,7 +190,8 @@
   .mtile.on { background:var(--rose-soft); border-color:var(--rose); }
   .mtile .mtic { width:38px; height:38px; flex:none; border-radius:50%; background:var(--plum-soft); color:var(--plum); display:flex; align-items:center; justify-content:center; }
   .mtile.bright .mtic { background:var(--rose-soft); color:var(--rose-deep); }
-  .mtile .mtt { display:block; font-size:14.5px; color:var(--ink); }
+  .mtile .mtt { flex:1; font-size:15px; color:var(--ink); }
+  .mtile .mtchev { color:var(--ink-faint); font-size:20px; line-height:1; }
   .mtile .mts { display:block; font-size:12px; color:var(--ink-faint); margin-top:3px; }
   .msub { margin-top:14px; padding-top:16px; border-top:1px solid var(--line); }
   .msub-label { font-size:14px; color:var(--ink-soft); text-align:center; margin-bottom:11px; }
@@ -199,16 +200,19 @@
   .chip { font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--paper);
     border:1px solid var(--line-strong); border-radius:30px; padding:9px 16px; cursor:pointer; transition:all .16s; }
   .chip:hover { border-color:var(--rose); color:var(--rose); }
-  .chip.on { background:var(--plum); border-color:var(--plum); color:#fff; }
+  .chip.on { background:var(--rose); border-color:var(--rose); color:#fff; }
   .levels { display:flex; gap:9px; }
   .level { font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--paper);
     border:1px solid var(--line-strong); border-radius:30px; padding:10px 0; cursor:pointer; transition:all .16s; flex:1; text-align:center; }
   .level:hover { border-color:var(--rose); color:var(--rose); }
-  .level.on { background:var(--plum-soft); border-color:var(--plum); color:var(--plum-deep); font-weight:600; }
+  .level.on { background:var(--rose-soft); border-color:var(--rose); color:var(--rose-deep); font-weight:600; }
   .mood input { width:100%; font-family:inherit; font-size:14px; color:var(--ink); text-align:center;
     background:var(--paper); border:1px solid var(--line-strong); border-radius:30px; padding:13px 18px; outline:none; transition:border-color .2s; margin-top:22px; }
   .mood input:focus { border-color:var(--plum); }
   .mood input::placeholder { color:var(--ink-faint); }
+  .mood .memo-label { font-size:12px; color:var(--ink-faint); text-align:center; margin:18px 0 10px; }
+  .mood .memo-label span { font-size:11px; }
+  #moodMore input { margin-top:0; }
   .actions { display:flex; gap:11px; margin-top:22px; }
   .btn { font-family:inherit; font-size:15px; font-weight:600; padding:15px; border-radius:30px; cursor:pointer; transition:all .2s; border:1px solid transparent; }
   .btn-main { background:var(--plum); color:#fff; flex:1.4; }
@@ -737,9 +741,12 @@
         <div class="msub-label">좀 더 자세히 고를까요? <span>(안 골라도 돼요)</span></div>
         <div class="chips" id="chips"></div>
       </div>
-      <div class="sublabel">얼마나 그런가요?</div>
-      <div class="levels" id="levels"></div>
-      <input id="moodInput" type="text" name="mood_note" placeholder="한 줄로 남겨도 좋아요" autocomplete="off" autocorrect="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" />
+      <div id="moodMore" style="display:none;">
+        <div class="sublabel">얼마나 그런가요?</div>
+        <div class="levels" id="levels"></div>
+        <div class="memo-label">오늘 한마디 <span>(선택)</span></div>
+        <input id="moodInput" type="text" name="mood_note" placeholder="한 줄로 남겨도 좋아요" autocomplete="off" autocorrect="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" />
+      </div>
       <div class="actions">
         <button class="btn btn-main" id="giveBtn">오늘의 한 편</button>
         <button class="btn btn-sub" id="randomBtn">다른 글로</button>
@@ -1268,13 +1275,14 @@
   }
   MOOD_GROUPS.forEach(g => {
     const t=document.createElement("button"); t.className="mtile"+(g.cls?(" "+g.cls):"");
-    t.innerHTML='<span class="mtic">'+g.icon+'</span><span><span class="mtt">'+g.label+'</span><span class="mts">'+g.sub+'</span></span>';
+    t.innerHTML='<span class="mtic">'+g.icon+'</span><span class="mtt">'+g.label+'</span><span class="mtchev">›</span>';
     t.onclick=()=>{
       document.querySelectorAll(".mtile").forEach(x=>x.classList.remove("on"));
       t.classList.add("on");
       selectedMood=g.items[0];
       renderSubChips(g.items);
       $("moodSub").style.display="block";
+      $("moodMore").style.display="block";
     };
     $("mtiles").appendChild(t);
   });
@@ -1733,8 +1741,7 @@
   }
 
   $("giveBtn").onclick=()=>{ logTrace(); show(true); };
-  $("randomBtn").onclick=()=>{ selectedMood=null;selectedLevel=null;
-    document.querySelectorAll(".chip,.level,.mtile").forEach(c=>c.classList.remove("on")); $("moodSub").style.display="none"; $("moodInput").value=""; show(false); };
+  $("randomBtn").onclick=()=>{ show(true); };
 
   /* ── 보내는 사람들 ── */
   const TIMES = ["아침 8시"];
