@@ -63,10 +63,17 @@ export default async function handler(req, res) {
       if (!recipients.length)
         return res.status(200).json({ ok: true, message: "보낼 수신자가 없어요. (odo_recipients 비어있음)", sent: 0 });
 
+      // 각 수신자를 등록한 사람(sender)의 '보내는 이름'을 조회해 둠
+      const sendersById = await fetchSenders(SB_URL, SB_SERVICE);
+
       const results = [];
       for (const rc of recipients) {
         try {
-          const id = await sendOne({ ...cfg, to: rc.email, toName: rc.name || "", wantBible: rc.kind === "bible", senderId: rc.sender_id });
+          const su = sendersById[rc.sender_id] || {};
+          const perFromName = (su.display_name && su.display_name.trim())
+            || (su.email ? su.email.split("@")[0] : "")
+            || cfg.fromName;
+          const id = await sendOne({ ...cfg, fromName: perFromName, to: rc.email, toName: rc.name || "", wantBible: rc.kind === "bible", senderId: rc.sender_id });
           results.push({ email: rc.email, ok: true, id });
         } catch (e) {
           results.push({ email: rc.email, ok: false, error: String(e && e.message || e) });
@@ -137,6 +144,20 @@ async function fetchRecipients(url, key) {
   });
   if (!r.ok) throw new Error("수신자 명단 읽기 실패: " + r.status);
   return await r.json();
+}
+
+// 등록한 사람(sender)들의 '보내는 이름'을 id로 찾을 수 있게 맵으로 만들어 둠
+async function fetchSenders(url, key) {
+  try {
+    const r = await fetch(url + "/rest/v1/odo_users?select=id,display_name,email", {
+      headers: { "apikey": key, "Authorization": "Bearer " + key }
+    });
+    if (!r.ok) return {};
+    const rows = await r.json();
+    const map = {};
+    (rows || []).forEach(u => { map[u.id] = { display_name: u.display_name, email: u.email }; });
+    return map;
+  } catch (e) { return {}; }
 }
 
 // 이름 뒤 조사(가/이) 자동 처리
