@@ -450,6 +450,21 @@
   .mgs-bible { background:var(--plum-soft); border-color:var(--plum-line); color:var(--plum-deep); }
   .mg-summary .mgs-note { flex-basis:100%; font-size:11px; color:var(--ink-faint); margin-top:2px; }
   /* 음식 관리 */
+  .fd-ai { background:linear-gradient(135deg,#f7f1f4,#efecf4); border:1px solid var(--plum-line); border-radius:14px; padding:16px 18px; margin-bottom:16px; }
+  .fd-ai-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .fd-ai-title { font-size:15px; font-weight:700; color:var(--plum-deep); }
+  .fd-ai-sub { font-size:12.5px; color:var(--ink-soft); margin-top:3px; line-height:1.5; }
+  .fd-ai-btn { font-family:inherit; font-size:13px; font-weight:600; color:#fff; background:var(--plum); border:none; border-radius:10px; padding:10px 16px; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+  .fd-ai-btn:hover { background:var(--plum-deep); }
+  .fd-ai-btn:disabled { opacity:.6; cursor:default; }
+  .fd-ai-status { font-size:12.5px; color:var(--plum); margin-top:10px; }
+  .fd-ai-status.err { color:#b5546b; }
+  .fd-ai-list { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+  .fd-ai-item { display:flex; align-items:flex-start; gap:10px; background:var(--white); border:1px solid var(--plum-line); border-radius:10px; padding:10px 12px; }
+  .fd-ai-item .fd-emo { font-size:19px; flex-shrink:0; line-height:1.2; }
+  .fd-ai-save { font-family:inherit; font-size:14px; font-weight:600; color:#fff; background:var(--rose); border:none; border-radius:10px; padding:11px; width:100%; cursor:pointer; margin-top:12px; }
+  .fd-ai-save:hover { background:var(--rose-deep); }
+  .fd-ai-save:disabled { opacity:.6; cursor:default; }
   .fd-form { background:var(--white); border:1px solid var(--plum-line); border-radius:14px; padding:16px 18px; margin-bottom:18px; }
   .fd-kind { display:flex; gap:8px; margin-bottom:12px; }
   .fd-kbtn { font-family:inherit; font-size:13px; padding:8px 14px; border-radius:20px; border:1px solid var(--plum-line); background:var(--white); color:var(--ink-soft); cursor:pointer; transition:all .15s; }
@@ -1230,6 +1245,18 @@
     <div class="ops-panel" id="ops-foods">
     <div class="admin-banner">⚙ 운영자 전용 — "오늘 이 음식 어때요?"에 나오는 음식을 관리해요.</div>
     <div class="section-sub">절기(날짜)나 기분에 맞는 음식을 추가·삭제할 수 있어요. 절기가 있는 날엔 절기 음식이 먼저 나와요.</div>
+
+    <div class="fd-ai">
+      <div class="fd-ai-head">
+        <div>
+          <div class="fd-ai-title">🍽 AI로 음식 채우기</div>
+          <div class="fd-ai-sub">버튼을 누르면 AI가 절기·기분 음식을 이모지·설명까지 만들어 와요. 확인하고 저장하세요.</div>
+        </div>
+        <button class="fd-ai-btn" id="fdAiBtn">AI에게 부탁하기</button>
+      </div>
+      <div class="fd-ai-status" id="fdAiStatus"></div>
+      <div id="fdAiPreview"></div>
+    </div>
 
     <div class="fd-form">
       <div class="fd-kind">
@@ -2840,8 +2867,85 @@
 
   // ===== 음식 관리 (관리자 전용) =====
   const FD_GROUP_LABEL = { heavy:"무거움", anx:"조급함", bright:"밝음" };
+
+  // AI로 음식 생성
+  async function fdAiGenerate(){
+    const btn=$("fdAiBtn"), st=$("fdAiStatus"), pv=$("fdAiPreview");
+    if(!btn) return;
+    btn.disabled=true; st.className="fd-ai-status"; st.textContent="AI가 음식을 고르는 중이에요…"; pv.innerHTML="";
+    const prompt = `당신은 한국의 "오늘도" 위로 서비스의 음식 큐레이터입니다.
+사용자에게 "오늘 이 음식 어때요?"로 추천할 음식 목록을 만들어 주세요. 두 종류가 있습니다:
+1) 절기(season): 한국의 계절·명절·절기에 어울리는 음식. 날짜 범위 start_md, end_md 를 "MM-DD" 형식으로. 명절(설날 떡국, 대보름 오곡밥, 삼복 삼계탕, 추석 송편, 동지 팥죽 등)은 대략적인 양력 시기로.
+2) 기분(mood): 감정 그룹에 맞는 음식. mood_group 은 반드시 "heavy"(무겁고 지침), "anx"(불안·조급), "bright"(밝음) 중 하나.
+공통 필드: emoji(음식에 어울리는 이모지 1개), descr(따뜻한 한국어 존댓말 한 줄, 위로 톤, 40자 이내).
+절기 12개 내외 + 기분 그룹별 2~3개(총 6~9개), 모두 합쳐 18~20개.
+반드시 아래 JSON으로만, 다른 말 없이 응답:
+{"foods":[{"kind":"season","name":"삼계탕","emoji":"🍲","descr":"무더위엔 뜨끈한 국물로 기운을 채워요.","start_md":"07-10","end_md":"08-15"},{"kind":"mood","name":"따뜻한 국밥","emoji":"🍲","descr":"지친 날엔 국밥 한 그릇이 위로가 돼요.","mood_group":"heavy"}]}`;
+    try {
+      const { data:{ session } } = await odoDB.auth.getSession();
+      if(!session) throw new Error("로그인이 필요해요.");
+      const res = await fetch("/api/admin-generate", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+session.access_token },
+        body: JSON.stringify({ prompt })
+      });
+      const out = await res.json().catch(()=>({}));
+      if(!res.ok || !out.ok) throw new Error(out.error || "생성 실패");
+      let text=(out.text||"").replace(/```json/g,"").replace(/```/g,"").trim();
+      const parsed = JSON.parse(text);
+      const foods = (parsed.foods||[]).filter(f=>f && f.name && f.kind);
+      if(!foods.length) throw new Error("결과가 비어 있어요.");
+      window._fdAi = foods;
+      st.textContent = foods.length+"개를 만들었어요. 확인하고 저장하세요.";
+      const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      pv.innerHTML = '<div class="fd-ai-list">'+foods.map(f=>{
+        const meta = f.kind==="season" ? ((f.start_md||"?")+" ~ "+(f.end_md||"?")) : (FD_GROUP_LABEL[f.mood_group]||f.mood_group||"-");
+        const tag = f.kind==="season" ? '<span class="fd-tag season">절기</span>' : '<span class="fd-tag mood">기분</span>';
+        return '<div class="fd-ai-item"><span class="fd-emo">'+(esc(f.emoji)||"🍽")+'</span>'
+          + '<div class="fd-info"><div class="fd-nm">'+tag+esc(f.name)+'</div>'
+          + '<div class="fd-meta">'+esc(meta)+'</div>'
+          + (f.descr?'<div class="fd-ds">'+esc(f.descr)+'</div>':"")+'</div></div>';
+      }).join("")+'</div>'
+        + '<button class="fd-ai-save" id="fdAiSaveBtn">이 음식들 저장 (중복 제외)</button>';
+      $("fdAiSaveBtn").onclick = fdAiSaveAll;
+    } catch(e){
+      st.className="fd-ai-status err"; st.textContent="문제가 생겼어요. "+(e.message||"");
+    } finally { btn.disabled=false; }
+  }
+
+  // AI 결과 일괄 저장 (이름 중복은 건너뜀)
+  async function fdAiSaveAll(){
+    const foods = window._fdAi || [];
+    if(!foods.length) return;
+    const btn=$("fdAiSaveBtn"), st=$("fdAiStatus");
+    btn.disabled=true; btn.textContent="저장 중…";
+    let existing = new Set();
+    try { const { data } = await odoDB.from("odo_foods").select("name"); (data||[]).forEach(r=>existing.add((r.name||"").trim())); } catch(e){}
+    const rows = foods.filter(f=>!existing.has((f.name||"").trim())).map(f=>({
+      kind: f.kind==="season" ? "season" : "mood",
+      name: (f.name||"").trim(),
+      emoji: f.emoji||null,
+      descr: f.descr||null,
+      mood_group: f.kind==="mood" ? (["heavy","anx","bright"].includes(f.mood_group)?f.mood_group:"bright") : null,
+      start_md: f.kind==="season" ? (f.start_md||null) : null,
+      end_md: f.kind==="season" ? (f.end_md||null) : null,
+      active: true
+    }));
+    if(!rows.length){ st.textContent="새로 추가할 음식이 없어요 (모두 이미 있음)."; btn.disabled=false; btn.textContent="이 음식들 저장 (중복 제외)"; return; }
+    const { error } = await odoDB.from("odo_foods").insert(rows);
+    if(error){ st.className="fd-ai-status err"; st.textContent="저장 실패 — 쓰기 권한(RLS)을 확인해 주세요."; btn.disabled=false; btn.textContent="이 음식들 저장 (중복 제외)"; console.log("음식 일괄 저장 오류:",error); return; }
+    window._fdAi=null;
+    await renderFoodsAdmin();
+    if($("fdAiStatus")){ $("fdAiStatus").className="fd-ai-status"; $("fdAiStatus").textContent = rows.length+"개를 저장했어요! ✓"; }
+  }
+
   async function renderFoodsAdmin(){
     const list = $("foodAdminList"); if(!list) return;
+
+    // AI 영역 초기화 + 버튼 연결
+    if($("fdAiPreview")) $("fdAiPreview").innerHTML="";
+    if($("fdAiStatus")){ $("fdAiStatus").className="fd-ai-status"; $("fdAiStatus").textContent=""; }
+    if($("fdAiBtn")) $("fdAiBtn").onclick = fdAiGenerate;
 
     // 폼 토글 + 추가 버튼 연결
     const kbtns = document.querySelectorAll(".fd-kbtn");
