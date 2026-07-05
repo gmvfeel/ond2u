@@ -1949,7 +1949,7 @@
   async function loginWithKakao(){
     const { error } = await odoDB.auth.signInWithOAuth({
       provider: "kakao",
-      options: { scopes: "openid profile_nickname", redirectTo: window.location.href.split("#")[0] }
+      options: { scopes: "openid profile_nickname account_email", redirectTo: window.location.href.split("#")[0] }
     });
     if (error) { alert("카카오 로그인에 문제가 생겼어요. 잠시 후 다시 시도해 주세요."); console.log("카카오 로그인 오류:", error); }
   }
