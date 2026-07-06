@@ -109,6 +109,9 @@
   .from-line b { color:var(--ink); font-weight:700; }
   .from-badge { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:var(--plum); color:#fff; font-size:12px; font-weight:700; }
   .sig { text-align:center; font-size:14px; font-weight:500; color:var(--plum); margin-bottom:12px; }
+  .back-greet { text-align:center; font-size:13px; color:var(--rose-deep); background:var(--rose-soft);
+    border-radius:12px; padding:9px 16px; margin:0 auto 14px; max-width:460px; line-height:1.6; }
+  .back-greet b { font-weight:700; }
   .divider { width:34px; height:3px; background:var(--plum); opacity:.55; margin:0 auto 18px; border-radius:3px; }
 
   .connector {
@@ -809,6 +812,7 @@
       <div class="from-line" id="fromLine"><span class="from-badge">오</span> <b>오늘도</b>가 전해요</div>
     </div>
     <div class="sig">오늘도 당신의 최고가 될 겁니다. 힘내세요.</div>
+    <div class="back-greet" id="backGreet" style="display:none;"></div>
     <div class="divider"></div>
 
     <div class="streak-wrap"><div class="streak" id="streak"></div></div>
@@ -1670,9 +1674,32 @@
     } catch(e){ alert("삭제 중 오류가 났어요."); }
   };
 
+  // 어제와의 이어짐 — 로그인 + 지난 기분 기록이 있을 때, 오늘 편지에 안부 한 줄
+  function backGreetLine(){
+    if(!loggedIn) return "";
+    const now=new Date();
+    const today=(now.getMonth()+1)+"월 "+now.getDate()+"일";
+    let last=null;
+    for(let k=trace.length-1;k>=0;k--){ if(trace[k] && trace[k].mood && trace[k].date!==today){ last=trace[k]; break; } }
+    if(!last) return "";
+    let g=null; for(const gg of MOOD_GROUPS){ if(gg.items.includes(last.mood)){ g=gg.k; break; } }
+    const m=last.mood;
+    if(g==="heavy") return "지난번엔 <b>"+m+"</b> — 마음이 무거운 날이었죠. 오늘은 조금 나아지셨길 바라요.";
+    if(g==="anx")   return "지난번엔 <b>"+m+"</b> — 마음이 분주했죠. 오늘은 천천히 숨 고르며 읽어보세요.";
+    if(g==="bright")return "지난번엔 <b>"+m+"</b> — 좋은 마음결이었죠. 오늘도 그 온기가 이어지길 바라요.";
+    return "지난번엔 <b>"+m+"</b> — 오늘은 어떠세요?";
+  }
+  function renderBackGreet(){
+    const el=$("backGreet"); if(!el) return;
+    const line=backGreetLine();
+    if(line){ el.innerHTML=line; el.style.display=""; }
+    else { el.style.display="none"; el.innerHTML=""; }
+  }
+
   function show(useMood){
     const {p,i}=pick(useMood); current={p,i};
     updateConnector(useMood);
+    renderBackGreet();
     $("content").classList.add("fade"); $("content2").classList.add("fade");
     // 반응 초기화
     document.querySelectorAll(".react-btn").forEach(c=>c.classList.remove("picked")); $("reactDone").style.display="none";
@@ -2087,6 +2114,7 @@
         trace.push({ date, mood:row.mood, level:row.intensity, note:row.note });
       });
     } catch(e){ console.log("기분 불러오기 오류:", e); }
+    renderBackGreet();
   }
 
   function updateGiveLabel(){ const b=$("giveBtn"); if(b) b.textContent = selectedMood ? "이 마음에 맞는 한 편" : "오늘의 한 편"; }
