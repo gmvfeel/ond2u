@@ -69,6 +69,11 @@ export default async function handler(req, res) {
     background:#423458;border:none;border-radius:26px;padding:14px;cursor:pointer;transition:background .2s;}
   .send:hover{background:#33283f;} .send:disabled{opacity:.6;cursor:default;}
   .done{display:none;margin-top:22px;font-size:15px;color:#c56179;font-weight:600;}
+  .invite{margin-top:20px;padding-top:20px;border-top:1px solid #efecf4;}
+  .invite-line{font-size:13px;color:#7a7580;font-weight:400;margin-bottom:15px;line-height:1.75;}
+  .invite-btn{display:inline-block;font-size:14px;font-weight:600;color:#fff;background:#423458;
+    border-radius:24px;padding:12px 26px;text-decoration:none;}
+  .invite-btn:hover{background:#33283f;}
   .foot{margin-top:26px;font-size:12px;color:#b0aab6;}
   .foot a{color:#7a7580;text-decoration:underline;}
 </style></head><body><div class="box"><div class="logo">\uC624\uB298\uB3C4 · OND2U</div>${inner}</div></body></html>`;
@@ -118,7 +123,12 @@ export default async function handler(req, res) {
       <textarea id="replyText" rows="3" maxlength="500" placeholder="\uACE0\uB9C8\uC6CC\uC694. \uB355\uBD84\uC5D0 \uD798\uC774 \uB0AC\uC5B4\uC694."></textarea>
       <button class="send" id="sendReply">\uB2F5\uC7A5 \uBCF4\uB0B4\uAE30</button>
     </div>
-    <div class="done" id="replyDone">\uB9C8\uC74C\uC774 \uC804\uD574\uC84C\uC5B4\uC694. \uACE0\uB9C8\uC6CC\uC694 \u2661<br><span style="display:block; margin-top:8px; font-size:12px; color:#b0aab6; font-weight:400;">\uC774\uC81C \uCC3D\uC744 \uB2EB\uC73C\uC154\uB3C4 \uC88B\uC544\uC694.</span></div>
+    <div class="done" id="replyDone">마음이 전해졌어요. 고마워요 ♡
+      <div class="invite">
+        <div class="invite-line">당신에게도 이런 위로가 필요한 날이 있잖아요.<br>오늘도가 매일 아침, 당신에게도 한 편을 보내드릴게요.</div>
+        <a class="invite-btn" href="https://www.ond2u.com/app.html">오늘도, 나도 받아보기 →</a>
+      </div>
+    </div>
     <script>
       (function(){
         var btn=document.getElementById('sendReply'), ta=document.getElementById('replyText');
