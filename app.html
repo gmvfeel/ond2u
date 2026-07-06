@@ -135,8 +135,10 @@
   .content.fade { opacity:0; }
   .letter-card { background:var(--white); border:1.5px solid var(--rose); border-radius:20px; padding:38px 34px 34px; }
 
-  .quote { font-family:'Pretendard', sans-serif; font-size:30px; line-height:1.5; font-weight:800; letter-spacing:-0.035em; white-space:pre-line; text-align:center; }
-  .quote-en { font-family:'Pretendard', sans-serif; font-size:15px; line-height:1.6; font-weight:500; color:var(--ink-soft); white-space:pre-line; text-align:center; margin-top:14px; font-style:italic; }
+  .quote { font-family:'Pretendard', sans-serif; font-size:30px; line-height:1.5; font-weight:800; letter-spacing:-0.035em; white-space:normal; word-break:keep-all; overflow-wrap:break-word; text-align:center; }
+  .quote.q-mid { font-size:25px; line-height:1.55; }
+  .quote.q-long { font-size:21px; line-height:1.6; }
+  .quote-en { font-family:'Pretendard', sans-serif; font-size:15px; line-height:1.6; font-weight:500; color:var(--ink-soft); white-space:normal; word-break:keep-all; overflow-wrap:break-word; text-align:center; margin-top:14px; font-style:italic; }
   .author { margin-top:20px; font-size:14px; color:var(--ink-soft); text-align:center; }
 
   /* 담아두기 버튼 */
@@ -307,6 +309,8 @@
   @media (max-width:640px) {
     body { padding:28px 16px 70px; }
     .quote { font-size:26px; }
+    .quote.q-mid { font-size:22px; }
+    .quote.q-long { font-size:19px; }
     .quote-en { font-size:14px; }
     .essay { padding:26px 22px; }
     .essay .etitle { font-size:18px; }
@@ -325,6 +329,8 @@
   }
   @media (max-width:400px) {
     .quote { font-size:23px; }
+    .quote.q-mid { font-size:20px; }
+    .quote.q-long { font-size:18px; }
     .leftnav .brand-txt { font-size:18px; }
   }
 
@@ -1770,7 +1776,13 @@
     $("saveLabel").textContent = isSaved ? "담아둔 글" : "이 글 담아두기";
 
     setTimeout(()=>{
-      $("quote").textContent=p.quote; $("author").textContent="— "+p.author;
+      const qEl = $("quote");
+      const qText = (p.quote||"").replace(/\s*[\r\n]+\s*/g," ").trim();
+      qEl.textContent = qText;
+      qEl.classList.remove("q-mid","q-long");
+      if (qText.length > 58) qEl.classList.add("q-long");
+      else if (qText.length > 36) qEl.classList.add("q-mid");
+      $("author").textContent="— "+p.author;
       $("quoteEn").textContent=p.en||"";
       $("eyebrow").textContent="Today · No. "+String(i+1).padStart(2,"0");
       $("essayTitle").textContent=p.essayTitle;
