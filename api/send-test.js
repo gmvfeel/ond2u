@@ -259,10 +259,10 @@ function buildSpecialEmail({ fromName, toName, label, recipientEmail, senderId, 
   const unsubTok = secret ? crypto.createHmac("sha256", secret).update(recipientEmail || "").digest("hex").slice(0, 32) : "";
   const unsubUrl = "https://www.ond2u.com/api/unsubscribe?e=" + rParam + "&t=" + unsubTok;
 
+  const isSelf = (toName === "\uB098\uC5D0\uAC8C");
   const who = toName || "\uB2F9\uC2E0";
   const isBirthday = /\uC0DD\uC77C|\uC0DD\uC2E0|birthday/i.test(label || "");
   const emoji = isBirthday ? "\uD83C\uDF82" : "\uD83C\uDF89";
-  const head = isBirthday ? (who + "\uB2D8, \uC0DD\uC77C \uCD95\uD558\uD574\uC694") : (who + "\uB2D8, " + (label || "\uD2B9\uBCC4\uD55C \uB0A0") + " \uCD95\uD558\uD574\uC694");
 
   const bday = [
     who + "\uB2D8\uC774 \uD0DC\uC5B4\uB09C \uC624\uB298\uC774, \uC800\uC5D0\uAC8C\uB3C4 \uCC38 \uACE0\uB9C8\uC6B4 \uB0A0\uC774\uC5D0\uC694. \uC62C \uD55C \uD574\uB3C4 \uC6C3\uC744 \uC77C\uC774 \uAC00\uB4DD\uD558\uAE38, \uAC74\uAC15\uD558\uACE0 \uD3C9\uC548\uD558\uAE38 \uC9C4\uC2EC\uC73C\uB85C \uBC14\uB77C\uC694.",
@@ -274,7 +274,20 @@ function buildSpecialEmail({ fromName, toName, label, recipientEmail, senderId, 
     who + "\uB2D8\uC758 " + (label || "\uD2B9\uBCC4\uD55C \uB0A0") + "\uC744 \uD568\uAED8 \uAE30\uC5B5\uD558\uACE0 \uC2F6\uC5C8\uC5B4\uC694. \uC624\uB298 \uD558\uB8E8, \uB530\uD558\uACE0 \uD589\uBCF5\uD55C \uC2DC\uAC04 \uBCF4\uB0B4\uAE38 \uBC14\uB77C\uC694.",
     "\uD2B9\uBCC4\uD55C \uC624\uB298\uC744 \uCD95\uD558\uD574\uC694, " + who + "\uB2D8. \uC88B\uC740 \uC0AC\uB78C\uB4E4\uACFC \uC88B\uC740 \uC21C\uAC04\uC744 \uB098\uB204\uB294 \uD558\uB8E8\uAC00 \uB418\uAE38 \uBC14\uB77C\uC694."
   ];
-  const pool = isBirthday ? bday : aniv;
+  const bdaySelf = [
+    "\uC624\uB298\uC740 \uB2F9\uC2E0\uC774 \uD0DC\uC5B4\uB09C \uB0A0\uC774\uC5D0\uC694. \uC2A4\uC2A4\uB85C\uC5D0\uAC8C \uCD95\uD558\uB97C \uAC74\uB124\uB3C4 \uC88B\uC740 \uB0A0\uC774\uC8E0. \uC62C \uD55C \uD574\uB3C4 \uC6C3\uC744 \uC77C\uC774 \uAC00\uB4DD\uD558\uAE38, \uAC74\uAC15\uD558\uACE0 \uD3C9\uC548\uD558\uAE38 \uBC14\uB77C\uC694.",
+    "\uC77C \uB144 \uC911 \uAC00\uC7A5 \uBE5B\uB098\uB294 \uC624\uB298, \uB098\uB97C \uC704\uD55C \uC2DC\uAC04\uC744 \uC870\uAE08 \uB0B4\uC5B4\uBCF4\uC138\uC694. \uB2F9\uC2E0\uC740 \uCDA9\uBD84\uD788 \uCD95\uD558\uBC1B\uC544 \uB9C8\uB584\uD55C \uC0AC\uB78C\uC774\uC5D0\uC694.",
+    "\uC0DD\uC77C \uCD95\uD558\uD574\uC694. \uADF8\uB3D9\uC548 \uC560\uC368 \uC628 \uB098\uC5D0\uAC8C, \uC624\uB298 \uD558\uB8E8\uB9CC\uD07C\uC740 \uB2E4\uC815\uD55C \uC2DC\uAC04\uC744 \uC120\uBB3C\uD574 \uC8FC\uC138\uC694."
+  ];
+  const anivSelf = [
+    "\uC624\uB298\uC740 \uB2F9\uC2E0\uC5D0\uAC8C \uD2B9\uBCC4\uD55C \uB0A0\uC774\uC5D0\uC694. \uC2A4\uC2A4\uB85C \uCD95\uD558\uB97C \uAC74\uB124\uB3C4 \uC88B\uC544\uC694. \uC774 \uC88B\uC740 \uAE30\uC5B5\uC774 \uC624\uB798\uC624\uB798 \uB9C8\uC74C\uC5D0 \uB0A8\uAE30\uB97C \uBC14\uB77C\uC694.",
+    "\uC78A\uC9C0 \uC54A\uACE0 \uCC59\uAE30\uACE0 \uC2F6\uC5C8\uB358 \uB0A0\uC774\uC5D0\uC694. \uC624\uB298 \uD558\uB8E8, \uB530\uD558\uACE0 \uD589\uBCF5\uD55C \uC2DC\uAC04 \uBCF4\uB0B4\uAE38 \uBC14\uB77C\uC694.",
+    "\uD2B9\uBCC4\uD55C \uC624\uB298\uC744 \uCD95\uD558\uD574\uC694. \uC88B\uC740 \uC21C\uAC04\uC744 \uC2A4\uC2A4\uB85C\uC5D0\uAC8C \uC120\uBB3C\uD558\uB294 \uD558\uB8E8\uAC00 \uB418\uAE38 \uBC14\uB77C\uC694."
+  ];
+  const head = isSelf
+    ? (isBirthday ? "\uC0DD\uC77C \uCD95\uD558\uD574\uC694" : ((label || "\uD2B9\uBCC4\uD55C \uB0A0") + " \uCD95\uD558\uD574\uC694"))
+    : (isBirthday ? (who + "\uB2D8, \uC0DD\uC77C \uCD95\uD558\uD574\uC694") : (who + "\uB2D8, " + (label || "\uD2B9\uBCC4\uD55C \uB0A0") + " \uCD95\uD558\uD574\uC694"));
+  const pool = isSelf ? (isBirthday ? bdaySelf : anivSelf) : (isBirthday ? bday : aniv);
   const msg = pool[Math.floor(Math.random() * pool.length)];
 
   return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
@@ -285,7 +298,7 @@ function buildSpecialEmail({ fromName, toName, label, recipientEmail, senderId, 
 '<td align="center" style="padding:36px 12px 56px; font-family:' + font + '; word-break:keep-all;">' +
   '<table role="presentation" width="680" cellpadding="0" cellspacing="0" border="0" style="width:680px; max-width:680px; background:#ffffff; border:2px solid ' + ROSE + '; border-radius:16px; overflow:hidden;">' +
     '<tr><td bgcolor="#ffffff" style="padding:18px 24px; border-bottom:1px solid #eae7e3;">' +
-      '<div style="font-size:13px; color:#b0aab6;">' + fromName + '\uB2D8\uC774 ' + (toName ? toName + '\uB2D8\uC744 ' : '') + '\uC0DD\uAC01\uD558\uBA70 \uBCF4\uB0B4\uB294 \uD2B9\uBCC4\uD55C \uD3B8\uC9C0</div>' +
+      '<div style="font-size:13px; color:#b0aab6;">' + (isSelf ? '\uC624\uB298, \uC2A4\uC2A4\uB85C\uC5D0\uAC8C \uAC74\uB124\uB294 \uD2B9\uBCC4\uD55C \uD3B8\uC9C0' : (fromName + '\uB2D8\uC774 ' + (toName ? toName + '\uB2D8\uC744 ' : '') + '\uC0DD\uAC01\uD558\uBA70 \uBCF4\uB0B4\uB294 \uD2B9\uBCC4\uD55C \uD3B8\uC9C0')) + '</div>' +
     '</td></tr>' +
     '<tr><td bgcolor="' + ROSE_SOFT + '" style="background:' + ROSE_SOFT + '; padding:42px 28px 34px; text-align:center;">' +
       '<div style="font-size:46px; line-height:1; margin-bottom:14px;">' + emoji + '</div>' +
@@ -294,7 +307,7 @@ function buildSpecialEmail({ fromName, toName, label, recipientEmail, senderId, 
     '<tr><td bgcolor="#ffffff" style="padding:34px 30px 30px;">' +
       '<div style="font-size:16px; line-height:1.95; color:#3a3540; text-align:center; word-break:keep-all;">' + msg + '</div>' +
       spacer(24) +
-      '<div style="text-align:center; font-size:15px; font-weight:600; color:' + ROSE + ';">' + fromName + '\uC758 \uB9C8\uC74C\uC744 \uB2F4\uC544.</div>' +
+      '<div style="text-align:center; font-size:15px; font-weight:600; color:' + ROSE + ';">' + (isSelf ? '\uC624\uB298\uB3C4\uAC00, \uB2F9\uC2E0\uC758 \uD558\uB8E8\uC5D0.' : (fromName + '\uC758 \uB9C8\uC74C\uC744 \uB2F4\uC544.')) + '</div>' +
       spacer(28) +
       '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
         '<a href="https://ond2u.com/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:' + PLUM + '; text-decoration:none; padding:13px 28px; border-radius:30px;">\uC624\uB298\uB3C4\uC5D0\uC11C \uB354 \uBCF4\uAE30 \u2192</a>' +
