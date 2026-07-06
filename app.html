@@ -1127,6 +1127,16 @@
           <div class="time-note">고른 시각(한국 시간)에 맞춰 하루 한 통이 나에게 와요.</div>
         </div>
 
+        <div class="field" id="meSpecialField">
+          <label>내 특별한 날 <span class="opt">(선택)</span></label>
+          <div class="special-row">
+            <select id="meSpMonth" aria-label="월"><option value="">월</option></select>
+            <select id="meSpDay" aria-label="일"><option value="">일</option></select>
+            <input id="meSpLabel" type="text" placeholder="이름표 (예: 생일)" maxlength="12" />
+          </div>
+          <div class="time-note">이 날엔 나에게도 <b>축하 편지</b>가 와요. 매년 자동으로 챙겨요.</div>
+        </div>
+
         <div class="me-note">
           평소엔 <b>랜덤으로</b> 좋은 글이 와요. 마음이 특별히 힘든 날엔, 오늘 탭에서 기분을 골라 나에게 맞는 글을 볼 수 있어요.
         </div>
@@ -2461,9 +2471,11 @@
 
   // 특별한 날 월/일 드롭다운 채우기
   (function fillSpecialDate(){
-    const mSel=$("rSpMonth"), dSel=$("rSpDay");
-    if(mSel) for(let m=1;m<=12;m++){ const o=document.createElement("option"); o.value=String(m); o.textContent=m+"월"; mSel.appendChild(o); }
-    if(dSel) for(let d=1;d<=31;d++){ const o=document.createElement("option"); o.value=String(d); o.textContent=d+"일"; dSel.appendChild(o); }
+    [["rSpMonth","rSpDay"],["meSpMonth","meSpDay"]].forEach(([mid,did])=>{
+      const mSel=$(mid), dSel=$(did);
+      if(mSel) for(let m=1;m<=12;m++){ const o=document.createElement("option"); o.value=String(m); o.textContent=m+"월"; mSel.appendChild(o); }
+      if(dSel) for(let d=1;d<=31;d++){ const o=document.createElement("option"); o.value=String(d); o.textContent=d+"일"; dSel.appendChild(o); }
+    });
   })();
 
   $("addBtn").onclick = async () => {
@@ -2556,11 +2568,16 @@
       if(selfRow){
         meToggleEl.classList.add("on");
         myPickedTimes = selfRow.send_times || ["아침 8시"];
+        // 내 특별한 날 복원
+        if(selfRow.special_date){ const p=String(selfRow.special_date).split("-"); $("meSpMonth").value=String(parseInt(p[0],10)); $("meSpDay").value=String(parseInt(p[1],10)); $("meSpLabel").value=selfRow.special_label||""; }
+        else { $("meSpMonth").value=""; $("meSpDay").value=""; $("meSpLabel").value=""; }
       } else {
         meToggleEl.classList.remove("on");
+        $("meSpMonth").value=""; $("meSpDay").value=""; $("meSpLabel").value="";
       }
       $("meTimeField").style.opacity = selfRow ? "1" : "0.4";
       $("meTimeField").style.pointerEvents = selfRow ? "auto" : "none";
+      const sf = $("meSpecialField"); if(sf){ sf.style.opacity = selfRow ? "1" : "0.4"; sf.style.pointerEvents = selfRow ? "auto" : "none"; }
       const ob = $("meOnboard"); if (ob) ob.classList.toggle("show", !selfRow);
       refreshMeTimeChips();
       renderRecipients();
@@ -2892,19 +2909,28 @@
   async function saveSelfRecipient(on){
     if(!loggedIn || !currentUser || !currentUser.email) return;
     const myEmail = currentUser.email;
+    const spM = $("meSpMonth").value, spD = $("meSpDay").value;
+    const specialDate = (spM && spD) ? (String(spM).padStart(2,"0")+"-"+String(spD).padStart(2,"0")) : null;
+    const specialLabel = specialDate ? ($("meSpLabel").value.trim() || "특별한 날") : null;
     try {
       // 기존 '나' 행 제거 (중복 방지)
       await odoDB.from("odo_recipients").delete().eq("sender_id", currentUser.id).eq("email", myEmail);
       if(on){
         const times = myPickedTimes.length ? myPickedTimes : ["아침 8시"];
-        await odoDB.from("odo_recipients").insert({ sender_id: currentUser.id, email: myEmail, name: "나에게", send_times: times, kind: "normal" });
+        await odoDB.from("odo_recipients").insert({ sender_id: currentUser.id, email: myEmail, name: "나에게", send_times: times, kind: "normal", special_date: specialDate, special_label: specialLabel });
       }
     } catch(e){ console.log("나에게 받기 저장 오류:", e); }
   }
+  // 내 특별한 날 바꾸면 (매일 받기 켜져 있을 때) 즉시 반영
+  ["meSpMonth","meSpDay","meSpLabel"].forEach(id=>{
+    const el=$(id); if(!el) return;
+    el.addEventListener("change", async ()=>{ if($("meToggle").classList.contains("on")) await saveSelfRecipient(true); });
+  });
   $("meToggle").onclick = async () => {
     const on = $("meToggle").classList.toggle("on");
     $("meTimeField").style.opacity = on ? "1" : "0.4";
     $("meTimeField").style.pointerEvents = on ? "auto" : "none";
+    const sf = $("meSpecialField"); if(sf){ sf.style.opacity = on ? "1" : "0.4"; sf.style.pointerEvents = on ? "auto" : "none"; }
     const ob = $("meOnboard"); if (ob) ob.classList.toggle("show", !on);
     await saveSelfRecipient(on);
   };
