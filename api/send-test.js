@@ -208,7 +208,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
   const unsubUrl = "https://www.ond2u.com/api/unsubscribe?e=" + rParam + "&t=" + unsubTok;
   const sParam = encodeURIComponent(senderId || "");
   const qParam = encodeURIComponent(nl(normal.quote).replace(/\n/g, " ").slice(0, 60));
-  const reactUrl = em => "https://ond2u.com/api/react?e=" + encodeURIComponent(em) + "&r=" + rParam + "&s=" + sParam + "&q=" + qParam;
+  const reactUrl = em => "https://www.ond2u.com/api/letter?e=" + encodeURIComponent(em) + "&r=" + rParam + "&s=" + sParam + "&q=" + qParam;
   const brQuote = nl(normal.quote).replace(/\n/g, "<br>");
   const essayParas = nl(normal.essay).split("\n\n").filter(Boolean)
     .map(p => '<p style="font-size:14px; line-height:1.9; color:#e9e5f0; margin:0 0 13px;">' + p.replace(/\n/g, "<br>") + '</p>').join("");
