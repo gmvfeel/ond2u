@@ -95,6 +95,19 @@
   /* 첫 방문자 환영 */
   .welcome-overlay { position:fixed; inset:0; background:rgba(43,39,48,.5); display:flex; align-items:center; justify-content:center; z-index:100; padding:24px; }
   .welcome-overlay.hidden { display:none; }
+  .book-modal { background:#fff; border-radius:22px; padding:34px 26px 28px; max-width:400px; width:100%; text-align:center; position:relative; box-shadow:0 20px 60px rgba(43,39,48,.25); }
+  .book-close { position:absolute; top:14px; right:14px; background:none; border:none; font-size:17px; color:var(--ink-faint); cursor:pointer; line-height:1; padding:4px; }
+  .book-modal-ic { font-size:38px; margin-bottom:10px; }
+  .book-modal-title { font-size:20px; font-weight:800; color:var(--plum-deep); letter-spacing:-0.02em; }
+  .book-modal-sub { font-size:14px; color:var(--ink-soft); margin-top:8px; line-height:1.6; }
+  .book-steps { text-align:left; margin:22px 0 16px; display:flex; flex-direction:column; gap:14px; }
+  .book-step { display:flex; gap:12px; align-items:flex-start; font-size:14px; color:var(--ink); line-height:1.55; }
+  .book-step .bs-n { flex-shrink:0; width:26px; height:26px; border-radius:50%; background:var(--plum); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:1px; }
+  .book-step b { color:var(--plum-deep); }
+  .book-note { font-size:12.5px; color:var(--ink-soft); background:var(--paper); border-radius:12px; padding:12px 14px; line-height:1.6; margin-bottom:16px; }
+  .book-cta { width:100%; font-family:inherit; font-size:15px; font-weight:700; color:#fff; background:var(--plum); border:none; border-radius:14px; padding:14px; cursor:pointer; transition:all .2s; }
+  .book-cta:hover:not(:disabled) { background:var(--plum-deep); }
+  .book-cta.done { background:var(--rose-soft); color:var(--rose-deep); cursor:default; }
   .welcome-box { background:var(--white); border-radius:24px; padding:44px 34px; max-width:420px; width:100%; text-align:center;
     box-shadow:0 20px 60px rgba(43,39,48,.25); }
   .welcome-icon { width:64px; height:64px; border-radius:50%; background:var(--plum); display:flex; align-items:center; justify-content:center; margin:0 auto 20px; box-shadow:0 8px 22px rgba(66,52,88,.25); }
@@ -425,6 +438,7 @@
   /* 주고받은 마음 타임라인 */
   .tl-book { background:var(--plum-soft); border:1px solid var(--plum-line); border-radius:14px; padding:14px 18px; text-align:center; font-size:13px; color:var(--plum-deep); line-height:1.5; margin-bottom:14px; }
   .tl-book b { font-weight:700; }
+  .tl-book-more { font-weight:700; white-space:nowrap; }
   .tl-sum { background:var(--rose); border-radius:16px; padding:18px 22px; margin-bottom:16px; text-align:center; font-size:14px; color:#fff; font-weight:600; letter-spacing:-0.02em; }
   .tl-sum b { font-size:19px; font-weight:800; }
   .tl-chips { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
@@ -454,6 +468,7 @@
   .bt-badge { display:inline-block; font-size:11px; font-weight:700; color:#fff; background:var(--plum); border-radius:20px; padding:4px 13px; margin-bottom:14px; letter-spacing:0.02em; }
   .bt-title { font-size:18px; font-weight:800; color:var(--plum-deep); letter-spacing:-0.02em; }
   .bt-body { font-size:14px; line-height:1.75; color:var(--ink-soft); margin-top:10px; }
+  .bt-more { font-size:13px; font-weight:700; color:var(--plum-deep); margin-top:14px; }
   .reaction { background:var(--white); border:1px solid var(--plum-line); border-radius:16px; padding:20px 22px; margin-bottom:12px;
     display:flex; align-items:flex-start; gap:14px; }
   .reaction .rcav { width:40px; height:40px; border-radius:50%; background:var(--plum-soft); color:var(--plum-deep);
@@ -834,6 +849,21 @@
     <div class="welcome-sig">오늘도 당신의 최고가 될 겁니다. 힘내세요.</div>
   </div>
 </div>
+<div class="welcome-overlay hidden" id="bookOverlay" onclick="if(event.target===this)closeBookModal()">
+  <div class="book-modal">
+    <button class="book-close" aria-label="닫기" onclick="closeBookModal()">✕</button>
+    <div class="book-modal-ic">📖</div>
+    <div class="book-modal-title">당신만의 위로 책</div>
+    <div class="book-modal-sub">매일 쌓인 마음이 세상에 하나뿐인 책이 되는 과정이에요.</div>
+    <div class="book-steps">
+      <div class="book-step"><span class="bs-n">1</span><div><b>모여요</b><br>담아둔 글과 주고받은 편지가 차곡차곡 쌓여요.</div></div>
+      <div class="book-step"><span class="bs-n">2</span><div><b>엮어요</b><br>당신의 하루하루를 세상에 하나뿐인 책으로 디자인해요.</div></div>
+      <div class="book-step"><span class="bs-n">3</span><div><b>보내드려요</b><br>정성껏 인쇄해 집으로 보내드려요.</div></div>
+    </div>
+    <div class="book-note">아직 준비 중인 기능이에요. 준비되면 가장 먼저 알려드릴게요. 🙂</div>
+    <button class="book-cta" id="bookInterestBtn" onclick="bookInterest()">이 책, 만들어지면 알려주세요</button>
+  </div>
+</div>
 <div class="layout">
 <nav class="leftnav">
   <div class="brand" id="brandHome" style="cursor:pointer;" title="오늘 화면으로">
@@ -988,17 +1018,18 @@
     </div>
 
     <!-- 책으로 남기기 예고 -->
-    <div class="book-teaser">
-      <div class="bt-badge">OND2U, 곧 만나요</div>
-      <div class="bt-title">당신의 오늘도 언젠가, 세상 단 한 권의 책으로</div>
-      <div class="bt-body">매일매일 다른 오늘, 당신이 담아둔 글과 주고받은 편지들이 쌓여서 세상에 단 하나뿐인<br>당신의 위로 책으로 묶어드릴게요.</div>
+    <div class="book-teaser" onclick="openBookModal()" style="cursor:pointer;">
+      <div class="bt-badge">OND2U · 준비 중</div>
+      <div class="bt-title">당신의 오늘도, 언젠가 세상 단 한 권의 책으로</div>
+      <div class="bt-body">담아둔 글과 주고받은 편지가 쌓여, 세상에 단 하나뿐인<br>당신의 위로 책으로 만들어드릴 계획이에요.</div>
+      <div class="bt-more">→ 어떻게 만들어지는지 보기</div>
     </div>
   </div>
 
   <!-- 담아둔 글 -->
   <div class="view" id="view-saved">
     <div class="section-title">담아둔 글</div>
-    <div class="section-sub">마음을 움직인 글들이 여기 쌓여요. 언젠가 당신만의 위로책이 됩니다.</div>
+    <div class="section-sub">마음을 움직인 글들이 여기 쌓여요. 언젠가 당신만의 위로 책으로 이어질 거예요.</div>
     <div id="savedList"><div class="saved-empty">아직 담아둔 글이 없어요.<br>오늘 탭에서 마음에 드는 글을 담아보세요.</div></div>
   </div>
 
@@ -2871,7 +2902,7 @@
     const chips = chipArr.join("");
 
     const head =
-      '<div class="tl-book">📖 여기 쌓인 마음은 언젠가 <b>한 권의 책</b>이 됩니다.</div>' +
+      '<div class="tl-book" onclick="openBookModal()" style="cursor:pointer;">📖 여기 쌓인 마음은 언젠가 <b>한 권의 책</b>으로 만들어드릴 계획이에요 <span class="tl-book-more">→ 보기</span></div>' +
       '<div class="tl-sum">'+whoTxt+'지금까지 <b>'+sentN+'</b>통을 보내고, <b>'+recvN+'</b>번의 마음을 받았어요.</div>' +
       '<div class="tl-chips">'+chips+'</div>';
 
@@ -2905,6 +2936,27 @@
   }
 
   window.setTlFilter = function(em){ window._tlFilter = em; renderReactions(); };
+
+  // 책 만들기 안내 모달
+  function reflectBookInterest(){
+    const btn = $("bookInterestBtn"); if(!btn) return;
+    if (window._bookInterested) { btn.textContent = "✓ 신청됐어요 — 준비되면 알려드릴게요"; btn.classList.add("done"); btn.disabled = true; }
+    else { btn.textContent = "이 책, 만들어지면 알려주세요"; btn.classList.remove("done"); btn.disabled = false; }
+  }
+  window.openBookModal = async function(){
+    $("bookOverlay").classList.remove("hidden");
+    if (loggedIn && currentUser) {
+      try { const { data } = await odoDB.from("odo_users").select("book_interest").eq("id", currentUser.id).maybeSingle(); window._bookInterested = !!(data && data.book_interest); } catch(e){}
+    }
+    reflectBookInterest();
+  };
+  window.closeBookModal = function(){ const o=$("bookOverlay"); if(o) o.classList.add("hidden"); };
+  window.bookInterest = async function(){
+    if (!loggedIn || !currentUser) { alert("관심 신청은 로그인 후에 할 수 있어요. 왼쪽에서 로그인해 주세요."); return; }
+    const btn = $("bookInterestBtn"); btn.disabled = true; btn.textContent = "신청 중…";
+    try { await odoDB.from("odo_users").update({ book_interest: true }).eq("id", currentUser.id); window._bookInterested = true; } catch(e){}
+    reflectBookInterest();
+  };
 
   /* ── 작은 온기: 연속 기록 · 계절 인사 · 첫 방문 환영 ── */
   // 연속 기록 (실제 방문 기준 — checkSession에서 계산해 renderStreak를 부릅니다)
