@@ -286,17 +286,20 @@
   /* 담아둔 글 (탭2) */
   .section-title { font-size:20px; font-weight:800; letter-spacing:-0.03em; margin-bottom:6px; }
   .section-sub { font-size:13px; color:var(--ink-soft); margin-bottom:28px; }
-  .saved-item { background:var(--white); border:1px solid var(--plum-line); border-radius:16px; padding:22px 24px; margin-bottom:14px; }
+  .saved-item { background:var(--white); border:1px solid var(--plum-line); border-radius:16px; padding:22px 24px; margin-bottom:14px; position:relative; }
   .saved-item .sdate { font-size:11px; letter-spacing:0.1em; color:var(--plum); margin-bottom:12px; }
   .saved-item .sq { font-size:16px; font-weight:700; line-height:1.6; }
   .saved-item .sa { font-size:13px; color:var(--ink-soft); margin-top:8px; }
   .saved-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:50px 0; }
 
   /* 내 흔적 (탭3) */
-  .trace-item { display:flex; gap:14px; align-items:baseline; padding:16px 0; border-bottom:1px solid var(--line); }
+  .trace-item { display:flex; gap:14px; align-items:baseline; padding:16px 34px 16px 0; border-bottom:1px solid var(--line); position:relative; }
   .trace-item .td { font-size:12px; color:var(--ink-faint); white-space:nowrap; min-width:64px; }
   .trace-item .tm { font-size:14px; color:var(--ink-2); }
   .trace-item .tm b { color:var(--plum-deep); font-weight:600; }
+  .item-del { position:absolute; top:12px; right:12px; background:none; border:none; color:var(--ink-faint); font-size:13px; cursor:pointer; padding:4px 6px; line-height:1; border-radius:6px; transition:all .15s; z-index:1; }
+  .item-del:hover { color:#c0392b; background:#fdecea; }
+  .trace-item .item-del { top:10px; right:2px; }
   .trace-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:50px 0; }
 
   .footnote { margin-top:18px; text-align:center; font-size:12px; color:var(--ink-faint); line-height:1.8; }
@@ -446,7 +449,7 @@
   .tl-chip:hover { border-color:var(--plum-line); }
   .tl-chip.on { color:#fff; background:var(--plum); border-color:var(--plum); font-weight:600; }
   .tl-list { position:relative; }
-  .tl-item { background:var(--white); border:1px solid var(--line); border-radius:16px; padding:16px 18px; margin-bottom:10px; display:flex; align-items:flex-start; gap:13px; }
+  .tl-item { background:var(--white); border:1px solid var(--line); border-radius:16px; padding:16px 40px 16px 18px; margin-bottom:10px; display:flex; align-items:flex-start; gap:13px; position:relative; }
   .tl-item.tl-sent { border-color:var(--plum-line); background:var(--plum-soft); }
   .tl-item.tl-cele { border-color:var(--plum); }
   .tl-item.tl-recv { border-color:#f3c9d5; background:#fdeef2; }
@@ -2130,8 +2133,16 @@
   function renderSaved(){
     const guestNote = (!loggedIn && saved.length) ? '<div class="save-guest-note">아직 로그인하지 않으셨어요. 지금 담은 글은 <b>이번 방문에만</b> 보여요 — 다시 오면 사라져요. <a onclick="odoGoLogin()">로그인하고 계속 보관하기 →</a></div>' : '';
     if(!saved.length){ $("savedList").innerHTML='<div class="saved-empty">아직 담아둔 글이 없어요.<br>오늘 탭에서 마음에 드는 글을 담아보세요.</div>'; return; }
-    $("savedList").innerHTML = guestNote + saved.map(s=>`<div class="saved-item"><div class="sdate">${s.date?s.date+" 담음":"담아둔 글"}</div><div class="sq">${s.quote.replace(/(\s*(?:<br\s*\/?>|[\r\n])\s*)+/gi,"<br>")}</div><div class="sa">— ${s.author}</div></div>`).join("");
+    $("savedList").innerHTML = guestNote + saved.map((s,idx)=>`<div class="saved-item"><button class="item-del" onclick="deleteSaved(${idx})" aria-label="삭제">✕</button><div class="sdate">${s.date?s.date+" 담음":"담아둔 글"}</div><div class="sq">${s.quote.replace(/(\s*(?:<br\s*\/?>|[\r\n])\s*)+/gi,"<br>")}</div><div class="sa">— ${s.author}</div></div>`).join("");
   }
+
+  window.deleteSaved = async function(idx){
+    const s = saved[idx]; if(!s) return;
+    if(!confirm("이 글을 담은 목록에서 뺄까요?")) return;
+    if(loggedIn && s.rowId){ try{ await odoDB.from("odo_saved").delete().eq("id", s.rowId); }catch(e){ console.log("담은 글 삭제 오류:", e); } }
+    saved.splice(idx,1);
+    renderSaved();
+  };
 
   function renderTrace(){
     const wrap = $("traceList");
@@ -2170,9 +2181,17 @@
         + '<div class="mf-list-label">전체 기록</div>';
     }
 
-    const list = trace.slice().reverse().map(t=>'<div class="trace-item"><div class="td">'+t.date+'</div><div class="tm">'+(t.mood?("<b>"+t.mood+"</b>"+(t.level?" · "+t.level:"")):"")+(t.note?(t.mood?" — ":"")+t.note:"")+'</div></div>').join("");
+    const list = trace.map((t,idx)=>({t,idx})).reverse().map(({t,idx})=>'<div class="trace-item"><button class="item-del" onclick="deleteMood('+idx+')" aria-label="삭제">✕</button><div class="td">'+t.date+'</div><div class="tm">'+(t.mood?("<b>"+t.mood+"</b>"+(t.level?" · "+t.level:"")):"")+(t.note?(t.mood?" — ":"")+t.note:"")+'</div></div>').join("");
     wrap.innerHTML = flowHtml + list;
   }
+
+  window.deleteMood = async function(idx){
+    const t = trace[idx]; if(!t) return;
+    if(!confirm("이 기분 기록을 지울까요?")) return;
+    if(loggedIn && t.rowId){ try{ await odoDB.from("odo_moods").delete().eq("id", t.rowId); }catch(e){ console.log("기분 삭제 오류:", e); } }
+    trace.splice(idx,1);
+    renderTrace();
+  };
 
   // ===== 돌아보기 (이번 달 종합) =====
   let _monthlyData = null;
@@ -2367,7 +2386,7 @@
       data.forEach(row=>{
         const dt = row.created_at ? new Date(row.created_at) : new Date();
         const date=(dt.getMonth()+1)+"월 "+dt.getDate()+"일";
-        trace.push({ date, mood:row.mood, level:row.intensity, note:row.note });
+        trace.push({ date, mood:row.mood, level:row.intensity, note:row.note, rowId:row.id });
       });
     } catch(e){ console.log("기분 불러오기 오류:", e); }
     renderBackGreet(); renderSafeNet();
@@ -2927,16 +2946,16 @@
 
     // 받은 반응 + 보낸 편지를 함께 불러오기
     const [reactRes, sendRes] = await Promise.all([
-      odoDB.from("odo_reactions").select("emotion, content_quote, recipient_email, created_at, reply").eq("sender_id", currentUser.id).order("created_at", { ascending:false }),
-      odoDB.from("odo_sends").select("recipient_email, recipient_name, content_quote, created_at, status").eq("sender_id", currentUser.id).order("created_at", { ascending:false })
+      odoDB.from("odo_reactions").select("id, emotion, content_quote, recipient_email, created_at, reply").eq("sender_id", currentUser.id).order("created_at", { ascending:false }),
+      odoDB.from("odo_sends").select("id, recipient_email, recipient_name, content_quote, created_at, status").eq("sender_id", currentUser.id).order("created_at", { ascending:false })
     ]);
     const reactions = (reactRes && reactRes.data) || [];
     const sends = ((sendRes && sendRes.data) || []).filter(s => s.status !== "fail");
 
     // 통합 타임라인 항목
     const items = [];
-    reactions.forEach(r => items.push({ type:"recv", email:r.recipient_email, date:r.created_at, emo:r.emotion||"", reply:r.reply||"", quote:r.content_quote||"" }));
-    sends.forEach(s => items.push({ type:"sent", email:s.recipient_email, date:s.created_at, name:s.recipient_name||"", quote:s.content_quote||"" }));
+    reactions.forEach(r => items.push({ type:"recv", id:r.id, email:r.recipient_email, date:r.created_at, emo:r.emotion||"", reply:r.reply||"", quote:r.content_quote||"" }));
+    sends.forEach(s => items.push({ type:"sent", id:s.id, email:s.recipient_email, date:s.created_at, name:s.recipient_name||"", quote:s.content_quote||"" }));
 
     if (!items.length) {
       box.innerHTML = '<div class="recipient-empty">아직 주고받은 마음이 없어요.<br>보내기 탭에서 편지를 보내면 여기 쌓여요.</div>';
@@ -2966,6 +2985,7 @@
 
     const body = shown.map(i => {
       const nm = escR(i.type==="sent" ? (i.name || nameOf(i.email)) : nameOf(i.email));
+      const del = '<button class="item-del tl-del" onclick="deleteTimeline(\''+i.type+'\',\''+escR(String(i.id)).replace(/'/g,"&#39;")+'\')" aria-label="삭제">✕</button>';
       if (i.type==="sent") {
         const isCele = /^\[축하\]/.test(i.quote||"");
         if (isCele) {
@@ -2974,24 +2994,31 @@
           return '<div class="tl-item tl-sent tl-cele"><div class="tl-ic">'+ic+'</div><div class="tl-c">' +
             '<div class="tl-line"><b>'+nm+'</b>님에게 <b>'+lbl+' 축하 편지</b>를 보냈어요</div>' +
             '<div class="tl-date">'+fmtR(i.date)+'</div>' +
-          '</div></div>';
+          '</div>'+del+'</div>';
         }
         return '<div class="tl-item tl-sent"><div class="tl-ic">✉️</div><div class="tl-c">' +
           '<div class="tl-line"><b>'+nm+'</b>님에게 편지를 보냈어요</div>' +
           '<div class="tl-date">'+fmtR(i.date)+'</div>' +
           (i.quote?'<div class="tl-quote">"'+escR(i.quote)+'"</div>':'') +
-        '</div></div>';
+        '</div>'+del+'</div>';
       }
       return '<div class="tl-item tl-recv"><div class="tl-ic">💌</div><div class="tl-c">' +
         '<div class="tl-line"><b>'+nm+'</b>님이 '+(i.emo?'<span class="tl-emo">'+escR(i.emo)+'</span>':'마음을 남겼어요') + '</div>' +
         '<div class="tl-date">'+fmtR(i.date)+'</div>' +
         (i.reply?'<div class="tl-reply">💬 '+escR(i.reply)+'</div>':'') +
         (i.quote?'<div class="tl-quote">"'+escR(i.quote)+'"</div>':'') +
-      '</div></div>';
+      '</div>'+del+'</div>';
     }).join("");
 
     box.innerHTML = head + '<div class="tl-list">'+body+'</div>';
   }
+
+  window.deleteTimeline = async function(type, id){
+    if(!confirm("이 기록을 지울까요?")) return;
+    const table = type==="sent" ? "odo_sends" : "odo_reactions";
+    try{ await odoDB.from(table).delete().eq("id", id); }catch(e){ console.log("기록 삭제 오류:", e); }
+    renderReactions();
+  };
 
   window.setTlFilter = function(em){ window._tlFilter = em; renderReactions(); };
 
