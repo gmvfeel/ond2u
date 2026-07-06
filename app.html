@@ -291,16 +291,21 @@
   .more-btn { display:block; width:100%; font-family:inherit; font-size:14px; font-weight:600; color:var(--plum-deep); background:var(--plum-soft); border:1px solid var(--plum-line); border-radius:30px; padding:14px; margin-top:8px; cursor:pointer; transition:all .15s; }
   .more-btn:hover { background:var(--plum-line); }
   .more-btn span { font-weight:400; color:var(--ink-soft); font-size:12px; }
-  .otd-card { position:relative; background:linear-gradient(135deg,#eef4ec 0%,#e9f1e6 55%,#f4f9f1 100%); border:1px solid #d3e2ca; border-radius:20px; padding:26px 26px 22px; margin-bottom:20px; overflow:hidden; box-shadow:0 8px 26px rgba(90,130,80,.14); animation:otdIn .7s cubic-bezier(.2,.7,.2,1) both; }
-  @keyframes otdIn { from { opacity:0; transform:translateY(16px) scale(.98); } to { opacity:1; transform:none; } }
-  .otd-card::before { content:""; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#7a9e6c,#aecb9c,#7a9e6c); }
-  .otd-card::after { content:"\201C"; position:absolute; top:-14px; right:16px; font-family:Georgia,'Times New Roman',serif; font-size:120px; line-height:1; color:rgba(90,130,70,.12); pointer-events:none; }
-  .otd-badge { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; letter-spacing:.02em; color:#fff; background:linear-gradient(135deg,#7a9e6c,#688a5a); padding:6px 13px; border-radius:20px; box-shadow:0 3px 10px rgba(104,138,90,.35); margin-bottom:15px; }
+  .otd-card { position:relative; background:linear-gradient(140deg,#f0f5ed 0%,#e8f0e4 60%,#f5f9f2 100%); border-radius:22px; padding:7px; margin-bottom:20px; box-shadow:0 10px 30px rgba(90,130,80,.15), 0 2px 6px rgba(90,130,80,.08); animation:otdIn .7s cubic-bezier(.2,.7,.2,1) both; transition:transform .3s ease, box-shadow .3s ease; }
+  .otd-card:hover { transform:translateY(-2px); box-shadow:0 16px 42px rgba(90,130,80,.20), 0 3px 8px rgba(90,130,80,.10); }
+  @keyframes otdIn { from { opacity:0; transform:translateY(18px) scale(.98); } to { opacity:1; transform:none; } }
+  .otd-frame { position:relative; border:1px solid rgba(122,158,108,.35); border-radius:17px; padding:22px 26px 20px; overflow:hidden; }
+  .otd-frame::after { content:"\201C"; position:absolute; top:-6px; right:16px; font-family:Georgia,'Times New Roman',serif; font-size:130px; line-height:1; color:rgba(104,138,90,.08); pointer-events:none; }
+  .otd-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .otd-badge { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; letter-spacing:.03em; color:#4f6e42; background:rgba(255,255,255,.72); border:1px solid rgba(122,158,108,.42); padding:5px 12px; border-radius:20px; }
   .otd-badge-ic { display:inline-flex; }
   .otd-badge-ic svg { width:13px; height:13px; display:block; }
-  .otd-q { position:relative; z-index:1; font-size:17px; line-height:1.75; color:#2c3a26; font-weight:600; word-break:keep-all; }
-  .otd-a { position:relative; z-index:1; font-size:13px; color:#71856a; margin-top:10px; }
-  .otd-note { margin-top:14px; padding-top:13px; border-top:1px dashed #d0e0c6; font-size:12.5px; color:#5f8050; }
+  .otd-date { font-size:11px; letter-spacing:.08em; color:#8ba07f; font-variant-numeric:tabular-nums; }
+  .otd-quote-wrap { position:relative; }
+  .otd-qmark { position:absolute; left:-3px; top:-20px; font-family:Georgia,'Times New Roman',serif; font-size:46px; line-height:1; color:rgba(104,138,90,.38); }
+  .otd-q { position:relative; z-index:1; font-size:17.5px; line-height:1.85; color:#2c3a26; font-weight:600; word-break:keep-all; padding-top:8px; }
+  .otd-a { position:relative; z-index:1; font-size:13px; color:#7a8d70; margin-top:12px; text-align:right; font-style:italic; }
+  .otd-note { margin-top:16px; padding-top:14px; border-top:1px dashed rgba(122,158,108,.4); font-size:12px; color:#5f8050; text-align:center; letter-spacing:.02em; }
   .saved-item .sdate { font-size:11px; letter-spacing:0.1em; color:var(--plum); margin-bottom:12px; }
   .saved-item .sq { font-size:16px; font-weight:700; line-height:1.6; }
   .saved-item .sa { font-size:13px; color:var(--ink-soft); margin-top:8px; }
@@ -2199,13 +2204,15 @@
     const yearsAgo = tY - sy;
     const yLabel = yearsAgo + "년 전 오늘";
     const q = (s.quote||"").replace(/(\s*(?:<br\s*\/?>|[\r\n])\s*)+/gi,"<br>");
+    const sd = new Date(new Date(s.savedAt).getTime()+9*3600*1000);
+    const dateStr = sd.getUTCFullYear()+"."+(sd.getUTCMonth()+1)+"."+sd.getUTCDate();
     const IC_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
-    box.innerHTML = '<div class="otd-card">'
-      + '<div class="otd-badge"><span class="otd-badge-ic">'+IC_CLOCK+'</span>'+yLabel+'</div>'
-      + '<div class="otd-q">'+q+'</div>'
+    box.innerHTML = '<div class="otd-card"><div class="otd-frame">'
+      + '<div class="otd-top"><span class="otd-badge"><span class="otd-badge-ic">'+IC_CLOCK+'</span>'+yLabel+'</span><span class="otd-date">'+dateStr+'</span></div>'
+      + '<div class="otd-quote-wrap"><span class="otd-qmark">\u201C</span><div class="otd-q">'+q+'</div></div>'
       + '<div class="otd-a">— '+s.author+'</div>'
       + '<div class="otd-note">그날, 이 글을 마음에 담으셨어요</div>'
-      + '</div>';
+      + '</div></div>';
   }
 
   function renderSaved(){
