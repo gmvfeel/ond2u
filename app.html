@@ -424,6 +424,10 @@
   .reaction .rcwho .rcemo { color:var(--plum-deep); font-weight:600; }
   .reaction .rcdate { font-size:12px; color:var(--ink-faint); margin-top:3px; }
   .reaction .rcquote { font-size:13px; color:var(--ink-soft); margin-top:10px; padding-top:10px; border-top:1px solid var(--line); line-height:1.5; }
+  .reaction .rcreply { font-size:14px; color:var(--rose-deep); background:var(--rose-soft); border-radius:12px;
+    padding:11px 14px; margin-top:10px; line-height:1.55; }
+  .re-sum-reply { font-size:13px; color:var(--rose-deep); margin-top:6px; }
+  .re-sum-reply b { font-weight:700; }
 
   /* 콘텐츠 공장 (관리자) */
   .tab-admin { color:var(--ink-faint); font-size:13px; display:none; }
@@ -2574,7 +2578,7 @@
     box.innerHTML = '<div class="recipient-empty">불러오는 중…</div>';
 
     const { data, error } = await odoDB.from("odo_reactions")
-      .select("emotion, content_quote, recipient_email, created_at")
+      .select("emotion, content_quote, recipient_email, created_at, reply")
       .eq("sender_id", currentUser.id)
       .order("created_at", { ascending: false });
 
@@ -2596,21 +2600,25 @@
 
     // 온기 요약 — 보낸 사람에게 보람을
     const total = data.length;
+    const replyCount = data.filter(x => x.reply && String(x.reply).trim()).length;
     const byEmo = {};
     data.forEach(x => { const em = x.emotion || "마음"; byEmo[em] = (byEmo[em]||0)+1; });
     const emoChips = Object.keys(byEmo).map(em => '<span class="re-chip">'+escR(em)+' '+byEmo[em]+'</span>').join("");
-    const head = '<div class="re-sum"><div class="re-sum-title">당신의 편지가 <b>'+total+'</b>번 마음에 가닿았어요</div>'+(emoChips?'<div class="re-sum-chips">'+emoChips+'</div>':'')+'</div>';
+    const replyLine = replyCount ? '<div class="re-sum-reply">그중 <b>'+replyCount+'</b>번은 답장도 왔어요 \uD83D\uDC8C</div>' : '';
+    const head = '<div class="re-sum"><div class="re-sum-title">당신의 편지가 <b>'+total+'</b>번 마음에 가닿았어요</div>'+replyLine+(emoChips?'<div class="re-sum-chips">'+emoChips+'</div>':'')+'</div>';
 
     box.innerHTML = head + data.map(r => {
       const who = nameByEmail[r.recipient_email] || (r.recipient_email||"").split("@")[0] || "받는 분";
       const emo = r.emotion || "";
       const quote = r.content_quote || "";
+      const reply = r.reply || "";
       return `
       <div class="reaction">
         <div class="rcav">${escR(who).charAt(0)}</div>
         <div class="rcinfo">
           <div class="rcwho"><b>${escR(who)}</b>님이 <span class="rcemo">${escR(emo)}</span></div>
           <div class="rcdate">${fmtR(r.created_at)}</div>
+          ${reply ? `<div class="rcreply">\uD83D\uDCAC ${escR(reply)}</div>` : ""}
           ${quote ? `<div class="rcquote">"${escR(quote)}"</div>` : ""}
         </div>
       </div>`;
