@@ -323,6 +323,10 @@
 
   .footnote { margin-top:18px; text-align:center; font-size:12px; color:var(--ink-faint); line-height:1.8; }
   .copyright { text-align:center; padding:36px 20px 40px; font-size:12px; color:var(--ink-faint); letter-spacing:.02em; line-height:1.7; }
+  .to-top { position:fixed; right:24px; bottom:24px; width:44px; height:44px; border-radius:50%; background:var(--plum); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(66,52,88,.18); opacity:0; visibility:hidden; transform:translateY(8px); transition:opacity .25s ease, transform .25s ease, visibility .25s ease; z-index:120; }
+  .to-top.show { opacity:1; visibility:visible; transform:none; }
+  .to-top:hover { filter:brightness(1.08); }
+  .to-top svg { width:20px; height:20px; }
 
   @media (max-width: 1080px) {
     .nav-auth { position:absolute; top:44px; right:16px; margin:0; z-index:70; }
@@ -338,7 +342,9 @@
     .stage { max-width: 600px; margin: 0 auto; }
     .sidebar { width: 100%; max-width: 600px; margin: 40px auto 0; position: static; padding-top: 32px; border-top: 1px solid var(--line); }
     .sidebar .family-list { display:grid; grid-template-columns:1fr 1fr; gap:5px; background:transparent; border:none; box-shadow:none; border-radius:0; overflow:visible; }
-    .sidebar .family-item { background:var(--white); border:1px solid var(--line); border-radius:7px; box-shadow:0 2px 8px rgba(80,60,70,.05); }
+    .sidebar .family-item { background:var(--white); border:1px solid var(--line); border-radius:7px; box-shadow:0 2px 8px rgba(80,60,70,.05); padding:7px 9px; gap:6px; }
+    .sidebar .family-item .fc-name { font-size:10.5px; }
+    .sidebar .family-item .fc-soon { font-size:8px; padding:1px 5px; margin-left:4px; }
   }
 
   @media (max-width:640px) {
@@ -670,9 +676,9 @@
   .family-item .fc-ic { width:15px; height:15px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
   .family-item .fc-ic svg { width:14px; height:14px; stroke:#b8b4c0; transition:stroke .16s; }
   .family-item:hover .fc-ic svg { stroke:#fff; }
-  .family-item .fc-name { font-size:11.5px; font-weight:600; color:var(--ink-faint); transition:color .16s; }
+  .family-item .fc-name { font-size:11.5px; font-weight:600; color:var(--ink-faint); transition:color .16s; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .family-item:hover .fc-name { color:#fff; }
-  .fc-soon { display:inline-block; font-size:9px; color:var(--plum); background:var(--plum-soft); border-radius:20px; padding:1px 6px; margin-left:auto; }
+  .fc-soon { display:inline-block; flex-shrink:0; font-size:9px; color:var(--plum); background:var(--plum-soft); border-radius:20px; padding:1px 6px; margin-left:auto; }
 
   /* 카드 공통 드롭섀도우 (배경에서 살짝 떠 보이게) */
   .letter-card, .essay, .care, .food, .react-wrap, .mood, .player { box-shadow: 0 4px 12px rgba(80,60,70,.09), 0 14px 30px rgba(80,60,70,.09); }
@@ -1569,7 +1575,21 @@
 
 <footer class="copyright">© 2026 오늘도 · Alliance WXN ㈜윅슨어소시에이츠. All rights reserved.</footer>
 
+<button id="toTopBtn" class="to-top" aria-label="맨 위로 가기" title="맨 위로">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
 <script>
+  // 맨 위로 가기 버튼: 일정 이상 스크롤하면 나타나고, 누르면 위로
+  (function(){
+    const btn = document.getElementById("toTopBtn");
+    if(!btn) return;
+    btn.addEventListener("click", ()=> window.scrollTo({ top:0, behavior:"smooth" }));
+    const onScroll = ()=> { if(window.scrollY > 400) btn.classList.add("show"); else btn.classList.remove("show"); };
+    window.addEventListener("scroll", onScroll, { passive:true });
+    onScroll();
+  })();
+
   const CARE_ICONS = {
     tea: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h11v5a4 4 0 01-4 4H9a4 4 0 01-4-4z"/><path d="M16 9h2a2 2 0 010 4h-2"/><path d="M8 3c-.5 1 .5 1 0 2M11 3c-.5 1 .5 1 0 2"/></svg>',
     breath: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg>',
