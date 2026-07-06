@@ -642,6 +642,9 @@
   .mn-book-title { font-size:22px; font-weight:800; color:var(--plum-deep); letter-spacing:-0.02em; margin-bottom:14px; }
   .mn-book-body { font-size:14px; line-height:1.9; color:var(--ink-2); max-width:520px; margin:0 auto; }
   .mn-book-body b { color:var(--plum-deep); font-weight:700; }
+  .mn-book-btn { margin-top:20px; background:var(--plum); color:#fff; border:none; border-radius:999px; padding:11px 26px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit; }
+  .mn-book-btn:hover { background:var(--plum-deep); }
+  .mn-book-btn:disabled { cursor:default; }
   .mn-sum { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:24px; }
   .mn-sum .box { background:var(--white); border:1px solid var(--plum-line); border-radius:16px; padding:18px 12px; text-align:center; }
   .mn-sum .n { font-size:26px; font-weight:800; color:var(--plum-deep); letter-spacing:-0.03em; line-height:1.1; }
@@ -1892,6 +1895,71 @@
   }
   { const sib=$("shareImgBtn"); if(sib) sib.onclick=()=>makeShareImage(); }
 
+  async function makeMonthlyImage(){
+    const d = _monthlyData;
+    if(!d){ alert("이번 달 기록을 먼저 불러와 주세요."); return; }
+    const btn = $("mnSaveImg"); const label = btn ? btn.innerHTML : "";
+    if(btn){ btn.disabled=true; btn.style.opacity="0.6"; btn.innerHTML="만드는 중…"; }
+    try{
+      try{ await document.fonts.ready; }catch(e){}
+      const W=1080, H=1350, cv=document.createElement("canvas");
+      cv.width=W; cv.height=H; const ctx=cv.getContext("2d");
+      ctx.fillStyle="#faf9f8"; ctx.fillRect(0,0,W,H);
+      const pad=70;
+      roundRect(ctx, pad, pad, W-pad*2, H-pad*2, 40);
+      ctx.fillStyle="#ffffff"; ctx.fill();
+      ctx.strokeStyle="#d8d0e4"; ctx.lineWidth=2; ctx.stroke();
+      ctx.textAlign="center";
+      ctx.fillStyle="#423458"; ctx.font="600 26px Pretendard, sans-serif";
+      ctx.fillText("이번 달의 나", W/2, 215);
+      ctx.fillStyle="#33283f"; ctx.font="800 58px Pretendard, sans-serif";
+      ctx.fillText(d.monthLabel+", 당신의 마음", W/2, 300);
+      ctx.strokeStyle="#d8d0e4"; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(W/2-60, 348); ctx.lineTo(W/2+60, 348); ctx.stroke();
+      // 회고 문장 (밴드 안에 맞춰 폰트 자동 축소)
+      const bandTop=430, bandBot=950, maxW=W-pad*2-90;
+      let fs=36, lh=58, lines;
+      while(true){
+        ctx.font="400 "+fs+"px Pretendard, sans-serif";
+        lines = wrapLines(ctx, d.narrText, maxW);
+        if(lines.length*lh <= (bandBot-bandTop) || fs<=24) break;
+        fs-=2; lh-=3;
+      }
+      ctx.fillStyle="#46414d"; ctx.font="400 "+fs+"px Pretendard, sans-serif";
+      let y = bandTop + ((bandBot-bandTop) - lines.length*lh)/2 + fs;
+      lines.forEach(ln=>{ ctx.fillText(ln, W/2, y); y+=lh; });
+      // 통계 3칸
+      const cols=[["담은 글",d.saved],["남긴 마음",d.moods],["받은 반응",d.reacts]];
+      const cx=[W*0.28, W*0.5, W*0.72], statY=1060;
+      cols.forEach((c,i)=>{
+        ctx.fillStyle="#423458"; ctx.font="800 64px Pretendard, sans-serif";
+        ctx.fillText(String(c[1]), cx[i], statY);
+        ctx.fillStyle="#7a7580"; ctx.font="500 26px Pretendard, sans-serif";
+        ctx.fillText(c[0], cx[i], statY+44);
+      });
+      ctx.strokeStyle="#efecf4"; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(pad+60, 1130); ctx.lineTo(W-pad-60, 1130); ctx.stroke();
+      ctx.fillStyle="#a8a2af"; ctx.font="400 25px Pretendard, sans-serif";
+      ctx.fillText("이렇게 쌓인 하루하루가, 언젠가", W/2, 1175);
+      ctx.fillText("세상에 단 하나뿐인 위로 책이 됩니다.", W/2, 1210);
+      ctx.fillStyle="#423458"; ctx.font="700 28px Pretendard, sans-serif";
+      ctx.fillText("오늘도 · OND2U", W/2, 1258);
+      const blob = await new Promise(res=>cv.toBlob(res,"image/png"));
+      if(!blob){ alert("이미지를 만들지 못했어요."); return; }
+      const now2=new Date();
+      const stamp=now2.getFullYear()+String(now2.getMonth()+1).padStart(2,"0");
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a"); a.href=url; a.download="ondu-month-"+stamp+".png";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }catch(e){
+      console.log("월간 이미지 오류:", e);
+      alert("이미지를 만들지 못했어요. 잠시 후 다시 시도해 주세요.");
+    }finally{
+      if(btn){ btn.disabled=false; btn.style.opacity="1"; btn.innerHTML=label; }
+    }
+  }
+
   window.odoGoLogin = function(){
     const tab = document.querySelector('.tab[data-view="send"]');
     if(tab) tab.click();
@@ -2004,6 +2072,7 @@
   }
 
   // ===== 돌아보기 (이번 달 종합) =====
+  let _monthlyData = null;
   async function renderMonthly(){
     const body = $("monthlyBody");
     if (!body) return;
@@ -2112,9 +2181,13 @@
       else parts.push("이 모든 결이, 다 당신이었어요.");
       narr = parts.join(" ");
     }
+    const hasBookData = (moodDays>0 || savedN>0 || reactCount>0);
+    _monthlyData = { monthLabel:monthLabel, narrText: narr.replace(/<[^>]+>/g,""), saved: savedRows.length, moods: moodCount, reacts: reactCount };
     const bookHtml = '<div class="mn-book"><div class="mn-book-eyebrow">이번 달의 나</div>'
       + '<div class="mn-book-title">'+monthLabel+', 당신의 마음</div>'
-      + '<div class="mn-book-body">'+narr+'</div></div>';
+      + '<div class="mn-book-body">'+narr+'</div>'
+      + (hasBookData ? '<button class="mn-book-btn" id="mnSaveImg">이미지로 간직하기</button>' : '')
+      + '</div>';
 
     let html = bookHtml + calHtml + '<div class="mn-sum">'
       + '<div class="box"><div class="n">'+savedRows.length+'</div><div class="lbl">담은 글</div></div>'
@@ -2125,6 +2198,7 @@
     html += '<div id="mnDetail"></div>';
     html += '<div class="mn-foot">이렇게 쌓인 하루하루가,<br>언젠가 세상에 단 하나뿐인 위로 책이 됩니다.</div>';
     body.innerHTML = html;
+    { const b=$("mnSaveImg"); if(b) b.onclick=()=>makeMonthlyImage(); }
 
     function monthAllHtml(){
       return '<div class="mn-group-title">'+monthLabel+'에 담아둔 글</div>'
