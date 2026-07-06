@@ -409,6 +409,9 @@
   .me-badge { width:42px; height:42px; border-radius:50%; background:var(--plum); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; flex-shrink:0; }
   .me-title { font-size:17px; font-weight:700; color:var(--plum-deep); }
   .me-sub { font-size:12px; color:var(--ink-soft); margin-top:3px; line-height:1.5; }
+  .me-email { display:none; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--plum-deep); background:var(--plum-soft); border:1px solid var(--plum-line); border-radius:12px; padding:11px 14px; margin-bottom:16px; line-height:1.45; word-break:break-all; }
+  .me-email.show { display:flex; }
+  .me-email .me-mail-ic { flex-shrink:0; font-size:15px; }
   .me-toggle-row { display:flex; justify-content:space-between; align-items:center; font-size:14px; color:var(--ink); padding:12px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin-bottom:18px; }
   .toggle { width:46px; height:26px; border-radius:20px; border:none; background:var(--line-strong); cursor:pointer; position:relative; transition:background .2s; padding:0; }
   .toggle.on { background:var(--plum); }
@@ -1030,6 +1033,8 @@
             <div class="me-sub">먼저 나부터 챙겨요. 매일 정해진 시각에 나에게도 한 편이 와요.</div>
           </div>
         </div>
+
+        <div class="me-email" id="meEmail"></div>
 
         <div class="me-onboard" id="meOnboard">👋 여기서 시작해요 — 매일 나에게 한 통. 아래 스위치를 켜보세요.</div>
 
@@ -2486,6 +2491,11 @@
     $("gate").style.display = "none";
     $("sendPanel").style.display = "block";
     $("meBadge").textContent = (name || "나").charAt(0);
+    const meEmailEl = $("meEmail");
+    if (meEmailEl && currentUser && currentUser.email) {
+      meEmailEl.innerHTML = '<span class="me-mail-ic">✉️</span><span><b>' + currentUser.email + '</b> 주소로 매일 편지가 도착해요</span>';
+      meEmailEl.classList.add("show");
+    }
     $("welcomeBar").innerHTML =
       '<span>안녕하세요, <b>'+(name||"")+'</b>님 · 편지는 <b>'+(senderName||name||"")+'</b> 이름으로 나가요 '+
       '<button class="namebtn" id="editNameBtn">이름 바꾸기</button></span>'+
@@ -2504,6 +2514,7 @@
   async function doLogout(){
     await odoDB.auth.signOut();
     loggedIn = false; currentUser = null; senderName = "";
+    { const m = $("meEmail"); if (m) m.classList.remove("show"); }
     saved.length = 0; trace.length = 0; recipients.length = 0;
     renderStreak(null);
     updateFromLine();
