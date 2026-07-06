@@ -627,6 +627,11 @@
   .dash-refresh:hover { background:var(--plum-soft); }
   /* 돌아보기 (월간) */
   .mn-loading { text-align:center; color:var(--ink-faint); font-size:14px; padding:30px 0; }
+  .mn-book { background:var(--plum-soft); border:1px solid var(--plum-line); border-radius:18px; padding:26px 24px; margin-bottom:18px; text-align:center; }
+  .mn-book-eyebrow { font-size:11px; letter-spacing:0.22em; color:var(--plum); margin-bottom:10px; }
+  .mn-book-title { font-size:22px; font-weight:800; color:var(--plum-deep); letter-spacing:-0.02em; margin-bottom:14px; }
+  .mn-book-body { font-size:14px; line-height:1.9; color:var(--ink-2); max-width:520px; margin:0 auto; }
+  .mn-book-body b { color:var(--plum-deep); font-weight:700; }
   .mn-sum { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:24px; }
   .mn-sum .box { background:var(--white); border:1px solid var(--plum-line); border-radius:16px; padding:18px 12px; text-align:center; }
   .mn-sum .n { font-size:26px; font-weight:800; color:var(--plum-deep); letter-spacing:-0.03em; line-height:1.1; }
@@ -2041,7 +2046,38 @@
       + calCells + '</div>'
       + '<div class="cal-legend"><span><i class="lg lg-heavy"></i>무거움</span><span><i class="lg lg-anx"></i>조급함</span><span><i class="lg lg-bright"></i>밝음</span></div></div>';
 
-    let html = calHtml + '<div class="mn-sum">'
+    // ── 이번 달의 나 (회고 카드) ──
+    const gc = { heavy:0, anx:0, bright:0 };
+    moodRows.forEach(r=>{ const g=groupOf(r.mood); if(g && gc[g]!=null) gc[g]++; });
+    const moodDays = Object.keys(dayMoods).length;
+    const savedN = savedRows.length;
+    let dom=null, domMax=0;
+    for(const k of ["heavy","anx","bright"]){ if(gc[k]>domMax){ domMax=gc[k]; dom=k; } }
+    let narr = "";
+    if (moodDays===0 && savedN===0){
+      narr = monthLabel+", 아직 마음이 쌓이기 전이에요. 오늘 탭에서 마음을 남기고 마음에 드는 글을 담아보면, 이 자리에 당신의 "+monthLabel+"이 조금씩 그려질 거예요.";
+    } else {
+      const parts=[];
+      if (moodDays>0) parts.push(monthLabel+", 당신은 <b>"+moodDays+"</b>일 이 자리에 마음을 남겼어요.");
+      if (dom==="heavy") parts.push("무거운 마음의 날이 많았지만, 그래도 매번 이 자리에 와준 당신이에요.");
+      else if (dom==="anx") parts.push("마음이 분주한 날이 많았던 한 달이었어요. 그 속에서도 잠깐 멈춰 자신을 들여다본 당신이 대견해요.");
+      else if (dom==="bright") parts.push("밝은 마음이 자주 머문 한 달이었네요.");
+      let srLine="";
+      if (savedN>0 && reactCount>0) srLine = "<b>"+savedN+"</b>편의 글을 마음에 담았고, <b>"+reactCount+"</b>번의 따뜻한 반응이 오갔어요.";
+      else if (savedN>0) srLine = "<b>"+savedN+"</b>편의 글을 마음에 담았어요.";
+      else if (reactCount>0) srLine = "<b>"+reactCount+"</b>번의 따뜻한 반응이 오갔어요.";
+      if (srLine) parts.push(srLine);
+      if (dom==="heavy") parts.push("그 발걸음 하나하나가, 이미 잘 버텨온 증거예요.");
+      else if (dom==="bright") parts.push("그 온기가 다음 달까지 이어지길 바라요.");
+      else if (dom==="anx") parts.push("조급하지 않아도 괜찮아요. 당신은 충분히 잘 하고 있어요.");
+      else parts.push("이 모든 결이, 다 당신이었어요.");
+      narr = parts.join(" ");
+    }
+    const bookHtml = '<div class="mn-book"><div class="mn-book-eyebrow">이번 달의 나</div>'
+      + '<div class="mn-book-title">'+monthLabel+', 당신의 마음</div>'
+      + '<div class="mn-book-body">'+narr+'</div></div>';
+
+    let html = bookHtml + calHtml + '<div class="mn-sum">'
       + '<div class="box"><div class="n">'+savedRows.length+'</div><div class="lbl">담은 글</div></div>'
       + '<div class="box"><div class="n">'+moodCount+'</div><div class="lbl">남긴 마음</div></div>'
       + '<div class="box"><div class="n">'+reactCount+'</div><div class="lbl">받은 반응</div></div>'
