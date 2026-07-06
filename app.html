@@ -422,6 +422,27 @@
   .send-others-label { font-size:14px; font-weight:700; color:var(--ink); margin:24px 0 14px; }
 
   /* 받은 반응 */
+  /* 주고받은 마음 타임라인 */
+  .tl-book { background:var(--plum-soft); border:1px solid var(--plum-line); border-radius:14px; padding:14px 18px; text-align:center; font-size:13px; color:var(--plum-deep); line-height:1.5; margin-bottom:14px; }
+  .tl-book b { font-weight:700; }
+  .tl-sum { background:var(--rose); border-radius:16px; padding:18px 22px; margin-bottom:16px; text-align:center; font-size:14px; color:#fff; font-weight:600; letter-spacing:-0.02em; }
+  .tl-sum b { font-size:19px; font-weight:800; }
+  .tl-chips { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+  .tl-chip { font-family:inherit; font-size:13px; color:var(--ink-soft); background:var(--paper); border:1px solid var(--line-strong); border-radius:20px; padding:7px 14px; cursor:pointer; transition:all .15s; }
+  .tl-chip:hover { border-color:var(--plum-line); }
+  .tl-chip.on { color:#fff; background:var(--plum); border-color:var(--plum); font-weight:600; }
+  .tl-list { position:relative; }
+  .tl-item { background:var(--white); border:1px solid var(--line); border-radius:16px; padding:16px 18px; margin-bottom:10px; display:flex; align-items:flex-start; gap:13px; }
+  .tl-item.tl-sent { border-color:var(--plum-line); background:var(--plum-soft); }
+  .tl-item.tl-recv { border-color:#f3c9d5; background:#fdeef2; }
+  .tl-ic { font-size:20px; flex-shrink:0; line-height:1.3; }
+  .tl-c { flex:1; min-width:0; }
+  .tl-line { font-size:14px; color:var(--ink); line-height:1.5; }
+  .tl-line b { font-weight:700; }
+  .tl-line .tl-emo { color:var(--rose-deep); font-weight:600; }
+  .tl-date { font-size:12px; color:var(--ink-faint); margin-top:3px; }
+  .tl-reply { font-size:14px; color:var(--rose-deep); background:rgba(255,255,255,.65); border-radius:12px; padding:10px 13px; margin-top:10px; line-height:1.55; overflow-wrap:anywhere; word-break:break-word; }
+  .tl-quote { font-size:13px; color:var(--ink-soft); margin-top:9px; line-height:1.5; overflow-wrap:anywhere; word-break:break-word; }
   .re-sum { background:var(--rose); border-radius:16px; padding:20px 22px; margin-bottom:18px; text-align:center; }
   .re-sum-title { font-size:15px; color:#fff; font-weight:600; letter-spacing:-0.02em; }
   .re-sum-title b { font-size:20px; font-weight:800; }
@@ -829,7 +850,7 @@
 
     <div class="tab-sec">나눔</div>
     <button class="tab" data-view="send"><svg viewBox="0 0 24 24"><path d="M21 3 10.5 13.5M21 3l-6.5 18-4-8-8-4z"/></svg>보내기</button>
-    <button class="tab" data-view="reactions"><svg viewBox="0 0 24 24"><path d="M12 20.5S3 15 3 8.8C3 5.8 5 4 7.3 4c1.9 0 3.4 1.2 4.7 3 1.3-1.8 2.8-3 4.7-3C19 4 21 5.8 21 8.8 21 15 12 20.5 12 20.5z"/></svg>받은 반응 <span class="tab-badge" id="reactBadge"></span></button>
+    <button class="tab" data-view="reactions"><svg viewBox="0 0 24 24"><path d="M12 20.5S3 15 3 8.8C3 5.8 5 4 7.3 4c1.9 0 3.4 1.2 4.7 3 1.3-1.8 2.8-3 4.7-3C19 4 21 5.8 21 8.8 21 15 12 20.5 12 20.5z"/></svg>주고받은 마음 <span class="tab-badge" id="reactBadge"></span></button>
 
     <div class="tab-sec">안내</div>
     <button class="tab" data-view="guide"><svg viewBox="0 0 24 24"><path d="M12 7C10.4 5.4 7.9 5 4.5 5v13c3.4 0 5.9.4 7.5 2 1.6-1.6 4.1-2 7.5-2V5c-3.4 0-5.9.4-7.5 2zM12 7v13"/></svg>오늘도 가이드</button>
@@ -1105,10 +1126,10 @@
     </div>
   </div>
 
-  <!-- 받은 반응 -->
+  <!-- 주고받은 마음 -->
   <div class="view" id="view-reactions">
-    <div class="section-title">받은 반응</div>
-    <div class="section-sub">내가 보낸 편지에, 그 사람들이 남긴 마음이에요.</div>
+    <div class="section-title">주고받은 마음</div>
+    <div class="section-sub">내가 보낸 편지와, 그 사람이 남긴 마음이 시간순으로 쌓여요.</div>
     <div id="reactionList"></div>
   </div>
 
@@ -2801,58 +2822,79 @@
     const fmtR = iso => { try { const d=new Date(iso); return (d.getMonth()+1)+"월 "+d.getDate()+"일"; } catch(e){ return ""; } };
 
     if (!currentUser) {
-      box.innerHTML = '<div class="recipient-empty">로그인하면 받은 반응을 볼 수 있어요.</div>';
+      box.innerHTML = '<div class="recipient-empty">로그인하면 주고받은 마음을 볼 수 있어요.</div>';
       return;
     }
     box.innerHTML = '<div class="recipient-empty">불러오는 중…</div>';
 
-    const { data, error } = await odoDB.from("odo_reactions")
-      .select("emotion, content_quote, recipient_email, created_at, reply")
-      .eq("sender_id", currentUser.id)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      box.innerHTML = '<div class="recipient-empty">반응을 불러오지 못했어요.</div>';
-      return;
-    }
-    if (!data || !data.length) {
-      box.innerHTML = '<div class="recipient-empty">아직 받은 반응이 없어요.<br>보낸 편지에 답이 오면 여기 쌓여요.</div>';
-      return;
-    }
-
-    // 받는 사람 이메일 → 이름 매핑 (있으면 "엄마"처럼 이름으로 표시)
+    // 받는 사람 이메일 → 이름 매핑
     let nameByEmail = {};
     try {
       const { data: recips } = await odoDB.from("odo_recipients").select("email, name");
       (recips||[]).forEach(x => { if (x.email) nameByEmail[x.email] = x.name; });
     } catch(e){}
+    const nameOf = em => nameByEmail[em] || (em||"").split("@")[0] || "받는 분";
 
-    // 온기 요약 — 보낸 사람에게 보람을
-    const total = data.length;
-    const replyCount = data.filter(x => x.reply && String(x.reply).trim()).length;
-    const byEmo = {};
-    data.forEach(x => { const em = x.emotion || "마음"; byEmo[em] = (byEmo[em]||0)+1; });
-    const emoChips = Object.keys(byEmo).map(em => '<span class="re-chip">'+escR(em)+' '+byEmo[em]+'</span>').join("");
-    const replyLine = replyCount ? '<div class="re-sum-reply">그중 <b>'+replyCount+'</b>번은 답장도 왔어요 \uD83D\uDC8C</div>' : '';
-    const head = '<div class="re-sum"><div class="re-sum-title">당신의 편지가 <b>'+total+'</b>번 마음에 가닿았어요</div>'+replyLine+(emoChips?'<div class="re-sum-chips">'+emoChips+'</div>':'')+'</div>';
+    // 받은 반응 + 보낸 편지를 함께 불러오기
+    const [reactRes, sendRes] = await Promise.all([
+      odoDB.from("odo_reactions").select("emotion, content_quote, recipient_email, created_at, reply").eq("sender_id", currentUser.id).order("created_at", { ascending:false }),
+      odoDB.from("odo_sends").select("recipient_email, recipient_name, content_quote, created_at, status").eq("sender_id", currentUser.id).order("created_at", { ascending:false })
+    ]);
+    const reactions = (reactRes && reactRes.data) || [];
+    const sends = ((sendRes && sendRes.data) || []).filter(s => s.status !== "fail");
 
-    box.innerHTML = head + data.map(r => {
-      const who = nameByEmail[r.recipient_email] || (r.recipient_email||"").split("@")[0] || "받는 분";
-      const emo = r.emotion || "";
-      const quote = r.content_quote || "";
-      const reply = r.reply || "";
-      return `
-      <div class="reaction">
-        <div class="rcav">${escR(who).charAt(0)}</div>
-        <div class="rcinfo">
-          <div class="rcwho"><b>${escR(who)}</b>님이 <span class="rcemo">${escR(emo)}</span></div>
-          <div class="rcdate">${fmtR(r.created_at)}</div>
-          ${reply ? `<div class="rcreply">\uD83D\uDCAC ${escR(reply)}</div>` : ""}
-          ${quote ? `<div class="rcquote">"${escR(quote)}"</div>` : ""}
-        </div>
-      </div>`;
+    // 통합 타임라인 항목
+    const items = [];
+    reactions.forEach(r => items.push({ type:"recv", email:r.recipient_email, date:r.created_at, emo:r.emotion||"", reply:r.reply||"", quote:r.content_quote||"" }));
+    sends.forEach(s => items.push({ type:"sent", email:s.recipient_email, date:s.created_at, name:s.recipient_name||"", quote:s.content_quote||"" }));
+
+    if (!items.length) {
+      box.innerHTML = '<div class="recipient-empty">아직 주고받은 마음이 없어요.<br>보내기 탭에서 편지를 보내면 여기 쌓여요.</div>';
+      return;
+    }
+    items.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+    // 사람 필터
+    const emails = [...new Set(items.map(i=>i.email).filter(Boolean))];
+    const cur = window._tlFilter || "";
+    const shown = cur ? items.filter(i => i.email === cur) : items;
+
+    // 요약
+    const sentN = shown.filter(i=>i.type==="sent").length;
+    const recvN = shown.filter(i=>i.type==="recv").length;
+    const whoTxt = cur ? escR(nameOf(cur))+"님과 " : "";
+
+    // 필터 칩
+    const chipArr = ['<button class="tl-chip'+(cur===""?" on":"")+'" onclick="setTlFilter(\'\')">전체</button>'];
+    emails.forEach(em => { chipArr.push('<button class="tl-chip'+(cur===em?" on":"")+'" onclick="setTlFilter(\''+escR(em).replace(/'/g,"&#39;")+'\')">'+escR(nameOf(em))+'</button>'); });
+    const chips = chipArr.join("");
+
+    const head =
+      '<div class="tl-book">📖 여기 쌓인 마음은 언젠가 <b>한 권의 책</b>이 됩니다.</div>' +
+      '<div class="tl-sum">'+whoTxt+'지금까지 <b>'+sentN+'</b>통을 보내고, <b>'+recvN+'</b>번의 마음을 받았어요.</div>' +
+      '<div class="tl-chips">'+chips+'</div>';
+
+    const body = shown.map(i => {
+      const nm = escR(i.type==="sent" ? (i.name || nameOf(i.email)) : nameOf(i.email));
+      if (i.type==="sent") {
+        return '<div class="tl-item tl-sent"><div class="tl-ic">✉️</div><div class="tl-c">' +
+          '<div class="tl-line"><b>'+nm+'</b>님에게 편지를 보냈어요</div>' +
+          '<div class="tl-date">'+fmtR(i.date)+'</div>' +
+          (i.quote?'<div class="tl-quote">"'+escR(i.quote)+'"</div>':'') +
+        '</div></div>';
+      }
+      return '<div class="tl-item tl-recv"><div class="tl-ic">💌</div><div class="tl-c">' +
+        '<div class="tl-line"><b>'+nm+'</b>님이 '+(i.emo?'<span class="tl-emo">'+escR(i.emo)+'</span>':'마음을 남겼어요') + '</div>' +
+        '<div class="tl-date">'+fmtR(i.date)+'</div>' +
+        (i.reply?'<div class="tl-reply">💬 '+escR(i.reply)+'</div>':'') +
+        (i.quote?'<div class="tl-quote">"'+escR(i.quote)+'"</div>':'') +
+      '</div></div>';
     }).join("");
+
+    box.innerHTML = head + '<div class="tl-list">'+body+'</div>';
   }
+
+  window.setTlFilter = function(em){ window._tlFilter = em; renderReactions(); };
 
   /* ── 작은 온기: 연속 기록 · 계절 인사 · 첫 방문 환영 ── */
   // 연속 기록 (실제 방문 기준 — checkSession에서 계산해 renderStreak를 부릅니다)
