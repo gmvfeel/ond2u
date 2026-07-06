@@ -519,7 +519,7 @@ async function runMonthlyRecap(req, res, env) {
   // 지난달 범위 (KST) → UTC 변환
   const nowKst = new Date(Date.now() + 9*3600*1000);
   let y = nowKst.getUTCFullYear(), m = nowKst.getUTCMonth(); // 이번 달(0~11)
-  if (req.query.month) { const mm = String(req.query.month).split("-"); y = parseInt(mm[0],10); m = parseInt(mm[1],10); }
+  if (req.query.month) { const mm = String(req.query.month).split("-"); y = parseInt(mm[0],10); m = parseInt(mm[1],10) - 1; }
   const prevFirstKstMs = Date.UTC(y, m-1, 1, 0,0,0);
   const thisFirstKstMs = Date.UTC(y, m, 1, 0,0,0);
   const startUtc = new Date(prevFirstKstMs - 9*3600*1000).toISOString();
