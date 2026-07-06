@@ -147,7 +147,7 @@
   .eyebrow { font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:20px; text-align:center; }
   .content { transition: opacity .45s ease; }
   .content.fade { opacity:0; }
-  .letter-card { background:var(--white); border:1.5px solid var(--rose); border-radius:20px; padding:38px 34px 34px; }
+  .letter-card { background:var(--white); border:1.5px solid var(--rose); border-radius:20px; padding:38px 34px 34px; scroll-margin-top:16px; }
 
   .quote { font-family:'Pretendard', sans-serif; font-size:30px; line-height:1.5; font-weight:800; letter-spacing:-0.035em; white-space:normal; word-break:keep-all; overflow-wrap:break-word; text-align:center; }
   .quote.q-mid { font-size:25px; line-height:1.55; }
@@ -504,6 +504,17 @@
   body.is-admin .tab-sec-admin { display:block; }
 
   /* 콘텐츠 관리 카드 */
+  .mg-filter { display:flex; gap:8px; margin:14px 0 16px; }
+  .mg-search { flex:1; min-width:0; font-family:inherit; font-size:14px; padding:11px 14px; border:1px solid var(--line-strong); border-radius:12px; outline:none; }
+  .mg-search:focus { border-color:var(--plum); }
+  .mg-tone-sel { font-family:inherit; font-size:14px; padding:11px 12px; border:1px solid var(--line-strong); border-radius:12px; background:var(--paper); cursor:pointer; outline:none; flex:0 0 auto; }
+  .mg-tone-sel:focus { border-color:var(--plum); }
+  .mg-pager { display:flex; justify-content:center; align-items:center; gap:4px; margin:20px 0 6px; flex-wrap:wrap; }
+  .mg-page-btn { font-family:inherit; font-size:13px; min-width:34px; height:34px; padding:0 8px; border:1px solid var(--line-strong); background:var(--white); border-radius:9px; cursor:pointer; color:var(--ink-soft); }
+  .mg-page-btn:hover:not(:disabled) { border-color:var(--plum); color:var(--plum-deep); }
+  .mg-page-btn.on { background:var(--plum); color:#fff; border-color:var(--plum); font-weight:700; }
+  .mg-page-btn:disabled { opacity:.4; cursor:default; }
+  .mg-page-dot { color:var(--ink-faint); padding:0 2px; }
   .mg-card { background:var(--white); border:1px solid var(--plum-line); border-radius:14px; padding:16px 18px; margin-bottom:12px; }
   .mg-q { font-size:14px; color:var(--ink); font-weight:600; line-height:1.5; }
   .mg-a { font-size:12px; color:var(--ink-faint); margin-top:4px; }
@@ -2411,7 +2422,12 @@
   }
 
   function updateGiveLabel(){ const b=$("giveBtn"); if(b) b.textContent = selectedMood ? "이 마음에 맞는 한 편" : "오늘의 한 편"; }
-  $("giveBtn").onclick=()=>{ logTrace(); show(true); };  $("randomBtn").onclick=()=>{ show(true); };
+  function scrollToLetter(){
+    const card = document.querySelector("#view-home .letter-card");
+    if (card) card.scrollIntoView({ behavior:"smooth", block:"start" });
+    else window.scrollTo({ top:0, behavior:"smooth" });
+  }
+  $("giveBtn").onclick=()=>{ logTrace(); show(true); scrollToLetter(); };  $("randomBtn").onclick=()=>{ show(true); scrollToLetter(); };
   { const c=$("safeNetClose"); if(c) c.onclick=()=>{ try{ localStorage.setItem("odo_safenet_dismissed", String(Date.now())); }catch(e){} const el=$("safeNet"); if(el) el.style.display="none"; }; }
 
   // 읽기 글씨 크기 (− 가 + 스텝퍼) — 선택 저장
@@ -3318,6 +3334,7 @@
     return m ? m[1] : "";
   }
 
+  const MG_PER = 20;
   async function renderManage(){
     const box = $("manageList");
     if (!box) return;
@@ -3327,7 +3344,12 @@
     try { ({ data, error } = await odoDB.from("odo_contents").select("*").order("id")); }
     catch(e){ error = e; }
     if (error || !data || !data.length){ box.innerHTML = '<div class="adm-empty">콘텐츠를 불러오지 못했어요.</div>'; return; }
+    window._mgAll = data;
+    window._mgPage = 1;
+    if (window._mgQ == null) window._mgQ = "";
+    if (window._mgTone == null) window._mgTone = "";
     const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    // 감정 분포 (전체 기준)
     const MG_GROUPS = [
       { k:"무거움", cls:"heavy", items:["지침","번아웃","슬픔","외로움"] },
       { k:"조급함", cls:"anx", items:["불안","초조","막막","화남","미룸"] },
@@ -3346,18 +3368,61 @@
       + (mgNoTag?'<span class="mgs-chip mgs-none">태그없음 <b>'+mgNoTag+'</b></span>':'')
       + '<span class="mgs-chip mgs-bible">✝ 성경 <b>'+mgBible+'</b></span>'
       + '<span class="mgs-note">여러 감정에 걸친 글은 각 그룹에 중복 집계돼요.</span>';
-    let html = '<div class="mg-top">'
+    const TONES = ["","공통","위로","응원","평온","시작","성경"];
+    const toneOpts = TONES.map(t=>'<option value="'+t+'"'+(t===window._mgTone?' selected':'')+'>'+(t===""?"전체 결":t)+'</option>').join("");
+    box.innerHTML = '<div class="mg-top">'
       + '<span id="mgCount">총 <b>'+data.length+'</b>개</span>'
-      + '<button class="mg-btn" id="mgCheckBtn" onclick="mgCheckAll()">⚠ 재생 안 되는 영상 찾기</button>'
+      + '<button class="mg-btn" id="mgCheckBtn" onclick="mgCheckAll()">⚠ 재생 검사(이 페이지)</button>'
       + '<button class="mg-btn save" id="mgFillBtn" onclick="mgFillBad()" style="display:none">정상 영상으로 자동 채우기</button>'
       + '</div>'
-      + '<div id="mgSummary" class="mg-summary">'+mgSum+'</div>';
-    html += data.map(r => {
+      + '<div id="mgSummary" class="mg-summary">'+mgSum+'</div>'
+      + '<div class="mg-filter">'
+      +   '<input type="text" id="mgSearch" class="mg-search" placeholder="명언·저자·제목 검색" value="'+esc(window._mgQ)+'" oninput="mgOnSearch(this.value)">'
+      +   '<select class="mg-tone-sel" onchange="mgSetTone(this.value)">'+toneOpts+'</select>'
+      + '</div>'
+      + '<div id="mgListBody"></div>';
+    mgRenderBody();
+  }
+
+  function mgFiltered(){
+    const all = window._mgAll || [];
+    const q = (window._mgQ||"").trim().toLowerCase();
+    const tone = window._mgTone||"";
+    return all.filter(r=>{
+      if (tone==="성경"){ if(r.kind!=="bible") return false; }
+      else if (tone==="공통"){ if(r.tone || r.kind==="bible") return false; }
+      else if (tone){ if(r.tone!==tone) return false; }
+      if (q){
+        const hay = ((r.quote||"")+" "+(r.author||"")+" "+(r.essay_title||"")).toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  function mgRenderBody(){
+    const body = $("mgListBody");
+    if (!body) return;
+    const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    const all = window._mgAll || [];
+    const list = mgFiltered();
+    const per = MG_PER;
+    let page = window._mgPage || 1;
+    const pages = Math.max(1, Math.ceil(list.length/per));
+    if (page > pages) page = pages;
+    window._mgPage = page;
+    const start = (page-1)*per;
+    const pageItems = list.slice(start, start+per);
+    const cnt = $("mgCount");
+    if (cnt) cnt.innerHTML = '총 <b>'+all.length+'</b>개' + (list.length!==all.length ? ' · 조건 <b>'+list.length+'</b>개' : '');
+    if (!pageItems.length){ body.innerHTML = '<div class="adm-empty">조건에 맞는 콘텐츠가 없어요.</div>'; return; }
+    let html = pageItems.map(r => {
       const raw = (r.quote||"").replace(/\\n/g," ");
       const q = esc(raw.slice(0,40)) + (raw.length>40?"…":"");
+      const toneBadge = r.kind==="bible" ? "성경" : (r.tone || "공통");
       return '<div class="mg-card" id="mg_'+r.id+'" data-vid="'+esc(r.video_id||"")+'">'
         + '<div class="mg-head"><div class="mg-q">'+q+'</div><span class="mg-status" id="mgSt_'+r.id+'"></span></div>'
-        + '<div class="mg-a">— '+esc(r.author)+' · '+esc(r.kind||"normal")+'</div>'
+        + '<div class="mg-a">— '+esc(r.author)+' · '+esc(toneBadge)+'</div>'
         + '<div class="mg-cur">현재 영상: <b>'+esc(r.video_id||"(없음)")+'</b>'+(r.video_title?' · 검색어: '+esc(r.video_title):'')+'</div>'
         + '<div class="mg-row">'
         +   '<input type="text" id="mgUrl_'+r.id+'" placeholder="유튜브 주소 붙여넣기">'
@@ -3368,8 +3433,29 @@
         + '<div class="mg-row"><button class="mg-btn del" onclick="mgDelete(\''+r.id+'\')">이 콘텐츠 삭제</button></div>'
         + '</div>';
     }).join("");
-    box.innerHTML = html;
+    html += makePager(page, pages, "mgGoPage");
+    body.innerHTML = html;
   }
+
+  function makePager(page, pages, fn){
+    if (pages <= 1) return "";
+    let btns = '<button class="mg-page-btn" onclick="'+fn+'('+(page-1)+')"'+(page<=1?' disabled':'')+'>‹</button>';
+    const nums = [];
+    for (let p=1; p<=pages; p++){
+      if (p===1 || p===pages || (p>=page-2 && p<=page+2)) nums.push(p);
+      else if (nums[nums.length-1] !== "…") nums.push("…");
+    }
+    nums.forEach(p=>{
+      if (p==="…") btns += '<span class="mg-page-dot">…</span>';
+      else btns += '<button class="mg-page-btn'+(p===page?' on':'')+'" onclick="'+fn+'('+p+')">'+p+'</button>';
+    });
+    btns += '<button class="mg-page-btn" onclick="'+fn+'('+(page+1)+')"'+(page>=pages?' disabled':'')+'>›</button>';
+    return '<div class="mg-pager">'+btns+'</div>';
+  }
+
+  window.mgOnSearch = function(v){ window._mgQ = v; window._mgPage = 1; mgRenderBody(); };
+  window.mgSetTone = function(t){ window._mgTone = t; window._mgPage = 1; mgRenderBody(); };
+  window.mgGoPage = function(p){ window._mgPage = p; mgRenderBody(); const b=$("ops-manage")||$("manageList"); if(b) b.scrollIntoView({behavior:"smooth", block:"start"}); };
 
   window.mgPreview = function(id){
     const el = $("mgUrl_"+id);
@@ -3659,21 +3745,49 @@
       out = await res.json().catch(()=>({}));
     } catch(e){ box.innerHTML = '<div class="adm-empty">불러오지 못했어요.</div>'; return; }
     if (!out || !out.ok || !Array.isArray(out.sends)){ box.innerHTML = '<div class="adm-empty">'+((out&&out.error)||"불러오지 못했어요.")+'</div>'; return; }
-    const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-    const fmt = iso => {
-      if(!iso) return "";
-      try { const d=new Date(new Date(iso).getTime()+9*3600*1000); return d.toISOString().slice(0,16).replace("T"," "); } catch(e){ return ""; }
-    };
-    let html = '<div class="sd-sum">'
+    window._sdAll = out.sends;
+    window._sdPage = 1;
+    if (window._sdFilter == null) window._sdFilter = "";
+    const sumHtml = '<div class="sd-sum">'
       + '<div class="box"><div class="n">'+(out.today_success||0)+'</div><div class="lbl">오늘 성공</div></div>'
       + '<div class="box"><div class="n fail">'+(out.today_fail||0)+'</div><div class="lbl">오늘 실패</div></div>'
       + '<div class="box"><div class="n">'+(out.total||0)+'</div><div class="lbl">최근 기록</div></div>'
       + '</div>';
     if (!out.sends.length){
-      box.innerHTML = html + '<div class="adm-empty">아직 발송 기록이 없어요. 편지가 나가면 여기 쌓여요.</div>';
+      box.innerHTML = sumHtml + '<div class="adm-empty">아직 발송 기록이 없어요. 편지가 나가면 여기 쌓여요.</div>';
       return;
     }
-    html += out.sends.map(s => {
+    const opts = [["","전체"],["success","성공만"],["fail","실패만"]]
+      .map(([v,l])=>'<option value="'+v+'"'+(v===window._sdFilter?' selected':'')+'>'+l+'</option>').join("");
+    box.innerHTML = sumHtml
+      + '<div class="mg-filter"><select class="mg-tone-sel" style="flex:1" onchange="sdSetFilter(this.value)">'+opts+'</select></div>'
+      + '<div id="sdListBody"></div>';
+    sdRenderBody();
+  }
+
+  function sdFiltered(){
+    const all = window._sdAll || [];
+    const f = window._sdFilter || "";
+    if (f==="success") return all.filter(s=>s.status==="success");
+    if (f==="fail") return all.filter(s=>s.status!=="success");
+    return all;
+  }
+
+  function sdRenderBody(){
+    const body = $("sdListBody");
+    if (!body) return;
+    const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    const fmt = iso => { if(!iso) return ""; try { const d=new Date(new Date(iso).getTime()+9*3600*1000); return d.toISOString().slice(0,16).replace("T"," "); } catch(e){ return ""; } };
+    const list = sdFiltered();
+    const per = 20;
+    let page = window._sdPage || 1;
+    const pages = Math.max(1, Math.ceil(list.length/per));
+    if (page>pages) page=pages;
+    window._sdPage = page;
+    const start = (page-1)*per;
+    const items = list.slice(start, start+per);
+    if (!items.length){ body.innerHTML = '<div class="adm-empty">조건에 맞는 기록이 없어요.</div>'; return; }
+    let html = items.map(s => {
       const ok = s.status === "success";
       const who = esc(s.sender_name||"?") + " → " + esc(s.recipient_name || s.recipient_email || "?");
       return '<div class="sd-card">'
@@ -3683,8 +3797,12 @@
         + '<div class="sd-time">'+fmt(s.created_at)+' · '+esc(s.recipient_email||"")+'</div>'
         + '</div>';
     }).join("");
-    box.innerHTML = html;
+    html += makePager(page, pages, "sdGoPage");
+    body.innerHTML = html;
   }
+
+  window.sdSetFilter = function(v){ window._sdFilter = v; window._sdPage = 1; sdRenderBody(); };
+  window.sdGoPage = function(p){ window._sdPage = p; sdRenderBody(); const b=$("ops-sends")||$("sendsList"); if(b) b.scrollIntoView({behavior:"smooth", block:"start"}); };
 
   // ===== 회원 관리 (관리자 전용) =====
   window.deleteMember = async function(email, name){
@@ -3726,9 +3844,40 @@
     } catch(e){ box.innerHTML = '<div class="adm-empty">불러오지 못했어요.</div>'; return; }
     if (!out || !out.ok || !Array.isArray(out.members)){ box.innerHTML = '<div class="adm-empty">'+((out&&out.error)||"불러오지 못했어요.")+'</div>'; return; }
     if (!out.members.length){ box.innerHTML = '<div class="adm-empty">아직 가입한 회원이 없어요.</div>'; return; }
+    window._mbAll = out.members;
+    window._mbPage = 1;
+    if (window._mbQ == null) window._mbQ = "";
     const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-    let html = '<div class="mg-top"><span id="mgCount">총 <b>'+out.members.length+'</b>명</span></div>';
-    html += out.members.map(u => {
+    box.innerHTML = '<div class="mg-top"><span id="mbCount">총 <b>'+out.members.length+'</b>명</span></div>'
+      + '<div class="mg-filter"><input type="text" id="mbSearch" class="mg-search" placeholder="이름·이메일 검색" value="'+esc(window._mbQ)+'" oninput="mbOnSearch(this.value)"></div>'
+      + '<div id="mbListBody"></div>';
+    mbRenderBody();
+  }
+
+  function mbFiltered(){
+    const all = window._mbAll || [];
+    const q = (window._mbQ||"").trim().toLowerCase();
+    if (!q) return all;
+    return all.filter(u => ((u.display_name||"")+" "+(u.email||"")).toLowerCase().includes(q));
+  }
+
+  function mbRenderBody(){
+    const body = $("mbListBody");
+    if (!body) return;
+    const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    const all = window._mbAll || [];
+    const list = mbFiltered();
+    const per = 20;
+    let page = window._mbPage || 1;
+    const pages = Math.max(1, Math.ceil(list.length/per));
+    if (page > pages) page = pages;
+    window._mbPage = page;
+    const start = (page-1)*per;
+    const items = list.slice(start, start+per);
+    const cnt = $("mbCount");
+    if (cnt) cnt.innerHTML = '총 <b>'+all.length+'</b>명' + (list.length!==all.length ? ' · 검색 <b>'+list.length+'</b>명' : '');
+    if (!items.length){ body.innerHTML = '<div class="adm-empty">조건에 맞는 회원이 없어요.</div>'; return; }
+    let html = items.map(u => {
       const provMap = { google:"구글", kakao:"카카오", naver:"네이버", email:"이메일" };
       const prov = provMap[u.provider] || u.provider || "";
       const bits = [];
@@ -3749,8 +3898,12 @@
         + delBtn
         + '</div>';
     }).join("");
-    box.innerHTML = html;
+    html += makePager(page, pages, "mbGoPage");
+    body.innerHTML = html;
   }
+
+  window.mbOnSearch = function(v){ window._mbQ = v; window._mbPage = 1; mbRenderBody(); };
+  window.mbGoPage = function(p){ window._mbPage = p; mbRenderBody(); const b=$("ops-members")||$("membersList"); if(b) b.scrollIntoView({behavior:"smooth", block:"start"}); };
 
   // ── 재생 불가 영상 자동 검사 (화면 밖 숨은 플레이어로 하나씩 확인) ──
   let mgChecker=null, mgCheckerReady=false, mgResultCb=null;
