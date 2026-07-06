@@ -56,8 +56,9 @@ export default async function handler(req, res) {
     const normalPool = await fetchContents(SB_URL, SB_SERVICE, "normal");
     if (!normalPool.length) throw new Error("창고에 일반 콘텐츠가 없어요.");
     const biblePool = await fetchContents(SB_URL, SB_SERVICE, "bible");
+    const foodPool = await fetchFoods(SB_URL, SB_SERVICE);
 
-    const cfg = { RESEND_KEY, FROM, fromName, normalPool, biblePool, SB_URL, SB_SERVICE, SECRET };
+    const cfg = { RESEND_KEY, FROM, fromName, normalPool, biblePool, foodPool, SB_URL, SB_SERVICE, SECRET };
 
     if (all) {
       // ── 전체 발송: 수신자 명단 전원에게 ──
@@ -98,12 +99,12 @@ export default async function handler(req, res) {
 }
 
 // 수신자 한 명에게 발송 (콘텐츠 풀에서 랜덤으로 뽑아 메일 만들어 Resend로)
-async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, to, toName, wantBible, senderId, SB_URL, SB_SERVICE, SECRET }) {
+async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, foodPool, to, toName, wantBible, senderId, SB_URL, SB_SERVICE, SECRET }) {
   const pickN = normalPool[Math.floor(Math.random() * normalPool.length)];
   let pickB = null;
   if (wantBible && biblePool.length) pickB = biblePool[Math.floor(Math.random() * biblePool.length)];
 
-  const html = buildEmail({ fromName, toName, normal: pickN, bible: pickB, recipientEmail: to, senderId, secret: SECRET });
+  const html = buildEmail({ fromName, toName, normal: pickN, bible: pickB, recipientEmail: to, senderId, secret: SECRET, foodPool });
   const quote = (pickN.quote || "").replace(/\\n/g, " ").slice(0, 80);
   const logBase = { sender_id: senderId || null, sender_name: fromName, recipient_email: to, recipient_name: toName || "", content_quote: quote };
 
@@ -170,6 +171,16 @@ function josaGaI(name) {
   return name + (((c - 0xAC00) % 28 !== 0) ? "이" : "가");
 }
 
+async function fetchFoods(url, key) {
+  try {
+    const r = await fetch(url + "/rest/v1/odo_foods?active=eq.true&select=*", {
+      headers: { "apikey": key, "Authorization": "Bearer " + key }
+    });
+    if (!r.ok) return [];
+    return await r.json();
+  } catch (e) { return []; }
+}
+
 async function fetchContents(url, key, kind) {
   const r = await fetch(url + "/rest/v1/odo_contents?kind=eq." + kind + "&select=*", {
     headers: { "apikey": key, "Authorization": "Bearer " + key }
@@ -190,7 +201,7 @@ function careEmoji(k){
   return map[k] || "\uD83C\uDF43"; // 기본 🍃
 }
 
-function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId, secret }) {
+function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId, secret, foodPool }) {
   const nl = s => (s || "").replace(/\\n/g, "\n");
   const rParam = encodeURIComponent(recipientEmail || "");
   const unsubTok = secret ? crypto.createHmac("sha256", secret).update(recipientEmail || "").digest("hex").slice(0, 32) : "";
@@ -202,6 +213,24 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
   const essayParas = nl(normal.essay).split("\n\n").filter(Boolean)
     .map(p => '<p style="font-size:14px; line-height:1.9; color:#e9e5f0; margin:0 0 13px;">' + p.replace(/\n/g, "<br>") + '</p>').join("");
   const careIc = careEmoji(normal.care_icon);
+  // 오늘 이 음식 (절기 우선 → 없으면 랜덤), 한국 날짜(KST) 기준
+  const _kst = new Date(Date.now() + 9*3600*1000);
+  const _md = String(_kst.getUTCMonth()+1).padStart(2,"0") + "-" + String(_kst.getUTCDate()).padStart(2,"0");
+  const _inR = (a,b)=> (a&&b) ? ((a<=b) ? (_md>=a&&_md<=b) : (_md>=a||_md<=b)) : false;
+  let _fc = (foodPool||[]).filter(f=>f.kind==="season" && _inR(f.start_md,f.end_md));
+  if(!_fc.length) _fc = (foodPool||[]).filter(f=>f.kind==="mood");
+  if(!_fc.length) _fc = (foodPool||[]).slice();
+  const food = _fc.length ? _fc[Math.floor(Math.random()*_fc.length)] : null;
+  const foodBlock = food ? (
+      spacer(16) +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#fcf2ea" style="background:#fcf2ea; border:1px solid #f0ddcb; border-radius:14px;"><tr><td style="padding:20px 22px;">' +
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
+          '<td width="48" style="vertical-align:middle;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="36" height="36" bgcolor="#ffffff" align="center" style="background:#ffffff; border-radius:10px; font-size:19px; line-height:36px;">' + (food.emoji || "\uD83C\uDF7D") + '</td></tr></table></td>' +
+          '<td style="vertical-align:middle;"><div style="font-size:10px; letter-spacing:0.1em; color:#c58a5a;">\uC624\uB298 \uC774 \uC74C\uC2DD \uC5B4\uB54C\uC694?</div><div style="font-size:15px; font-weight:700; color:#8a5236; margin-top:2px;">' + (food.name || "") + '</div></td>' +
+        '</tr></table>' +
+        (food.descr ? '<div style="font-size:13px; line-height:1.8; color:#46414d; margin-top:11px;">' + food.descr + '</div>' : "") +
+      '</td></tr></table>'
+    ) : "";
   const badge = fromName.charAt(0);
   const font = "'Pretendard','Gulim','\uAD74\uB9BC',sans-serif";
   const spacer = h => '<div style="height:' + h + 'px; line-height:' + h + 'px; font-size:0;">&nbsp;</div>';
@@ -281,6 +310,8 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
         '</tr></table>' +
         '<div style="font-size:13px; line-height:1.8; color:#46414d; margin-top:11px;">' + (normal.care_body || "") + '</div>' +
       '</td></tr></table>' : "") +
+
+      foodBlock +
 
       // 영상
       (normal.video_id ?
