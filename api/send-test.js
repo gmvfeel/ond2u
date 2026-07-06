@@ -8,6 +8,7 @@
 import crypto from "crypto";
 
 export const config = { maxDuration: 60 };
+const sleep = ms => new Promise(res => setTimeout(res, ms));
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -70,7 +71,9 @@ export default async function handler(req, res) {
       const sendersById = await fetchSenders(SB_URL, SB_SERVICE);
 
       const results = [];
+      let _idx = 0;
       for (const rc of recipients) {
+        if (_idx++ > 0) await sleep(600);
         try {
           const su = sendersById[rc.sender_id] || {};
           const perFromName = (su.display_name && su.display_name.trim())
@@ -109,16 +112,19 @@ async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, food
   const logBase = { sender_id: senderId || null, sender_name: fromName, recipient_email: to, recipient_name: toName || "", content_quote: quote };
 
   try {
-    const r = await fetch("https://api.resend.com/emails", {
+    const payload = JSON.stringify({
+      from: '"오늘도/OND2U" <' + FROM + ">",
+      to: [to],
+      subject: fromName + "님이 오늘도 보냅니다",
+      html
+    });
+    const doSend = () => fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: '"오늘도/OND2U" <' + FROM + ">",
-        to: [to],
-        subject: fromName + "님이 오늘도 보냅니다",
-        html
-      })
+      body: payload
     });
+    let r = await doSend();
+    if (r.status === 429) { await sleep(1200); r = await doSend(); }
     const data = await r.json();
     if (!r.ok) throw new Error("Resend 발송 실패: " + JSON.stringify(data));
     await logSend(SB_URL, SB_SERVICE, { ...logBase, status: "success", resend_id: data.id || "" });
