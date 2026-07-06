@@ -98,6 +98,7 @@
   .book-modal { background:#fff; border-radius:22px; padding:34px 26px 28px; max-width:400px; width:100%; text-align:center; position:relative; box-shadow:0 20px 60px rgba(43,39,48,.25); }
   .book-close { position:absolute; top:14px; right:14px; background:none; border:none; font-size:17px; color:var(--ink-faint); cursor:pointer; line-height:1; padding:4px; }
   .book-modal-ic { font-size:38px; margin-bottom:10px; }
+  .book-modal-ic svg { width:38px; height:38px; color:var(--plum); display:block; margin:0 auto; }
   .book-modal-title { font-size:20px; font-weight:800; color:var(--plum-deep); letter-spacing:-0.02em; }
   .book-modal-sub { font-size:14px; color:var(--ink-soft); margin-top:8px; line-height:1.6; }
   .book-steps { text-align:left; margin:22px 0 16px; display:flex; flex-direction:column; gap:14px; }
@@ -428,6 +429,7 @@
   .me-email { display:none; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--plum-deep); background:var(--plum-soft); border:1px solid var(--plum-line); border-radius:12px; padding:11px 14px; margin-bottom:16px; line-height:1.45; word-break:break-all; }
   .me-email.show { display:flex; }
   .me-email .me-mail-ic { flex-shrink:0; font-size:15px; }
+  .me-email .me-mail-ic svg { width:16px; height:16px; vertical-align:-3px; }
   .me-toggle-row { display:flex; justify-content:space-between; align-items:center; font-size:14px; color:var(--ink); padding:12px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin-bottom:18px; }
   .toggle { width:46px; height:26px; border-radius:20px; border:none; background:var(--line-strong); cursor:pointer; position:relative; transition:background .2s; padding:0; }
   .toggle.on { background:var(--plum); }
@@ -454,6 +456,12 @@
   .tl-item.tl-cele { border-color:var(--plum); }
   .tl-item.tl-recv { border-color:#f3c9d5; background:#fdeef2; }
   .tl-ic { font-size:20px; flex-shrink:0; line-height:1.3; }
+  .tl-ic svg { width:21px; height:21px; display:block; }
+  .tl-item.tl-sent .tl-ic { color:var(--plum); }
+  .tl-item.tl-recv .tl-ic { color:var(--rose-deep); }
+  .tl-item.tl-cele .tl-ic { color:var(--rose-deep); }
+  .tl-reply-ic svg { width:14px; height:14px; vertical-align:-2px; margin-right:5px; }
+  .tl-book-ic svg { width:15px; height:15px; vertical-align:-3px; margin-right:4px; }
   .tl-c { flex:1; min-width:0; }
   .tl-line { font-size:14px; color:var(--ink); line-height:1.5; }
   .tl-line b { font-weight:700; }
@@ -864,7 +872,7 @@
 <div class="welcome-overlay hidden" id="bookOverlay" onclick="if(event.target===this)closeBookModal()">
   <div class="book-modal">
     <button class="book-close" aria-label="닫기" onclick="closeBookModal()">✕</button>
-    <div class="book-modal-ic">📖</div>
+    <div class="book-modal-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
     <div class="book-modal-title">당신만의 위로 책</div>
     <div class="book-modal-sub">매일 쌓인 마음이 세상에 하나뿐인 책이 되는 과정이에요.</div>
     <div class="book-steps">
@@ -872,7 +880,7 @@
       <div class="book-step"><span class="bs-n">2</span><div><b>엮어요</b><br>당신의 하루하루를 세상에 하나뿐인 책으로 디자인해요.</div></div>
       <div class="book-step"><span class="bs-n">3</span><div><b>보내드려요</b><br>정성껏 인쇄해 집으로 보내드려요.</div></div>
     </div>
-    <div class="book-note">아직 준비 중인 기능이에요. 준비되면 가장 먼저 알려드릴게요. 🙂</div>
+    <div class="book-note">아직 준비 중인 기능이에요. 준비되면 가장 먼저 알려드릴게요.</div>
     <button class="book-cta" id="bookInterestBtn" onclick="bookInterest()">이 책, 만들어지면 알려주세요</button>
   </div>
 </div>
@@ -1106,7 +1114,7 @@
 
         <div class="me-email" id="meEmail"></div>
 
-        <div class="me-onboard" id="meOnboard">👋 여기서 시작해요 — 매일 나에게 한 통. 아래 스위치를 켜보세요.</div>
+        <div class="me-onboard" id="meOnboard">여기서 시작해요 — 매일 나에게 한 통. 아래 스위치를 켜보세요.</div>
 
         <div class="me-toggle-row">
           <span>매일 나에게 받기</span>
@@ -2656,7 +2664,7 @@
     $("meBadge").textContent = (name || "나").charAt(0);
     const meEmailEl = $("meEmail");
     if (meEmailEl && currentUser && currentUser.email) {
-      meEmailEl.innerHTML = '<span class="me-mail-ic">✉️</span><span><b>' + currentUser.email + '</b> 주소로 매일 편지가 도착해요</span>';
+      meEmailEl.innerHTML = '<span class="me-mail-ic">'+ODO_IC.mail+'</span><span><b>' + currentUser.email + '</b> 주소로 매일 편지가 도착해요</span>';
       meEmailEl.classList.add("show");
     }
     $("welcomeBar").innerHTML =
@@ -2979,7 +2987,7 @@
     const chips = chipArr.join("");
 
     const head =
-      '<div class="tl-book" onclick="openBookModal()" style="cursor:pointer;">📖 여기 쌓인 마음은 언젠가 <b>한 권의 책</b>으로 만들어드릴 계획이에요 <span class="tl-book-more">→ 보기</span></div>' +
+      '<div class="tl-book" onclick="openBookModal()" style="cursor:pointer;"><span class="tl-book-ic">'+ODO_IC.book+'</span> 여기 쌓인 마음은 언젠가 <b>한 권의 책</b>으로 만들어드릴 계획이에요 <span class="tl-book-more">→ 보기</span></div>' +
       '<div class="tl-sum">'+whoTxt+'지금까지 <b>'+sentN+'</b>통을 보내고, <b>'+recvN+'</b>번의 마음을 받았어요.</div>' +
       '<div class="tl-chips">'+chips+'</div>';
 
@@ -2990,22 +2998,21 @@
         const isCele = /^\[축하\]/.test(i.quote||"");
         if (isCele) {
           const lbl = escR((i.quote||"").replace(/^\[축하\]\s*/,"")) || "특별한 날";
-          const ic = /생일|생신/.test(lbl) ? "🎂" : "🎉";
-          return '<div class="tl-item tl-sent tl-cele"><div class="tl-ic">'+ic+'</div><div class="tl-c">' +
+          return '<div class="tl-item tl-sent tl-cele"><div class="tl-ic">'+ODO_IC.gift+'</div><div class="tl-c">' +
             '<div class="tl-line"><b>'+nm+'</b>님에게 <b>'+lbl+' 축하 편지</b>를 보냈어요</div>' +
             '<div class="tl-date">'+fmtR(i.date)+'</div>' +
           '</div>'+del+'</div>';
         }
-        return '<div class="tl-item tl-sent"><div class="tl-ic">✉️</div><div class="tl-c">' +
+        return '<div class="tl-item tl-sent"><div class="tl-ic">'+ODO_IC.send+'</div><div class="tl-c">' +
           '<div class="tl-line"><b>'+nm+'</b>님에게 편지를 보냈어요</div>' +
           '<div class="tl-date">'+fmtR(i.date)+'</div>' +
           (i.quote?'<div class="tl-quote">"'+escR(i.quote)+'"</div>':'') +
         '</div>'+del+'</div>';
       }
-      return '<div class="tl-item tl-recv"><div class="tl-ic">💌</div><div class="tl-c">' +
+      return '<div class="tl-item tl-recv"><div class="tl-ic">'+ODO_IC.heart+'</div><div class="tl-c">' +
         '<div class="tl-line"><b>'+nm+'</b>님이 '+(i.emo?'<span class="tl-emo">'+escR(i.emo)+'</span>':'마음을 남겼어요') + '</div>' +
         '<div class="tl-date">'+fmtR(i.date)+'</div>' +
-        (i.reply?'<div class="tl-reply">💬 '+escR(i.reply)+'</div>':'') +
+        (i.reply?'<div class="tl-reply"><span class="tl-reply-ic">'+ODO_IC.chat+'</span>'+escR(i.reply)+'</div>':'') +
         (i.quote?'<div class="tl-quote">"'+escR(i.quote)+'"</div>':'') +
       '</div>'+del+'</div>';
     }).join("");
@@ -3021,6 +3028,16 @@
   };
 
   window.setTlFilter = function(em){ window._tlFilter = em; renderReactions(); };
+
+  // 공용 라인 아이콘 (얇은 선, 브랜드 톤 통일)
+  const ODO_IC = {
+    send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9z"/></svg>',
+    heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.9-8.6a5.5 5.5 0 0 0-.2-7.8z"/></svg>',
+    gift: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7S9.5 2 7.5 3.5 9 7 12 7"/><path d="M12 7s2.5-5 4.5-3.5S15 7 12 7"/></svg>',
+    chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 21l2-4.5A8.5 8.5 0 1 1 21 11.5z"/></svg>',
+    book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+    mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 5.5L20 7"/></svg>'
+  };
 
   // 책 만들기 안내 모달
   function reflectBookInterest(){
