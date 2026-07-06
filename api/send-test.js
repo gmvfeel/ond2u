@@ -5,6 +5,8 @@
 //
 // 호출: /api/send-test?key=<CRON_SECRET>&to=<이메일>&from_name=<이름>&to_name=<받는사람>&bible=<1이면 성경도>
 
+import crypto from "crypto";
+
 export const config = { maxDuration: 60 };
 
 export default async function handler(req, res) {
@@ -55,7 +57,7 @@ export default async function handler(req, res) {
     if (!normalPool.length) throw new Error("창고에 일반 콘텐츠가 없어요.");
     const biblePool = await fetchContents(SB_URL, SB_SERVICE, "bible");
 
-    const cfg = { RESEND_KEY, FROM, fromName, normalPool, biblePool, SB_URL, SB_SERVICE };
+    const cfg = { RESEND_KEY, FROM, fromName, normalPool, biblePool, SB_URL, SB_SERVICE, SECRET };
 
     if (all) {
       // ── 전체 발송: 수신자 명단 전원에게 ──
@@ -96,12 +98,12 @@ export default async function handler(req, res) {
 }
 
 // 수신자 한 명에게 발송 (콘텐츠 풀에서 랜덤으로 뽑아 메일 만들어 Resend로)
-async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, to, toName, wantBible, senderId, SB_URL, SB_SERVICE }) {
+async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, to, toName, wantBible, senderId, SB_URL, SB_SERVICE, SECRET }) {
   const pickN = normalPool[Math.floor(Math.random() * normalPool.length)];
   let pickB = null;
   if (wantBible && biblePool.length) pickB = biblePool[Math.floor(Math.random() * biblePool.length)];
 
-  const html = buildEmail({ fromName, toName, normal: pickN, bible: pickB, recipientEmail: to, senderId });
+  const html = buildEmail({ fromName, toName, normal: pickN, bible: pickB, recipientEmail: to, senderId, secret: SECRET });
   const quote = (pickN.quote || "").replace(/\\n/g, " ").slice(0, 80);
   const logBase = { sender_id: senderId || null, sender_name: fromName, recipient_email: to, recipient_name: toName || "", content_quote: quote };
 
@@ -188,9 +190,11 @@ function careEmoji(k){
   return map[k] || "\uD83C\uDF43"; // 기본 🍃
 }
 
-function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId }) {
+function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId, secret }) {
   const nl = s => (s || "").replace(/\\n/g, "\n");
   const rParam = encodeURIComponent(recipientEmail || "");
+  const unsubTok = secret ? crypto.createHmac("sha256", secret).update(recipientEmail || "").digest("hex").slice(0, 32) : "";
+  const unsubUrl = "https://www.ond2u.com/api/unsubscribe?e=" + rParam + "&t=" + unsubTok;
   const sParam = encodeURIComponent(senderId || "");
   const qParam = encodeURIComponent(nl(normal.quote).replace(/\n/g, " ").slice(0, 60));
   const reactUrl = em => "https://ond2u.com/api/react?e=" + encodeURIComponent(em) + "&r=" + rParam + "&s=" + sParam + "&q=" + qParam;
@@ -321,7 +325,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId 
     // 푸터
     '<tr><td bgcolor="#f3f1ef" style="padding:22px 28px; border-top:1px solid #eae7e3; text-align:center;">' +
       '<div style="font-size:12px; color:#7a7580; line-height:1.7;"><b style="color:' + PLUM_DEEP + ';">' + fromName + '</b>\uB2D8\uC774 ' + (toName ? toName + "\uB97C" : "\uB2F9\uC2E0\uC744") + ' \uC0DD\uAC01\uD558\uBA70 \uBCF4\uB0B4\uB294 \uD3B8\uC9C0\uC608\uC694.</div>' +
-      '<div style="font-size:11px; color:#b0aab6; margin-top:10px;">\uC774\uC81C \uADF8\uB9CC \uBC1B\uACE0 \uC2F6\uC73C\uC2DC\uBA74 <a href="#" style="color:#b0aab6;">\uC5EC\uAE30</a>\uB97C \uB20C\uB7EC\uC8FC\uC138\uC694. \uC5B8\uC81C\uB4E0 \uAD1C\uCC2E\uC544\uC694.</div>' +
+      '<div style="font-size:11px; color:#b0aab6; margin-top:10px;">\uC774\uC81C \uADF8\uB9CC \uBC1B\uACE0 \uC2F6\uC73C\uC2DC\uBA74 <a href="' + unsubUrl + '" style="color:#b0aab6;">\uC5EC\uAE30</a>\uB97C \uB20C\uB7EC\uC8FC\uC138\uC694. \uC5B8\uC81C\uB4E0 \uAD1C\uCC2E\uC544\uC694.</div>' +
     '</td></tr>' +
 
   '</table>' +
