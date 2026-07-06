@@ -98,7 +98,7 @@ export default async function handler(req, res) {
             || (su.email ? su.email.split("@")[0] : "")
             || cfg.fromName;
           const isSpecial = rc.special_date && rc.special_date === todayMD;
-          const id = await sendOne({ ...cfg, fromName: perFromName, to: rc.email, toName: rc.name || "", wantBible: rc.kind === "bible", senderId: rc.sender_id, tone: rc.tone || "", special: isSpecial ? (rc.special_label || "특별한 날") : null });
+          const id = await sendOne({ ...cfg, fromName: perFromName, to: rc.email, toName: rc.name || "", wantBible: rc.kind === "bible", senderId: rc.sender_id, tone: rc.tone || "", special: isSpecial ? (rc.special_label || "특별한 날") : null, personalNote: rc.personal_note || "" });
           results.push({ email: rc.email, ok: true, id });
         } catch (e) {
           results.push({ email: rc.email, ok: false, error: String(e && e.message || e) });
@@ -112,7 +112,7 @@ export default async function handler(req, res) {
       if (!to) return res.status(400).json({ ok: false, error: "받을 이메일(to)이 없어요. (전체 발송은 주소 끝에 all=1)" });
       const toName = req.query.to_name || "";
       const wantBible = req.query.bible === "1";
-      const id = await sendOne({ ...cfg, to, toName, wantBible, senderId: req.query.sender_id || "", tone: req.query.tone || "", special: req.query.special || null });
+      const id = await sendOne({ ...cfg, to, toName, wantBible, senderId: req.query.sender_id || "", tone: req.query.tone || "", special: req.query.special || null, personalNote: req.query.note || "" });
       return res.status(200).json({ ok: true, message: "보냈어요!", to, id });
     }
   } catch (e) {
@@ -124,7 +124,7 @@ export default async function handler(req, res) {
 // tone(결)이 있으면: 그 결에 맞는 콘텐츠 + 결 없는(공통) 콘텐츠 중에서만 뽑음.
 //  - 그 결에 해당하는 게 하나도 없으면 전체에서 뽑음(폴백) → 편지가 안 나가는 일은 없음.
 // special(특별한 날 이름표)이 있으면: 평소 편지 대신 축하 편지를 보냄.
-async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, foodPool, to, toName, wantBible, senderId, tone, special, SB_URL, SB_SERVICE, SECRET }) {
+async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, foodPool, to, toName, wantBible, senderId, tone, special, personalNote, SB_URL, SB_SERVICE, SECRET }) {
   let html, quote, subject;
   if (special) {
     html = buildSpecialEmail({ fromName, toName, label: special, recipientEmail: to, senderId, secret: SECRET });
@@ -139,7 +139,7 @@ async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, food
     const pickN = pool[Math.floor(Math.random() * pool.length)];
     let pickB = null;
     if (wantBible && biblePool.length) pickB = biblePool[Math.floor(Math.random() * biblePool.length)];
-    html = buildEmail({ fromName, toName, normal: pickN, bible: pickB, recipientEmail: to, senderId, secret: SECRET, foodPool });
+    html = buildEmail({ fromName, toName, normal: pickN, bible: pickB, recipientEmail: to, senderId, secret: SECRET, foodPool, personalNote });
     quote = (pickN.quote || "").replace(/\\n/g, " ").slice(0, 80);
     subject = fromName + "님이 오늘도 보냅니다";
   }
@@ -322,8 +322,12 @@ function buildSpecialEmail({ fromName, toName, label, recipientEmail, senderId, 
 '</td></tr></table></body></html>';
 }
 
-function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId, secret, foodPool }) {
+function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId, secret, foodPool, personalNote }) {
   const nl = s => (s || "").replace(/\\n/g, "\n");
+  const escHtml = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const noteHtml = (personalNote && String(personalNote).trim())
+    ? escHtml(String(personalNote).trim()).replace(/\r?\n/g, "<br>")
+    : "";
   const rParam = encodeURIComponent(recipientEmail || "");
   const unsubTok = secret ? crypto.createHmac("sha256", secret).update(recipientEmail || "").digest("hex").slice(0, 32) : "";
   const unsubUrl = "https://www.ond2u.com/api/unsubscribe?e=" + rParam + "&t=" + unsubTok;
@@ -407,6 +411,13 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
       '<div style="text-align:center; font-size:14px; font-weight:600; color:' + PLUM + '; margin-bottom:14px;">\uC624\uB298\uB3C4 \uB2F9\uC2E0\uC758 \uCD5C\uACE0\uAC00 \uB420 \uAC81\uB2C8\uB2E4. \uD798\uB0B4\uC138\uC694.</div>' +
       '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td width="30" height="3" bgcolor="' + PLUM + '" style="background:' + PLUM + '; font-size:0; line-height:3px; border-radius:3px;">&nbsp;</td></tr></table>' +
       spacer(24) +
+
+      (noteHtml ?
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#fdeef2" style="background:#fdeef2; border-radius:14px; border:1px solid #f3c9d5;"><tr><td style="padding:20px 22px;">' +
+          '<div style="font-size:11px; letter-spacing:0.1em; color:' + ROSE + '; margin-bottom:9px;">' + escHtml(fromName) + '\uB2D8\uC758 \uD55C\uB9C8\uB514</div>' +
+          '<div style="font-size:15px; line-height:1.75; color:#4a3540; word-break:keep-all;">' + noteHtml + '</div>' +
+        '</td></tr></table>' + spacer(26)
+      : "") +
 
       '<div style="font-size:10px; letter-spacing:0.18em; color:#b0aab6; text-align:center; margin-bottom:16px;">\uC624\uB298\uC758 \uD55C \uC904</div>' +
       '<div style="font-size:25px; line-height:1.5; font-weight:800; text-align:center; color:#2b2730; letter-spacing:-0.035em; word-break:keep-all;">' + brQuote + '</div>' +
