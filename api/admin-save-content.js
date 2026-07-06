@@ -69,8 +69,13 @@ export default async function handler(req, res) {
   const ALLOWED_ICONS = ["tea", "breath", "sun", "walk", "stretch"];
   const icon = ALLOWED_ICONS.includes(s.careIcon) ? s.careIcon : "tea";
 
+  // 결(tone): 위로/응원/평온/시작만 허용. 그 외·빈값은 null = "공통(모두에게)".
+  const ALLOWED_TONES = ["위로", "응원", "평온", "시작"];
+  const tone = ALLOWED_TONES.includes(s.tone) ? s.tone : null;
+
   const row = {
     kind: "normal",
+    tone: tone,                   // 결. null이면 공통(모든 결의 사람에게 나갈 수 있음)
     quote: s.quote,
     quote_en: s.quoteEn || "",
     author: s.author || "",

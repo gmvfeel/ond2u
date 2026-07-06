@@ -94,7 +94,7 @@ export default async function handler(req, res) {
           const perFromName = (su.display_name && su.display_name.trim())
             || (su.email ? su.email.split("@")[0] : "")
             || cfg.fromName;
-          const id = await sendOne({ ...cfg, fromName: perFromName, to: rc.email, toName: rc.name || "", wantBible: rc.kind === "bible", senderId: rc.sender_id });
+          const id = await sendOne({ ...cfg, fromName: perFromName, to: rc.email, toName: rc.name || "", wantBible: rc.kind === "bible", senderId: rc.sender_id, tone: rc.tone || "" });
           results.push({ email: rc.email, ok: true, id });
         } catch (e) {
           results.push({ email: rc.email, ok: false, error: String(e && e.message || e) });
@@ -108,7 +108,7 @@ export default async function handler(req, res) {
       if (!to) return res.status(400).json({ ok: false, error: "받을 이메일(to)이 없어요. (전체 발송은 주소 끝에 all=1)" });
       const toName = req.query.to_name || "";
       const wantBible = req.query.bible === "1";
-      const id = await sendOne({ ...cfg, to, toName, wantBible, senderId: req.query.sender_id || "" });
+      const id = await sendOne({ ...cfg, to, toName, wantBible, senderId: req.query.sender_id || "", tone: req.query.tone || "" });
       return res.status(200).json({ ok: true, message: "보냈어요!", to, id });
     }
   } catch (e) {
@@ -117,8 +117,15 @@ export default async function handler(req, res) {
 }
 
 // 수신자 한 명에게 발송 (콘텐츠 풀에서 랜덤으로 뽑아 메일 만들어 Resend로)
-async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, foodPool, to, toName, wantBible, senderId, SB_URL, SB_SERVICE, SECRET }) {
-  const pickN = normalPool[Math.floor(Math.random() * normalPool.length)];
+// tone(결)이 있으면: 그 결에 맞는 콘텐츠 + 결 없는(공통) 콘텐츠 중에서만 뽑음.
+//  - 그 결에 해당하는 게 하나도 없으면 전체에서 뽑음(폴백) → 편지가 안 나가는 일은 없음.
+async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, foodPool, to, toName, wantBible, senderId, tone, SB_URL, SB_SERVICE, SECRET }) {
+  let pool = normalPool;
+  if (tone) {
+    const matched = normalPool.filter(c => c.tone === tone || !c.tone);
+    if (matched.length) pool = matched;
+  }
+  const pickN = pool[Math.floor(Math.random() * pool.length)];
   let pickB = null;
   if (wantBible && biblePool.length) pickB = biblePool[Math.floor(Math.random() * biblePool.length)];
 
