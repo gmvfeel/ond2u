@@ -214,6 +214,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
     .map(p => '<p style="font-size:14px; line-height:1.9; color:#e9e5f0; margin:0 0 13px;">' + p.replace(/\n/g, "<br>") + '</p>').join("");
   const careIc = careEmoji(normal.care_icon);
   // 오늘 이 음식 (절기 우선 → 없으면 랜덤), 한국 날짜(KST) 기준
+  const spacer = h => '<div style="height:' + h + 'px; line-height:' + h + 'px; font-size:0;">&nbsp;</div>';
   const _kst = new Date(Date.now() + 9*3600*1000);
   const _md = String(_kst.getUTCMonth()+1).padStart(2,"0") + "-" + String(_kst.getUTCDate()).padStart(2,"0");
   const _inR = (a,b)=> (a&&b) ? ((a<=b) ? (_md>=a&&_md<=b) : (_md>=a||_md<=b)) : false;
@@ -233,7 +234,6 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
     ) : "";
   const badge = fromName.charAt(0);
   const font = "'Pretendard','Gulim','\uAD74\uB9BC',sans-serif";
-  const spacer = h => '<div style="height:' + h + 'px; line-height:' + h + 'px; font-size:0;">&nbsp;</div>';
   // 반응 버튼 (아웃룩 호환: 각 버튼을 개별 table 셀로 만들어 margin 없이도 간격 확보)
   const reactBtn = (url, label, textColor, borderColor) =>
     '<td bgcolor="#ffffff" style="background:#ffffff; border:1px solid ' + borderColor + '; border-radius:30px;">' +
