@@ -73,6 +73,9 @@ export default async function handler(req, res) {
       const slotMode = req.query.slot === "1";
       let nowHour = new Date(Date.now() + 9 * 3600 * 1000).getUTCHours(); // KST 시(0~23)
       if (req.query.hour != null && req.query.hour !== "") { const hh = parseInt(req.query.hour, 10); if (!isNaN(hh)) nowHour = hh; }
+      // 오늘(KST) 월-일 — 특별한 날(생일·기념일) 판별용. ?date=MM-DD 로 테스트 가능.
+      let todayMD = (function(){ const k = new Date(Date.now() + 9 * 3600 * 1000); return String(k.getUTCMonth()+1).padStart(2,"0") + "-" + String(k.getUTCDate()).padStart(2,"0"); })();
+      if (req.query.date) todayMD = req.query.date;
       let skipped = 0;
       if (slotMode) {
         const before = recipients.length;
@@ -94,7 +97,8 @@ export default async function handler(req, res) {
           const perFromName = (su.display_name && su.display_name.trim())
             || (su.email ? su.email.split("@")[0] : "")
             || cfg.fromName;
-          const id = await sendOne({ ...cfg, fromName: perFromName, to: rc.email, toName: rc.name || "", wantBible: rc.kind === "bible", senderId: rc.sender_id, tone: rc.tone || "" });
+          const isSpecial = rc.special_date && rc.special_date === todayMD;
+          const id = await sendOne({ ...cfg, fromName: perFromName, to: rc.email, toName: rc.name || "", wantBible: rc.kind === "bible", senderId: rc.sender_id, tone: rc.tone || "", special: isSpecial ? (rc.special_label || "특별한 날") : null });
           results.push({ email: rc.email, ok: true, id });
         } catch (e) {
           results.push({ email: rc.email, ok: false, error: String(e && e.message || e) });
@@ -108,7 +112,7 @@ export default async function handler(req, res) {
       if (!to) return res.status(400).json({ ok: false, error: "받을 이메일(to)이 없어요. (전체 발송은 주소 끝에 all=1)" });
       const toName = req.query.to_name || "";
       const wantBible = req.query.bible === "1";
-      const id = await sendOne({ ...cfg, to, toName, wantBible, senderId: req.query.sender_id || "", tone: req.query.tone || "" });
+      const id = await sendOne({ ...cfg, to, toName, wantBible, senderId: req.query.sender_id || "", tone: req.query.tone || "", special: req.query.special || null });
       return res.status(200).json({ ok: true, message: "보냈어요!", to, id });
     }
   } catch (e) {
@@ -119,25 +123,33 @@ export default async function handler(req, res) {
 // 수신자 한 명에게 발송 (콘텐츠 풀에서 랜덤으로 뽑아 메일 만들어 Resend로)
 // tone(결)이 있으면: 그 결에 맞는 콘텐츠 + 결 없는(공통) 콘텐츠 중에서만 뽑음.
 //  - 그 결에 해당하는 게 하나도 없으면 전체에서 뽑음(폴백) → 편지가 안 나가는 일은 없음.
-async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, foodPool, to, toName, wantBible, senderId, tone, SB_URL, SB_SERVICE, SECRET }) {
-  let pool = normalPool;
-  if (tone) {
-    const matched = normalPool.filter(c => c.tone === tone || !c.tone);
-    if (matched.length) pool = matched;
+// special(특별한 날 이름표)이 있으면: 평소 편지 대신 축하 편지를 보냄.
+async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, foodPool, to, toName, wantBible, senderId, tone, special, SB_URL, SB_SERVICE, SECRET }) {
+  let html, quote, subject;
+  if (special) {
+    html = buildSpecialEmail({ fromName, toName, label: special, recipientEmail: to, senderId, secret: SECRET });
+    quote = "[축하] " + special;
+    subject = fromName + "님이 보내는 축하 편지 \uD83C\uDF89";
+  } else {
+    let pool = normalPool;
+    if (tone) {
+      const matched = normalPool.filter(c => c.tone === tone || !c.tone);
+      if (matched.length) pool = matched;
+    }
+    const pickN = pool[Math.floor(Math.random() * pool.length)];
+    let pickB = null;
+    if (wantBible && biblePool.length) pickB = biblePool[Math.floor(Math.random() * biblePool.length)];
+    html = buildEmail({ fromName, toName, normal: pickN, bible: pickB, recipientEmail: to, senderId, secret: SECRET, foodPool });
+    quote = (pickN.quote || "").replace(/\\n/g, " ").slice(0, 80);
+    subject = fromName + "님이 오늘도 보냅니다";
   }
-  const pickN = pool[Math.floor(Math.random() * pool.length)];
-  let pickB = null;
-  if (wantBible && biblePool.length) pickB = biblePool[Math.floor(Math.random() * biblePool.length)];
-
-  const html = buildEmail({ fromName, toName, normal: pickN, bible: pickB, recipientEmail: to, senderId, secret: SECRET, foodPool });
-  const quote = (pickN.quote || "").replace(/\\n/g, " ").slice(0, 80);
   const logBase = { sender_id: senderId || null, sender_name: fromName, recipient_email: to, recipient_name: toName || "", content_quote: quote };
 
   try {
     const payload = JSON.stringify({
       from: '"오늘도/OND2U" <' + FROM + ">",
       to: [to],
-      subject: fromName + "님이 오늘도 보냅니다",
+      subject,
       html
     });
     const doSend = () => fetch("https://api.resend.com/emails", {
@@ -236,6 +248,65 @@ const CARE_EMOJI = {
 function careEmoji(k){
   const map = { tea:"\u2615", breath:"\uD83C\uDF2C\uFE0F", sun:"\u2600\uFE0F", walk:"\uD83D\uDEB6", stretch:"\uD83E\uDD38" };
   return map[k] || "\uD83C\uDF43"; // 기본 🍃
+}
+
+// 특별한 날(생일·기념일) 축하 편지 HTML
+function buildSpecialEmail({ fromName, toName, label, recipientEmail, senderId, secret }) {
+  const PLUM = "#423458", PLUM_DEEP = "#2f2440", ROSE = "#d97c93", ROSE_SOFT = "#fdeef2";
+  const font = "'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif";
+  const spacer = h => '<div style="height:' + h + 'px; line-height:' + h + 'px; font-size:0;">&nbsp;</div>';
+  const rParam = encodeURIComponent(recipientEmail || "");
+  const unsubTok = secret ? crypto.createHmac("sha256", secret).update(recipientEmail || "").digest("hex").slice(0, 32) : "";
+  const unsubUrl = "https://www.ond2u.com/api/unsubscribe?e=" + rParam + "&t=" + unsubTok;
+
+  const who = toName || "\uB2F9\uC2E0";
+  const isBirthday = /\uC0DD\uC77C|\uC0DD\uC2E0|birthday/i.test(label || "");
+  const emoji = isBirthday ? "\uD83C\uDF82" : "\uD83C\uDF89";
+  const head = isBirthday ? (who + "\uB2D8, \uC0DD\uC77C \uCD95\uD558\uD574\uC694") : (who + "\uB2D8, " + (label || "\uD2B9\uBCC4\uD55C \uB0A0") + " \uCD95\uD558\uD574\uC694");
+
+  const bday = [
+    who + "\uB2D8\uC774 \uD0DC\uC5B4\uB09C \uC624\uB298\uC774, \uC800\uC5D0\uAC8C\uB3C4 \uCC38 \uACE0\uB9C8\uC6B4 \uB0A0\uC774\uC5D0\uC694. \uC62C \uD55C \uD574\uB3C4 \uC6C3\uC744 \uC77C\uC774 \uAC00\uB4DD\uD558\uAE38, \uAC74\uAC15\uD558\uACE0 \uD3C9\uC548\uD558\uAE38 \uC9C4\uC2EC\uC73C\uB85C \uBC14\uB77C\uC694.",
+    "\uC138\uC0C1\uC5D0 " + who + "\uB2D8\uC774 \uC788\uC5B4\uC11C \uC5BC\uB9C8\uB098 \uB2E4\uD589\uC778\uC9C0 \uBAB0\uB77C\uC694. \uC624\uB298 \uD558\uB8E8\uB9CC\uD07C\uC740 \uC628\uC804\uD788 " + who + "\uB2D8\uC744 \uC704\uD55C \uB0A0\uC774 \uB418\uAE38 \uBC14\uB77C\uC694.",
+    "\uC77C \uB144 \uC911 \uAC00\uC7A5 \uBE5B\uB098\uB294 \uC624\uB298, " + who + "\uB2D8\uC758 \uD558\uB8E8\uAC00 \uC88B\uC544\uD558\uB294 \uAC83\uB4E4\uB85C \uAC00\uB4DD \uCC44\uC6CC\uC9C0\uAE38 \uBC14\uB77C\uC694. \uD0DC\uC5B4\uB098 \uC918\uC11C \uACE0\uB9C8\uC6CC\uC694."
+  ];
+  const aniv = [
+    "\uC624\uB298\uC740 " + who + "\uB2D8\uC5D0\uAC8C \uD2B9\uBCC4\uD55C \uB0A0\uC774\uC8E0. " + (label || "") + ", \uC9C4\uC2EC\uC73C\uB85C \uCD95\uD558\uD574\uC694. \uC774 \uC88B\uC740 \uAE30\uC5B5\uC774 \uC624\uB798\uC624\uB798 \uB9C8\uC74C\uC5D0 \uB0A8\uAE30\uB97C \uBC14\uB77C\uC694.",
+    who + "\uB2D8\uC758 " + (label || "\uD2B9\uBCC4\uD55C \uB0A0") + "\uC744 \uD568\uAED8 \uAE30\uC5B5\uD558\uACE0 \uC2F6\uC5C8\uC5B4\uC694. \uC624\uB298 \uD558\uB8E8, \uB530\uD558\uACE0 \uD589\uBCF5\uD55C \uC2DC\uAC04 \uBCF4\uB0B4\uAE38 \uBC14\uB77C\uC694.",
+    "\uD2B9\uBCC4\uD55C \uC624\uB298\uC744 \uCD95\uD558\uD574\uC694, " + who + "\uB2D8. \uC88B\uC740 \uC0AC\uB78C\uB4E4\uACFC \uC88B\uC740 \uC21C\uAC04\uC744 \uB098\uB204\uB294 \uD558\uB8E8\uAC00 \uB418\uAE38 \uBC14\uB77C\uC694."
+  ];
+  const pool = isBirthday ? bday : aniv;
+  const msg = pool[Math.floor(Math.random() * pool.length)];
+
+  return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+'<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">' +
+'<!--[if mso]><style type="text/css">body,table,td,div,p,span,a,b,h1,h2,h3 { font-family:\'Gulim\',\'\uAD74\uB9BC\',sans-serif !important; letter-spacing:0 !important; }</style><![endif]-->' +
+'</head><body style="margin:0; padding:0; background:#f3f1ef; font-family:' + font + ';">' +
+'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f3f1ef" style="background:#f3f1ef;"><tr>' +
+'<td align="center" style="padding:36px 12px 56px; font-family:' + font + '; word-break:keep-all;">' +
+  '<table role="presentation" width="680" cellpadding="0" cellspacing="0" border="0" style="width:680px; max-width:680px; background:#ffffff; border:2px solid ' + ROSE + '; border-radius:16px; overflow:hidden;">' +
+    '<tr><td bgcolor="#ffffff" style="padding:18px 24px; border-bottom:1px solid #eae7e3;">' +
+      '<div style="font-size:13px; color:#b0aab6;">' + fromName + '\uB2D8\uC774 ' + (toName ? toName + '\uB2D8\uC744 ' : '') + '\uC0DD\uAC01\uD558\uBA70 \uBCF4\uB0B4\uB294 \uD2B9\uBCC4\uD55C \uD3B8\uC9C0</div>' +
+    '</td></tr>' +
+    '<tr><td bgcolor="' + ROSE_SOFT + '" style="background:' + ROSE_SOFT + '; padding:42px 28px 34px; text-align:center;">' +
+      '<div style="font-size:46px; line-height:1; margin-bottom:14px;">' + emoji + '</div>' +
+      '<div style="font-size:26px; font-weight:800; color:' + PLUM_DEEP + '; letter-spacing:-0.03em; word-break:keep-all;">' + head + '</div>' +
+    '</td></tr>' +
+    '<tr><td bgcolor="#ffffff" style="padding:34px 30px 30px;">' +
+      '<div style="font-size:16px; line-height:1.95; color:#3a3540; text-align:center; word-break:keep-all;">' + msg + '</div>' +
+      spacer(24) +
+      '<div style="text-align:center; font-size:15px; font-weight:600; color:' + ROSE + ';">' + fromName + '\uC758 \uB9C8\uC74C\uC744 \uB2F4\uC544.</div>' +
+      spacer(28) +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
+        '<a href="https://ond2u.com/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:' + PLUM + '; text-decoration:none; padding:13px 28px; border-radius:30px;">\uC624\uB298\uB3C4\uC5D0\uC11C \uB354 \uBCF4\uAE30 \u2192</a>' +
+      '</td></tr></table>' +
+    '</td></tr>' +
+    '<tr><td bgcolor="#f3f1ef" style="padding:22px 28px; border-top:1px solid #eae7e3; text-align:center;">' +
+      '<div style="font-size:11px; color:#b0aab6;">\uC774\uC81C \uADF8\uB9CC \uBC1B\uACE0 \uC2F6\uC73C\uC2DC\uBA74 <a href="' + unsubUrl + '" style="color:#b0aab6;">\uC5EC\uAE30</a>\uB97C \uB20C\uB7EC\uC8FC\uC138\uC694.</div>' +
+    '</td></tr>' +
+  '</table>' +
+  spacer(20) +
+  '<div style="text-align:center; font-size:12px; color:#b0aab6;">\uC624\uB298\uB3C4 \u00B7 OND2U</div>' +
+'</td></tr></table></body></html>';
 }
 
 function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId, secret, foodPool }) {
