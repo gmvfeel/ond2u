@@ -146,7 +146,21 @@ async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, food
     if (wantBible && biblePool.length) pickB = biblePool[Math.floor(Math.random() * biblePool.length)];
     html = buildEmail({ fromName, toName, normal: pickN, bible: pickB, recipientEmail: to, senderId, secret: SECRET, foodPool, personalNote });
     quote = (pickN.quote || "").replace(/\\n/g, " ").slice(0, 80);
-    subject = fromName + "님이 오늘도 보냅니다";
+    const rcpName = (toName && toName !== "나에게") ? toName : "";
+    const subjPool = rcpName ? [
+      rcpName + "님, 오늘의 편지가 도착했어요",
+      rcpName + "님, 오늘 하루 어땠나요?",
+      rcpName + "님을 위한 오늘의 한 줄",
+      rcpName + "님, 잠깐 쉬어가요",
+      rcpName + "님, 오늘의 마음을 전해요"
+    ] : [
+      "오늘의 편지가 도착했어요",
+      "오늘 하루 어땠나요?",
+      "오늘을 위한 한 줄",
+      "잠깐 쉬어가요",
+      "오늘의 마음을 전해요"
+    ];
+    subject = subjPool[Math.floor(Math.random() * subjPool.length)];
   }
   const logBase = { sender_id: senderId || null, sender_name: fromName, recipient_email: to, recipient_name: toName || "", content_quote: quote };
 
