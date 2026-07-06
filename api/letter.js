@@ -118,7 +118,7 @@ export default async function handler(req, res) {
       <textarea id="replyText" rows="3" maxlength="500" placeholder="\uACE0\uB9C8\uC6CC\uC694. \uB355\uBD84\uC5D0 \uD798\uC774 \uB0AC\uC5B4\uC694."></textarea>
       <button class="send" id="sendReply">\uB2F5\uC7A5 \uBCF4\uB0B4\uAE30</button>
     </div>
-    <div class="done" id="replyDone">\uB9C8\uC74C\uC774 \uC804\uD574\uC84C\uC5B4\uC694. \uACE0\uB9C8\uC6CC\uC694 \u2661</div>
+    <div class="done" id="replyDone">\uB9C8\uC74C\uC774 \uC804\uD574\uC84C\uC5B4\uC694. \uACE0\uB9C8\uC6CC\uC694 \u2661<br><span style="display:block; margin-top:8px; font-size:12px; color:#b0aab6; font-weight:400;">\uC774\uC81C \uCC3D\uC744 \uB2EB\uC73C\uC154\uB3C4 \uC88B\uC544\uC694.</span></div>
     <script>
       (function(){
         var btn=document.getElementById('sendReply'), ta=document.getElementById('replyText');
