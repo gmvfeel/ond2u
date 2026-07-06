@@ -2054,6 +2054,8 @@
     if(!selectedMood && !note) return;
     const now=new Date();
     const date=(now.getMonth()+1)+"월 "+now.getDate()+"일";
+    // 같은 날 같은 기분은 한 번만 (중복 저장 방지 — 돌아보기 품질 유지)
+    if(selectedMood && trace.some(t => t.date===date && t.mood===selectedMood)) return;
     trace.push({date, mood:selectedMood, level:selectedLevel, note});
     if(loggedIn){
       const { error } = await odoDB.from("odo_moods")
