@@ -2822,14 +2822,18 @@
     const el = $("dailyPick");
     if (!el) return;
     const PICKS = [
-      { name:"엘피스탁", url:"https://lpstock.co.kr", desc:"클래식과 현대음악, 12,000장의 LP가 기다리는 곳" },
-      { name:"오퍼스클램", url:"http://opusclam.com/", desc:"순수음악을 사랑하는 사람들의 커뮤니티" },
-      { name:"부클립스", url:"https://booklps.vercel.app", desc:"절판된 책과 희귀 음반을 한 번에 검색해요" }
+      { name:"엘피스탁", url:"https://lpstock.co.kr/", desc:"클래식과 현대음악, 12,000장의 LP가 기다리는 곳" },
+      { name:"부클립스", url:"https://booklps.vercel.app/", desc:"절판된 책과 희귀 음반을 한 번에 검색해요" },
+      { name:"엘파그", url:"https://lpaug.vercel.app/", desc:"LP와 오디오, 처음이라면 여기서 시작해요" },
+      { name:"핀홈", url:"https://pinhome-five.vercel.app/", desc:"우리 회사에 맞는 정책자금을 찾아드려요" },
+      { name:"치킬 CheatKill", url:"https://cheatkill-web.vercel.app/", desc:"사기 피해, 혼자 앓지 말고 함께 대응해요" },
+      { name:"오퍼스클램", url:"http://opusclam.com/", desc:"순수음악을 사랑하는 사람들의 커뮤니티" }
     ];
     const now = new Date();
     const start = new Date(now.getFullYear(), 0, 0);
     const dayOfYear = Math.floor((now - start) / 86400000);
-    const p = PICKS[dayOfYear % PICKS.length];
+    const half = now.getHours() < 12 ? 0 : 1;      // 하루 2번(오전/오후) 교체
+    const p = PICKS[(dayOfYear * 2 + half) % PICKS.length];
     el.innerHTML =
       '<div class="dp-badge">오늘의 추천</div>'
       + '<div class="dp-name">' + p.name + '</div>'
