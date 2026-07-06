@@ -63,9 +63,24 @@ export default async function handler(req, res) {
 
     if (all) {
       // ── 전체 발송: 수신자 명단 전원에게 ──
-      const recipients = await fetchRecipients(SB_URL, SB_SERVICE);
+      let recipients = await fetchRecipients(SB_URL, SB_SERVICE);
       if (!recipients.length)
         return res.status(200).json({ ok: true, message: "보낼 수신자가 없어요. (odo_recipients 비어있음)", sent: 0 });
+
+      // 발송 시각 개인화: slot=1(크론 시각별 호출)일 때만, 지금 시각(KST)에 해당하는 수신자에게만 보냄.
+      //  - 관리자 '지금 발송'은 slot 없이 all=1 만 오므로 시각과 무관하게 전원 즉시 발송.
+      //  - ?hour=8 처럼 특정 시각을 지정해 테스트할 수도 있음.
+      const slotMode = req.query.slot === "1";
+      let nowHour = new Date(Date.now() + 9 * 3600 * 1000).getUTCHours(); // KST 시(0~23)
+      if (req.query.hour != null && req.query.hour !== "") { const hh = parseInt(req.query.hour, 10); if (!isNaN(hh)) nowHour = hh; }
+      let skipped = 0;
+      if (slotMode) {
+        const before = recipients.length;
+        recipients = recipients.filter(rc => recipHours(rc).includes(nowHour));
+        skipped = before - recipients.length;
+        if (!recipients.length)
+          return res.status(200).json({ ok: true, message: nowHour + "시에 보낼 수신자가 없어요.", sent: 0, skipped, hour: nowHour });
+      }
 
       // 각 수신자를 등록한 사람(sender)의 '보내는 이름'을 조회해 둠
       const sendersById = await fetchSenders(SB_URL, SB_SERVICE);
@@ -86,7 +101,7 @@ export default async function handler(req, res) {
         }
       }
       const okCount = results.filter(x => x.ok).length;
-      return res.status(200).json({ ok: true, message: okCount + "/" + results.length + "명에게 보냈어요.", sent: okCount, total: results.length, results });
+      return res.status(200).json({ ok: true, message: okCount + "/" + results.length + "명에게 보냈어요." + (slotMode ? " (" + nowHour + "시)" : ""), sent: okCount, total: results.length, skipped, hour: slotMode ? nowHour : null, results });
     } else {
       // ── 단일 발송: 한 명에게 (기존 테스트 방식) ──
       const to = req.query.to;
@@ -153,6 +168,15 @@ async function fetchRecipients(url, key) {
   });
   if (!r.ok) throw new Error("수신자 명단 읽기 실패: " + r.status);
   return await r.json();
+}
+
+// 발송 시각 라벨 → KST 시(hour) 매핑 (app.html 시각 칩과 반드시 일치)
+const TIME_HOURS = { "아침 8시": 8, "점심 12시": 12, "저녁 6시": 18, "밤 10시": 22 };
+function recipHours(rc) {
+  let ts = rc && rc.send_times;
+  if (!Array.isArray(ts) || !ts.length) ts = ["아침 8시"];
+  const hs = ts.map(t => TIME_HOURS[t]).filter(h => h != null);
+  return hs.length ? hs : [8];
 }
 
 // 등록한 사람(sender)들의 '보내는 이름'을 id로 찾을 수 있게 맵으로 만들어 둠
