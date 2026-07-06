@@ -554,6 +554,8 @@
   .adm-set.approved { border-color:var(--plum); background:var(--plum-soft); }
   .adm-set.rejected { opacity:.4; }
   .adm-set .as-q { font-size:18px; font-weight:700; line-height:1.55; white-space:pre-line; letter-spacing:-0.02em; }
+  .adm-set .as-tone { display:inline-block; font-size:12px; font-weight:700; color:var(--plum-deep); background:var(--plum-soft); border:1px solid var(--plum-line); border-radius:20px; padding:3px 11px; margin-bottom:12px; }
+  .adm-set .as-tone-common { color:var(--ink-soft); background:var(--paper); border-color:var(--line); font-weight:600; }
   .adm-set .as-a { font-size:13px; color:var(--ink-soft); margin-top:8px; }
   .adm-set .as-et { font-size:15px; font-weight:700; margin:16px 0 8px; }
   .adm-set .as-eb { font-size:14px; line-height:1.8; color:var(--ink-2); white-space:pre-line; }
@@ -1270,6 +1272,13 @@
           <option value="2">2세트</option>
           <option value="3" selected>3세트</option>
           <option value="4">4세트</option>
+        </select>
+        <select id="admTone">
+          <option value="">결: 공통(모두에게)</option>
+          <option value="위로">결: 위로</option>
+          <option value="응원">결: 응원</option>
+          <option value="평온">결: 평온</option>
+          <option value="시작">결: 시작</option>
         </select>
         <button class="make-btn" id="admMakeBtn">✦ 콘텐츠 만들어줘</button>
       </div>
@@ -2855,13 +2864,24 @@
   async function admGenerate(){
     const topic = $("admTopic").value;
     const count = parseInt($("admCount").value)||3;
+    const tone = $("admTone").value; // "" = 공통, 또는 위로/응원/평온/시작
     const btn = $("admMakeBtn"), status = $("admStatus");
     btn.disabled = true; status.className="maker-status";
     status.textContent = "AI가 콘텐츠를 만들고 있어요…";
     $("admSets").innerHTML = '<div class="adm-loading">명언을 고르고, 에세이를 쓰고, 영상을 찾는 중…</div>';
 
+    const TONE_GUIDE = {
+      "위로": "받는 사람이 지치고 힘든 상태라고 가정하세요. 다그치지 말고, 곁에서 가만히 안아주듯 따뜻하게 위로해 주세요. 괜찮다고, 애썼다고 말해주는 결.",
+      "응원": "받는 사람이 무언가에 도전하거나 버티는 중이라고 가정하세요. 등을 힘있게 밀어주듯 용기와 힘을 북돋아 주세요. 할 수 있다고, 함께 있다고 말해주는 결.",
+      "평온": "받는 사람이 마음이 복잡하거나 불안한 상태라고 가정하세요. 숨을 고르게 하고 마음을 가라앉히듯, 잔잔하고 고요하게 다독여 주세요. 천천히 가도 된다고 말해주는 결.",
+      "시작": "받는 사람이 새로운 출발선 앞에 서 있다고 가정하세요. 설렘과 기대를 함께 나누며, 첫걸음을 산뜻하게 응원해 주세요. 새롭게 시작해도 좋다고 말해주는 결."
+    };
+    const toneLine = tone
+      ? `\n[이번 콘텐츠의 결(감정 톤): "${tone}"]\n${TONE_GUIDE[tone]}\n모든 세트의 명언·에세이·돌봄 카드가 이 결에 자연스럽게 어울리도록 써 주세요.\n`
+      : "";
+
     const prompt = `당신은 "오늘도"라는 위로·동기부여 서비스의 콘텐츠 에디터입니다.
-주제: "${topic}"
+주제: "${topic}"${toneLine}
 이 주제에 맞는 콘텐츠 ${count}세트를 만들어 주세요. 각 세트 구성:
 - quote: 실제로 존재하는 유명한 명언이나 짧은 시 구절 (2줄 이내, 줄바꿈은 \\n)
 - quoteEn: 그 명언의 영어 원문. 원문이 영어가 아니면 자연스러운 영어 번역 (1~2줄)
@@ -2898,8 +2918,9 @@
         if(!parsed) lastErr = "AI 응답을 읽지 못했어요(형식 오류).";
       }
       if(!parsed) throw new Error(lastErr || "생성 실패");
-      admRenderSets(parsed.sets||[]);
-      status.textContent = (parsed.sets||[]).length + "세트가 준비됐어요. 통과·탈락을 골라주세요.";
+      const taggedSets = (parsed.sets||[]).map(s => ({ ...s, tone }));
+      admRenderSets(taggedSets);
+      status.textContent = taggedSets.length + "세트가 준비됐어요." + (tone ? " (결: "+tone+")" : "") + " 통과·탈락을 골라주세요.";
     } catch(e){
       status.className="maker-status err";
       status.textContent = "생성 중 문제가 생겼어요. " + (e.message||"") ;
@@ -2912,6 +2933,7 @@
     window._admSets = sets; // 저장할 때 원본 데이터를 참조하려고 보관해 둠
     $("admSets").innerHTML = sets.map((s,i)=>`
       <div class="adm-set" id="admSet${i}">
+        ${s.tone ? `<div class="as-tone">결 · ${admEsc(s.tone)}</div>` : `<div class="as-tone as-tone-common">결 · 공통</div>`}
         <div class="as-q">${admEsc(s.quote)}</div>
         ${s.quoteEn ? `<div class="as-a" style="font-style:italic;opacity:.65">${admEsc(s.quoteEn)}</div>` : ""}
         <div class="as-a">— ${admEsc(s.author)}</div>
