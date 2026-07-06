@@ -328,6 +328,11 @@
     background:var(--paper); border:1px solid var(--line-strong); border-radius:14px; padding:13px 16px; outline:none; transition:border-color .2s; }
   .gate-form input:focus { border-color:var(--plum); }
   .gate-form input::placeholder { color:var(--ink-faint); }
+  .gate-consent { display:flex; align-items:flex-start; gap:9px; text-align:left; font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin:0 0 18px; cursor:pointer; }
+  .gate-consent input { margin-top:2px; width:16px; height:16px; flex-shrink:0; accent-color:var(--plum); cursor:pointer; }
+  .gate-consent a { color:var(--plum-deep); text-decoration:underline; }
+  .gate-consent.shake { animation: gcShake .4s; }
+  @keyframes gcShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
   .gate-btn { width:100%; font-family:inherit; font-size:15px; font-weight:600; color:#fff; background:var(--ink);
     border:none; border-radius:30px; padding:15px; cursor:pointer; transition:all .2s; }
   .gate-btn:hover { background:var(--plum-deep); }
@@ -937,6 +942,11 @@
       <div class="gate-icon">✉</div>
       <div class="gate-title">보내는 사람이 되려면<br>먼저 로그인해 주세요</div>
       <div class="gate-sub">위로를 받는 건 로그인 없이도 돼요.<br>내가 아끼는 사람에게 <b>보내려면</b> 계정이 필요해요.</div>
+
+      <label class="gate-consent" id="gateConsent">
+        <input type="checkbox" id="consentBox" />
+        <span>만 14세 이상이며, <a href="/terms.html" target="_blank" rel="noopener">이용약관</a> · <a href="/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>에 동의합니다.</span>
+      </label>
 
       <div class="gate-form">
         <input id="loginEmail" type="email" placeholder="이메일" />
@@ -2417,17 +2427,27 @@
   }
 
   // 구글 버튼 → 진짜 로그인. 카카오·네이버는 아직 준비 중 안내.
-  $("googleBtn").onclick = () => loginWithGoogle();
+  function consentOK(){
+    const box = $("consentBox");
+    if (box && box.checked){ try{ localStorage.setItem("odo_consent","1"); }catch(e){} return true; }
+    const el = $("gateConsent");
+    if (el){ el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
+    return false;
+  }
+  try{ if(localStorage.getItem("odo_consent")==="1"){ const _cb=$("consentBox"); if(_cb) _cb.checked=true; } }catch(e){}
+  $("googleBtn").onclick = () => { if(!consentOK()) return; loginWithGoogle(); };
   { const dr = $("dashRefresh"); if (dr) dr.onclick = () => renderDashboard(); }
   { const b = $("sendMeBtn"); if (b) b.onclick = () => adminSend("me"); }
   { const b = $("sendAllBtn"); if (b) b.onclick = () => adminSend("all"); }
-  $("kakaoBtn").onclick = () => loginWithKakao();
+  $("kakaoBtn").onclick = () => { if(!consentOK()) return; loginWithKakao(); };
   $("naverBtn").onclick = () => {
+    if(!consentOK()) return;
     const state = Math.random().toString(36).slice(2);
     const redirectUri = encodeURIComponent(location.origin + "/api/naver-callback");
     window.location.href = "https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=1b9f9_YPgdsQEBOGd0RU&redirect_uri=" + redirectUri + "&state=" + state;
   };
   $("loginBtn").onclick = async () => {
+    if(!consentOK()) return;
     const email = $("loginEmail").value.trim();
     const pw = $("loginPw").value;
     if (!email || !pw) { alert("이메일과 비밀번호를 입력해 주세요."); return; }
