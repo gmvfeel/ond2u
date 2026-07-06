@@ -288,6 +288,9 @@
   .section-title { font-size:20px; font-weight:800; letter-spacing:-0.03em; margin-bottom:6px; }
   .section-sub { font-size:13px; color:var(--ink-soft); margin-bottom:28px; }
   .saved-item { background:var(--white); border:1px solid var(--plum-line); border-radius:16px; padding:22px 24px; margin-bottom:14px; position:relative; }
+  .more-btn { display:block; width:100%; font-family:inherit; font-size:14px; font-weight:600; color:var(--plum-deep); background:var(--plum-soft); border:1px solid var(--plum-line); border-radius:30px; padding:14px; margin-top:8px; cursor:pointer; transition:all .15s; }
+  .more-btn:hover { background:var(--plum-line); }
+  .more-btn span { font-weight:400; color:var(--ink-soft); font-size:12px; }
   .saved-item .sdate { font-size:11px; letter-spacing:0.1em; color:var(--plum); margin-bottom:12px; }
   .saved-item .sq { font-size:16px; font-weight:700; line-height:1.6; }
   .saved-item .sa { font-size:13px; color:var(--ink-soft); margin-top:8px; }
@@ -2162,8 +2165,13 @@
   function renderSaved(){
     const guestNote = (!loggedIn && saved.length) ? '<div class="save-guest-note">아직 로그인하지 않으셨어요. 지금 담은 글은 <b>이번 방문에만</b> 보여요 — 다시 오면 사라져요. <a onclick="odoGoLogin()">로그인하고 계속 보관하기 →</a></div>' : '';
     if(!saved.length){ $("savedList").innerHTML='<div class="saved-empty">아직 담아둔 글이 없어요.<br>오늘 탭에서 마음에 드는 글을 담아보세요.</div>'; return; }
-    $("savedList").innerHTML = guestNote + saved.map((s,idx)=>`<div class="saved-item"><button class="item-del" onclick="deleteSaved(${idx})" aria-label="삭제">✕</button><div class="sdate">${s.date?s.date+" 담음":"담아둔 글"}</div><div class="sq">${s.quote.replace(/(\s*(?:<br\s*\/?>|[\r\n])\s*)+/gi,"<br>")}</div><div class="sa">— ${s.author}</div></div>`).join("");
+    if(window._savedShow==null) window._savedShow=12;
+    const show = Math.min(window._savedShow, saved.length);
+    let html = guestNote + saved.slice(0,show).map((s,idx)=>`<div class="saved-item"><button class="item-del" onclick="deleteSaved(${idx})" aria-label="삭제">✕</button><div class="sdate">${s.date?s.date+" 담음":"담아둔 글"}</div><div class="sq">${s.quote.replace(/(\s*(?:<br\s*\/?>|[\r\n])\s*)+/gi,"<br>")}</div><div class="sa">— ${s.author}</div></div>`).join("");
+    if(saved.length>show) html += '<button class="more-btn" onclick="showMoreSaved()">더 보기 <span>('+(saved.length-show)+'개 남음)</span></button>';
+    $("savedList").innerHTML = html;
   }
+  window.showMoreSaved = function(){ window._savedShow = (window._savedShow||12) + 12; renderSaved(); };
 
   window.deleteSaved = async function(idx){
     const s = saved[idx]; if(!s) return;
@@ -2210,9 +2218,14 @@
         + '<div class="mf-list-label">전체 기록</div>';
     }
 
-    const list = trace.map((t,idx)=>({t,idx})).reverse().map(({t,idx})=>'<div class="trace-item"><button class="item-del" onclick="deleteMood('+idx+')" aria-label="삭제">✕</button><div class="td">'+t.date+'</div><div class="tm">'+(t.mood?("<b>"+t.mood+"</b>"+(t.level?" · "+t.level:"")):"")+(t.note?(t.mood?" — ":"")+t.note:"")+'</div></div>').join("");
-    wrap.innerHTML = flowHtml + list;
+    if(window._traceShow==null) window._traceShow=20;
+    const traceArr = trace.map((t,idx)=>({t,idx})).reverse();
+    const tShow = Math.min(window._traceShow, traceArr.length);
+    const list = traceArr.slice(0,tShow).map(({t,idx})=>'<div class="trace-item"><button class="item-del" onclick="deleteMood('+idx+')" aria-label="삭제">✕</button><div class="td">'+t.date+'</div><div class="tm">'+(t.mood?("<b>"+t.mood+"</b>"+(t.level?" · "+t.level:"")):"")+(t.note?(t.mood?" — ":"")+t.note:"")+'</div></div>').join("");
+    const tMore = traceArr.length>tShow ? '<button class="more-btn" onclick="showMoreTrace()">더 보기 <span>('+(traceArr.length-tShow)+'개 남음)</span></button>' : '';
+    wrap.innerHTML = flowHtml + list + tMore;
   }
+  window.showMoreTrace = function(){ window._traceShow = (window._traceShow||20) + 20; renderTrace(); };
 
   window.deleteMood = async function(idx){
     const t = trace[idx]; if(!t) return;
@@ -3033,7 +3046,9 @@
       '<div class="tl-sum">'+whoTxt+'지금까지 <b>'+sentN+'</b>통을 보내고, <b>'+recvN+'</b>번의 마음을 받았어요.</div>' +
       '<div class="tl-chips">'+chips+'</div>';
 
-    const body = shown.map(i => {
+    if(window._tlShow==null) window._tlShow=15;
+    const tlShowN = Math.min(window._tlShow, shown.length);
+    const body = shown.slice(0,tlShowN).map(i => {
       const nm = escR(i.type==="sent" ? (i.name || nameOf(i.email)) : nameOf(i.email));
       const del = '<button class="item-del tl-del" onclick="deleteTimeline(\''+i.type+'\',\''+escR(String(i.id)).replace(/'/g,"&#39;")+'\')" aria-label="삭제">✕</button>';
       if (i.type==="sent") {
@@ -3059,8 +3074,10 @@
       '</div>'+del+'</div>';
     }).join("");
 
-    box.innerHTML = head + '<div class="tl-list">'+body+'</div>';
+    const tlMore = shown.length>tlShowN ? '<button class="more-btn" onclick="showMoreTl()">더 보기 <span>('+(shown.length-tlShowN)+'개 남음)</span></button>' : '';
+    box.innerHTML = head + '<div class="tl-list">'+body+'</div>' + tlMore;
   }
+  window.showMoreTl = function(){ window._tlShow = (window._tlShow||15) + 15; renderReactions(); };
 
   window.deleteTimeline = async function(type, id){
     if(!confirm("이 기록을 지울까요?")) return;
@@ -3069,7 +3086,7 @@
     renderReactions();
   };
 
-  window.setTlFilter = function(em){ window._tlFilter = em; renderReactions(); };
+  window.setTlFilter = function(em){ window._tlFilter = em; window._tlShow = 15; renderReactions(); };
 
   // 공용 라인 아이콘 (얇은 선, 브랜드 톤 통일)
   const ODO_IC = {
