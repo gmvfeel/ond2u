@@ -1033,7 +1033,7 @@
         <div class="field" id="meTimeField">
           <label>받는 시각</label>
           <div class="time-chips" id="meTimeChips"></div>
-          <div class="time-note">지금은 매일 아침 8시에 한 통씩 보내드려요. 다른 시간대는 곧 추가될 예정이에요.</div>
+          <div class="time-note">고른 시각(한국 시간)에 맞춰 하루 한 통이 나에게 와요.</div>
         </div>
 
         <div class="me-note">
@@ -1056,7 +1056,7 @@
         <div class="field">
           <label>보내는 시각</label>
           <div class="time-chips" id="timeChips"></div>
-          <div class="time-note">지금은 매일 아침 8시에 한 통씩 보내요. 다른 시간대는 곧 추가될 예정이에요.</div>
+          <div class="time-note">고른 시각(한국 시간)에 맞춰 이 사람에게 하루 한 통이 가요.</div>
         </div>
         <div class="field">
           <label>이 사람에게 맞는 결 <span class="opt">(선택)</span></label>
@@ -1156,7 +1156,7 @@
       <div class="gd-rail"><span class="gd-num">04</span></div>
       <div class="gd-body">
         <div class="gd-t">나에게 매일 받기</div>
-        <div class="gd-d">로그인한 뒤 <b>보내기</b> 탭에서 <b>‘매일 나에게 받기’</b>를 켜면, 매일 아침 8시에 나에게도 한 편이 이메일로 도착해요. 먼저 나부터 챙기는 거예요.</div>
+        <div class="gd-d">로그인한 뒤 <b>보내기</b> 탭에서 <b>‘매일 나에게 받기’</b>를 켜면, 내가 고른 시각에 나에게도 한 편이 이메일로 도착해요. 먼저 나부터 챙기는 거예요.</div>
       <div class="gd-visual">
         <div class="mock mock-toggle">
           <span class="mt-label">매일 나에게 받기</span>
@@ -1246,7 +1246,7 @@
 
     <div class="send-panel">
       <div class="sp-title">✉️ 즉시 발송</div>
-      <div class="sp-desc">아침 8시 자동 발송을 기다리지 않고, 지금 바로 편지를 보낼 수 있어요.</div>
+      <div class="sp-desc">자동 발송 시각을 기다리지 않고, 지금 바로 편지를 보낼 수 있어요.</div>
       <div class="sp-btns">
         <button class="sp-btn sp-me" id="sendMeBtn">나에게 테스트 1통</button>
         <button class="sp-btn sp-all" id="sendAllBtn">명단 전체 지금 발송</button>
@@ -2298,7 +2298,7 @@
   })();
 
   /* ── 보내는 사람들 ── */
-  const TIMES = ["아침 8시"];
+  const TIMES = ["아침 8시","점심 12시","저녁 6시","밤 10시"];
   const TONES = ["위로","응원","평온","시작"];
   const recipients = [];
   let pickedTimes = ["아침 8시"];
@@ -2306,8 +2306,16 @@
   let bibleAlso = false;   // 성경 말씀도 함께 보낼지 (기본 꺼짐)
 
   const timeWrap = $("timeChips");
-  TIMES.forEach(t => { const b=document.createElement("button"); b.type="button"; b.className="tchip on"; b.textContent=t;
-    timeWrap.appendChild(b); });   // 현재는 아침 8시 하나만 (항상 선택 상태)
+  function renderRecipTimeChips(){
+    timeWrap.innerHTML = "";
+    TIMES.forEach(t => {
+      const b=document.createElement("button"); b.type="button";
+      b.className="tchip" + (pickedTimes.includes(t) ? " on" : ""); b.textContent=t;
+      b.onclick=()=>{ pickedTimes=[t]; renderRecipTimeChips(); };   // 한 시각만 선택
+      timeWrap.appendChild(b);
+    });
+  }
+  renderRecipTimeChips();
 
   // 성경 말씀 함께 보내기 체크박스 토글
   $("bibleCheck").onclick = () => {
@@ -2337,8 +2345,9 @@
     else if(error) console.log("수신자 저장 오류:", error);
     // 초기화
     $("rName").value=""; $("rEmail").value="";
-    pickedTimes=[]; pickedTone=null; bibleAlso=false;
-    document.querySelectorAll(".tchip,.tochip").forEach(c=>c.classList.remove("on"));
+    pickedTimes=["아침 8시"]; pickedTone=null; bibleAlso=false;
+    document.querySelectorAll(".tochip").forEach(c=>c.classList.remove("on"));
+    renderRecipTimeChips();
     $("bibleCheck").classList.remove("on");
     renderRecipients();
   };
@@ -2659,17 +2668,23 @@
   };
 
   /* ── 나에게 보내기 ── */
-  const MY_TIMES = ["아침 8시"];
+  const MY_TIMES = ["아침 8시","점심 12시","저녁 6시","밤 10시"];
   let myPickedTimes = ["아침 8시"];
   const meTimeWrap = $("meTimeChips");
-  MY_TIMES.forEach(t => {
-    const b=document.createElement("button"); b.type="button"; b.className="tchip on"; b.textContent=t;
-    meTimeWrap.appendChild(b);   // 현재는 아침 8시 하나만 (항상 선택 상태)
-  });
-  // 시각 칩 UI를 myPickedTimes에 맞게 갱신
+  // 시각 칩 렌더 (myPickedTimes 반영, 한 시각만 선택)
   function refreshMeTimeChips(){
-    meTimeWrap.querySelectorAll(".tchip").forEach(b=>{ b.classList.add("on"); });
+    meTimeWrap.innerHTML = "";
+    MY_TIMES.forEach(t => {
+      const b=document.createElement("button"); b.type="button";
+      b.className="tchip" + (myPickedTimes.includes(t) ? " on" : ""); b.textContent=t;
+      b.onclick=async ()=>{
+        myPickedTimes=[t]; refreshMeTimeChips();
+        if($("meToggle").classList.contains("on")) await saveSelfRecipient(true);  // 받기 켜져 있으면 즉시 반영
+      };
+      meTimeWrap.appendChild(b);
+    });
   }
+  refreshMeTimeChips();
   // "나에게 받기"를 실제 발송 명단에 반영 (내 이메일을 '나에게'로 넣거나 뺌)
   async function saveSelfRecipient(on){
     if(!loggedIn || !currentUser || !currentUser.email) return;
