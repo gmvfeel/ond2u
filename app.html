@@ -291,6 +291,12 @@
   .more-btn { display:block; width:100%; font-family:inherit; font-size:14px; font-weight:600; color:var(--plum-deep); background:var(--plum-soft); border:1px solid var(--plum-line); border-radius:30px; padding:14px; margin-top:8px; cursor:pointer; transition:all .15s; }
   .more-btn:hover { background:var(--plum-line); }
   .more-btn span { font-weight:400; color:var(--ink-soft); font-size:12px; }
+  .otd-card { background:linear-gradient(135deg,#fdeef2,#f4f0f7); border:1px solid #f0d9e2; border-radius:16px; padding:18px 22px; margin-bottom:18px; }
+  .otd-head { display:flex; align-items:center; gap:7px; font-size:12px; font-weight:600; color:#b0446a; margin-bottom:12px; }
+  .otd-ic { display:inline-flex; }
+  .otd-ic svg { width:15px; height:15px; }
+  .otd-q { font-size:16px; line-height:1.7; color:#3a3540; word-break:keep-all; }
+  .otd-a { font-size:13px; color:#7a7580; margin-top:8px; }
   .saved-item .sdate { font-size:11px; letter-spacing:0.1em; color:var(--plum); margin-bottom:12px; }
   .saved-item .sq { font-size:16px; font-weight:700; line-height:1.6; }
   .saved-item .sa { font-size:13px; color:var(--ink-soft); margin-top:8px; }
@@ -931,6 +937,7 @@
   <div class="view on" id="view-home">
     <div class="section-title">오늘</div>
     <div class="section-sub">오늘 당신에게 도착한 한 편이에요. 천천히 마음으로 읽어보세요.</div>
+    <div id="onThisDay"></div>
     <div class="letter-card">
     <div class="greet-row">
       <div class="season" id="season"></div>
@@ -2162,10 +2169,37 @@
           const p = POOL[poolIdx];
           let d = "";
           if(row.saved_at){ const dt=new Date(row.saved_at); d=(dt.getMonth()+1)+"월 "+dt.getDate()+"일"; }
-          saved.push({ i:poolIdx, quote:p.quote, author:p.author, date:d, rowId:row.id });
+          saved.push({ i:poolIdx, quote:p.quote, author:p.author, date:d, savedAt:row.saved_at||null, rowId:row.id });
         }
       });
     } catch(e){ console.log("담은글 불러오기 오류:", e); }
+    try { renderOnThisDay(); } catch(e){}
+  }
+
+  // 1년 전 오늘 — 지난해(또는 그 이전) 같은 날 담은 글을 다시 꺼내기
+  function renderOnThisDay(){
+    const box = $("onThisDay");
+    if(!box) return;
+    if(!loggedIn || !saved.length){ box.innerHTML=""; return; }
+    const now = new Date(Date.now()+9*3600*1000);
+    const tM=now.getUTCMonth(), tD=now.getUTCDate(), tY=now.getUTCFullYear();
+    const hits = saved.filter(s=>{
+      if(!s.savedAt) return false;
+      const d = new Date(new Date(s.savedAt).getTime()+9*3600*1000);
+      return d.getUTCMonth()===tM && d.getUTCDate()===tD && d.getUTCFullYear()<tY;
+    });
+    if(!hits.length){ box.innerHTML=""; return; }
+    hits.sort((a,b)=> new Date(a.savedAt) - new Date(b.savedAt));
+    const s = hits[0];
+    const sy = new Date(new Date(s.savedAt).getTime()+9*3600*1000).getUTCFullYear();
+    const yearsAgo = tY - sy;
+    const yLabel = yearsAgo + "년 전 오늘";
+    const q = (s.quote||"").replace(/(\s*(?:<br\s*\/?>|[\r\n])\s*)+/gi,"<br>");
+    box.innerHTML = '<div class="otd-card">'
+      + '<div class="otd-head"><span class="otd-ic">'+ODO_IC.mail+'</span>'+yLabel+', 이 글을 마음에 담으셨어요</div>'
+      + '<div class="otd-q">'+q+'</div>'
+      + '<div class="otd-a">— '+s.author+'</div>'
+      + '</div>';
   }
 
   function renderSaved(){
