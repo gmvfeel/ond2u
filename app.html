@@ -291,12 +291,16 @@
   .more-btn { display:block; width:100%; font-family:inherit; font-size:14px; font-weight:600; color:var(--plum-deep); background:var(--plum-soft); border:1px solid var(--plum-line); border-radius:30px; padding:14px; margin-top:8px; cursor:pointer; transition:all .15s; }
   .more-btn:hover { background:var(--plum-line); }
   .more-btn span { font-weight:400; color:var(--ink-soft); font-size:12px; }
-  .otd-card { background:linear-gradient(135deg,#fdeef2,#f4f0f7); border:1px solid #f0d9e2; border-radius:16px; padding:18px 22px; margin-bottom:18px; }
-  .otd-head { display:flex; align-items:center; gap:7px; font-size:12px; font-weight:600; color:#b0446a; margin-bottom:12px; }
-  .otd-ic { display:inline-flex; }
-  .otd-ic svg { width:15px; height:15px; }
-  .otd-q { font-size:16px; line-height:1.7; color:#3a3540; word-break:keep-all; }
-  .otd-a { font-size:13px; color:#7a7580; margin-top:8px; }
+  .otd-card { position:relative; background:linear-gradient(135deg,#fdf3f6 0%,#f6f0f8 55%,#fef8f0 100%); border:1px solid #f0d9e2; border-radius:20px; padding:26px 26px 22px; margin-bottom:20px; overflow:hidden; box-shadow:0 8px 26px rgba(176,68,106,.12); animation:otdIn .7s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes otdIn { from { opacity:0; transform:translateY(16px) scale(.98); } to { opacity:1; transform:none; } }
+  .otd-card::before { content:""; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#d97c93,#e9c37f,#d97c93); }
+  .otd-card::after { content:"\201C"; position:absolute; top:-14px; right:16px; font-family:Georgia,'Times New Roman',serif; font-size:120px; line-height:1; color:rgba(217,124,147,.10); pointer-events:none; }
+  .otd-badge { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; letter-spacing:.02em; color:#fff; background:linear-gradient(135deg,#d97c93,#c76b86); padding:6px 13px; border-radius:20px; box-shadow:0 3px 10px rgba(199,107,134,.35); margin-bottom:15px; }
+  .otd-badge-ic { display:inline-flex; }
+  .otd-badge-ic svg { width:13px; height:13px; display:block; }
+  .otd-q { position:relative; z-index:1; font-size:17px; line-height:1.75; color:#2f2440; font-weight:600; word-break:keep-all; }
+  .otd-a { position:relative; z-index:1; font-size:13px; color:#8a6b78; margin-top:10px; }
+  .otd-note { margin-top:14px; padding-top:13px; border-top:1px dashed #e6cdd8; font-size:12.5px; color:#b0446a; }
   .saved-item .sdate { font-size:11px; letter-spacing:0.1em; color:var(--plum); margin-bottom:12px; }
   .saved-item .sq { font-size:16px; font-weight:700; line-height:1.6; }
   .saved-item .sa { font-size:13px; color:var(--ink-soft); margin-top:8px; }
@@ -2195,10 +2199,12 @@
     const yearsAgo = tY - sy;
     const yLabel = yearsAgo + "년 전 오늘";
     const q = (s.quote||"").replace(/(\s*(?:<br\s*\/?>|[\r\n])\s*)+/gi,"<br>");
+    const IC_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
     box.innerHTML = '<div class="otd-card">'
-      + '<div class="otd-head"><span class="otd-ic">'+ODO_IC.mail+'</span>'+yLabel+', 이 글을 마음에 담으셨어요</div>'
+      + '<div class="otd-badge"><span class="otd-badge-ic">'+IC_CLOCK+'</span>'+yLabel+'</div>'
       + '<div class="otd-q">'+q+'</div>'
       + '<div class="otd-a">— '+s.author+'</div>'
+      + '<div class="otd-note">그날, 이 글을 마음에 담으셨어요</div>'
       + '</div>';
   }
 
