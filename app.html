@@ -565,7 +565,11 @@
   .mg-status.warn { color:#b26a00; background:#fff3e0; }
   .mg-card.bad { border-color:#e0a0a0; box-shadow:0 0 0 1px #e0a0a0; }
   /* 회원 관리 */
-  .mb-card { background:var(--white); border:1px solid var(--plum-line); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+  .mb-card { background:var(--white); border:1px solid var(--plum-line); border-radius:12px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px; }
+  .mb-main { flex:1; min-width:0; }
+  .mb-del { flex-shrink:0; font-family:inherit; font-size:12px; font-weight:600; color:#c0392b; background:#fdecea; border:1px solid #f5c6c0; border-radius:8px; padding:7px 12px; cursor:pointer; transition:all .15s; }
+  .mb-del:hover { background:#c0392b; color:#fff; border-color:#c0392b; }
+  .mb-self { flex-shrink:0; font-size:11px; color:var(--ink-faint); background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:6px 10px; }
   .mb-name { font-size:15px; font-weight:700; color:var(--ink); }
   .mb-email { font-size:12px; color:var(--ink-soft); margin-top:2px; word-break:break-all; }
   .mb-meta { font-size:12px; color:var(--ink-faint); margin-top:8px; display:flex; gap:6px; flex-wrap:wrap; }
@@ -823,8 +827,13 @@
   .recipient .rtone { font-size:12px; color:var(--ink-soft); background:var(--paper); border:1px solid var(--line); border-radius:20px; padding:4px 10px; }
   .recipient .rtone.rbible { color:var(--plum-deep); background:var(--plum-soft); border-color:var(--plum-line); font-weight:600; }
   .recipient .rtone.rspecial { color:#b0446a; background:#fdeef2; border-color:#f3c9d5; font-weight:600; }
+  .recipient .ractions { display:flex; flex-direction:column; gap:2px; flex-shrink:0; align-items:flex-end; }
+  .recipient .redit { font-family:inherit; font-size:12px; color:var(--plum-deep); background:transparent; border:none; cursor:pointer; padding:4px; font-weight:600; }
+  .recipient .redit:hover { color:var(--plum); }
   .recipient .rdel { font-family:inherit; font-size:12px; color:var(--ink-faint); background:transparent; border:none; cursor:pointer; padding:4px; flex-shrink:0; }
   .recipient .rdel:hover { color:var(--plum); }
+  .add-cancel { width:100%; font-family:inherit; font-size:14px; font-weight:600; color:var(--ink-soft); background:transparent; border:1px solid var(--line-strong); border-radius:30px; padding:13px; cursor:pointer; transition:all .2s; margin-top:8px; }
+  .add-cancel:hover { border-color:var(--plum-line); color:var(--plum-deep); }
   .recipient-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:44px 0; }
 </style>
 </head>
@@ -1150,6 +1159,7 @@
           <div class="kind-hint">체크하면 일반 위로글에 더해, "하나님께서 오늘 주신 말씀입니다"와 함께 성경 구절도 같이 보내요. (기독교인에게)</div>
         </div>
         <button class="add-btn" id="addBtn">명단에 추가</button>
+        <button class="add-cancel" id="editCancelBtn" style="display:none" onclick="cancelEditRecipient()">수정 취소</button>
         <div class="add-hint">추가 전에 "매일 좋은 글 보낼게, 받을래?" 하고 한 번 물어봐 주세요. 편지 맨 밑엔 언제든 '그만 받기'가 있어요.</div>
       </div>
 
@@ -2439,13 +2449,23 @@
     const spM = $("rSpMonth").value, spD = $("rSpDay").value;
     const specialDate = (spM && spD) ? (String(spM).padStart(2,"0")+"-"+String(spD).padStart(2,"0")) : null;
     const specialLabel = specialDate ? ($("rSpLabel").value.trim() || "특별한 날") : null;
-    const rec = { name, email, times:[...pickedTimes], tone:pickedTone, bible:bibleAlso, special_date:specialDate, special_label:specialLabel };
-    recipients.push(rec);
-    // 창고에 저장 (kind: 성경 함께면 'bible', 아니면 'normal')
-    const { data, error } = await odoDB.from("odo_recipients")
-      .insert({ sender_id: currentUser.id, name, email, send_times: rec.times, tone: pickedTone, kind: bibleAlso?"bible":"normal", special_date: specialDate, special_label: specialLabel }).select().maybeSingle();
-    if(!error && data) rec.rowId = data.id;
-    else if(error) console.log("수신자 저장 오류:", error);
+    const payload = { name, email, send_times:[...pickedTimes], tone: pickedTone, kind: bibleAlso?"bible":"normal", special_date: specialDate, special_label: specialLabel };
+
+    if (window._editRowId) {
+      // 수정 모드: 기존 수신자 갱신
+      const { error } = await odoDB.from("odo_recipients").update(payload).eq("id", window._editRowId);
+      if(error){ console.log("수신자 수정 오류:", error); alert("수정에 실패했어요. 잠시 후 다시 시도해 주세요."); return; }
+      const idx = window._editIdx;
+      if (recipients[idx]) recipients[idx] = { name, email, times:[...pickedTimes], tone:pickedTone, bible:bibleAlso, special_date:specialDate, special_label:specialLabel, rowId: window._editRowId };
+      exitEditMode();
+    } else {
+      // 추가 모드
+      const rec = { name, email, times:[...pickedTimes], tone:pickedTone, bible:bibleAlso, special_date:specialDate, special_label:specialLabel };
+      recipients.push(rec);
+      const { data, error } = await odoDB.from("odo_recipients").insert({ sender_id: currentUser.id, ...payload }).select().maybeSingle();
+      if(!error && data) rec.rowId = data.id;
+      else if(error) console.log("수신자 저장 오류:", error);
+    }
     // 초기화
     $("rName").value=""; $("rEmail").value="";
     $("rSpMonth").value=""; $("rSpDay").value=""; $("rSpLabel").value="";
@@ -2454,6 +2474,41 @@
     renderRecipTimeChips();
     $("bibleCheck").classList.remove("on");
     renderRecipients();
+  };
+
+  function exitEditMode(){
+    window._editRowId = null; window._editIdx = null;
+    const b=$("addBtn"); if(b) b.textContent = "명단에 추가";
+    const c=$("editCancelBtn"); if(c) c.style.display = "none";
+  }
+
+  window.cancelEditRecipient = function(){
+    exitEditMode();
+    $("rName").value=""; $("rEmail").value="";
+    $("rSpMonth").value=""; $("rSpDay").value=""; $("rSpLabel").value="";
+    pickedTimes=["아침 8시"]; pickedTone=null; bibleAlso=false;
+    document.querySelectorAll(".tochip").forEach(c=>c.classList.remove("on"));
+    renderRecipTimeChips();
+    $("bibleCheck").classList.remove("on");
+  };
+
+  window.editRecipient = function(i){
+    const r = recipients[i]; if(!r) return;
+    if (!r.rowId) { alert("이 수신자는 저장 정보가 없어 수정할 수 없어요. 삭제 후 다시 추가해 주세요."); return; }
+    $("rName").value = r.name || "";
+    $("rEmail").value = r.email || "";
+    pickedTimes = [...(r.times || ["아침 8시"])];
+    renderRecipTimeChips();
+    pickedTone = r.tone || null;
+    document.querySelectorAll(".tochip").forEach(c=>{ c.classList.toggle("on", !!pickedTone && c.textContent===pickedTone); });
+    bibleAlso = !!r.bible;
+    $("bibleCheck").classList.toggle("on", bibleAlso);
+    if (r.special_date) { const p=String(r.special_date).split("-"); $("rSpMonth").value=String(parseInt(p[0],10)); $("rSpDay").value=String(parseInt(p[1],10)); $("rSpLabel").value=r.special_label||""; }
+    else { $("rSpMonth").value=""; $("rSpDay").value=""; $("rSpLabel").value=""; }
+    window._editRowId = r.rowId; window._editIdx = i;
+    const b=$("addBtn"); if(b) b.textContent = "수정 저장";
+    const c=$("editCancelBtn"); if(c) c.style.display = "";
+    const card = document.querySelector(".add-card"); if(card) card.scrollIntoView({ behavior:"smooth", block:"center" });
   };
 
   // 로그인 시 창고에서 수신자 불러오기
@@ -2513,7 +2568,10 @@
             ${r.special_date?`<span class="rtone rspecial">🎂 ${fmtSpecial(r.special_date)}${r.special_label?" "+r.special_label:""}</span>`:""}
           </div>
         </div>
-        <button class="rdel" onclick="delRecipient(${i})">삭제</button>
+        <div class="ractions">
+          <button class="redit" onclick="editRecipient(${i})">수정</button>
+          <button class="rdel" onclick="delRecipient(${i})">삭제</button>
+        </div>
       </div>
     `).join("");
   }
@@ -3559,6 +3617,30 @@
   }
 
   // ===== 회원 관리 (관리자 전용) =====
+  window.deleteMember = async function(email, name){
+    if (!isAdmin()) return;
+    if (!email) { alert("이메일 정보가 없어 삭제할 수 없어요."); return; }
+    const label = (name ? name+" " : "") + "(" + email + ")";
+    if (!confirm("정말 이 회원을 삭제할까요?\n\n"+label+"\n\n이 회원의 담은 글·기분 기록·수신자·반응·발송 기록·로그인 계정이 모두 지워지고,\n되돌릴 수 없어요.")) return;
+    const typed = prompt("실수 방지예요. 삭제하려면 이 회원의 이메일을 그대로 입력하세요:\n\n"+email);
+    if (typed == null) return;
+    if (String(typed).trim().toLowerCase() !== String(email).toLowerCase()) { alert("이메일이 일치하지 않아 취소했어요."); return; }
+    let session;
+    try { ({ data:{ session } } = await odoDB.auth.getSession()); } catch(e){}
+    if (!session){ alert("로그인이 필요해요."); return; }
+    try {
+      const res = await fetch("/api/admin-delete-member", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+session.access_token },
+        body: JSON.stringify({ email })
+      });
+      const out = await res.json().catch(()=>({}));
+      if (!res.ok || !out.ok){ alert("삭제 실패: "+((out&&out.error)||"알 수 없는 오류")); return; }
+      alert("삭제됐어요.");
+      renderMembers();
+    } catch(e){ alert("삭제 중 오류가 났어요. 잠시 후 다시 시도해 주세요."); }
+  };
+
   async function renderMembers(){
     const box = $("membersList");
     if (!box) return;
@@ -3584,10 +3666,17 @@
       bits.push('마지막 방문 '+(u.last_visit || '기록 없음'));
       bits.push('연속 '+(u.streak||0)+'일');
       bits.push('보내는 사람 '+(u.recipient_count||0)+'명');
+      const isSelf = currentUser && currentUser.email && u.email && String(currentUser.email).toLowerCase()===String(u.email).toLowerCase();
+      const delBtn = isSelf
+        ? '<span class="mb-self">내 계정</span>'
+        : '<button class="mb-del" onclick="deleteMember(\''+esc(u.email||"").replace(/'/g,"&#39;")+'\',\''+esc(u.display_name||"").replace(/'/g,"&#39;")+'\')">삭제</button>';
       return '<div class="mb-card">'
+        + '<div class="mb-main">'
         + '<div class="mb-name">'+esc(u.display_name||"(이름 없음)")+'</div>'
         + '<div class="mb-email">'+esc(u.email||"")+'</div>'
         + '<div class="mb-meta">'+bits.map(b=>'<span>'+esc(b)+'</span>').join("")+'</div>'
+        + '</div>'
+        + delBtn
         + '</div>';
     }).join("");
     box.innerHTML = html;
