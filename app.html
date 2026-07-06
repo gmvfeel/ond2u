@@ -610,6 +610,10 @@
   .field input:focus { border-color:var(--plum); }
   .field input::placeholder { color:var(--ink-faint); }
   .time-chips, .tone-chips, .kind-chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .special-row { display:flex; gap:8px; align-items:center; }
+  .special-row select { font-family:inherit; font-size:14px; color:var(--ink); background:var(--paper); border:1px solid var(--line-strong); border-radius:14px; padding:12px 10px; outline:none; cursor:pointer; flex:0 0 auto; }
+  .special-row select:focus { border-color:var(--plum); }
+  .special-row input { flex:1 1 auto; min-width:0; }
   .time-note { font-size:12px; color:var(--ink-faint); margin-top:8px; line-height:1.6; }
   .me-onboard { display:none; font-size:13px; color:var(--plum-deep); background:var(--plum-soft); border:1px dashed var(--plum-line); border-radius:12px; padding:11px 14px; margin:14px 0 4px; line-height:1.5; }
   .me-onboard.show { display:block; }
@@ -781,6 +785,7 @@
   .recipient .rtag { font-size:12px; color:var(--plum-deep); background:var(--plum-soft); border-radius:20px; padding:4px 10px; }
   .recipient .rtone { font-size:12px; color:var(--ink-soft); background:var(--paper); border:1px solid var(--line); border-radius:20px; padding:4px 10px; }
   .recipient .rtone.rbible { color:var(--plum-deep); background:var(--plum-soft); border-color:var(--plum-line); font-weight:600; }
+  .recipient .rtone.rspecial { color:#b0446a; background:#fdeef2; border-color:#f3c9d5; font-weight:600; }
   .recipient .rdel { font-family:inherit; font-size:12px; color:var(--ink-faint); background:transparent; border:none; cursor:pointer; padding:4px; flex-shrink:0; }
   .recipient .rdel:hover { color:var(--plum); }
   .recipient-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:44px 0; }
@@ -1074,6 +1079,15 @@
         <div class="field">
           <label>이 사람에게 맞는 결 <span class="opt">(선택)</span></label>
           <div class="tone-chips" id="toneChips"></div>
+        </div>
+        <div class="field">
+          <label>특별한 날 <span class="opt">(선택)</span></label>
+          <div class="special-row">
+            <select id="rSpMonth" aria-label="월"><option value="">월</option></select>
+            <select id="rSpDay" aria-label="일"><option value="">일</option></select>
+            <input id="rSpLabel" type="text" placeholder="이름표 (예: 생일)" maxlength="12" />
+          </div>
+          <div class="time-note">이 날엔 평소 편지 대신 <b>축하 편지</b>가 가요. 매년 자동으로 챙겨요.</div>
         </div>
         <div class="field">
           <label class="bible-check" id="bibleCheck">
@@ -2355,6 +2369,13 @@
       else { pickedTone=t; document.querySelectorAll(".tochip").forEach(c=>c.classList.remove("on")); b.classList.add("on"); } };
     toneWrap.appendChild(b); });
 
+  // 특별한 날 월/일 드롭다운 채우기
+  (function fillSpecialDate(){
+    const mSel=$("rSpMonth"), dSel=$("rSpDay");
+    if(mSel) for(let m=1;m<=12;m++){ const o=document.createElement("option"); o.value=String(m); o.textContent=m+"월"; mSel.appendChild(o); }
+    if(dSel) for(let d=1;d<=31;d++){ const o=document.createElement("option"); o.value=String(d); o.textContent=d+"일"; dSel.appendChild(o); }
+  })();
+
   $("addBtn").onclick = async () => {
     const name = $("rName").value.trim();
     const email = $("rEmail").value.trim();
@@ -2362,15 +2383,19 @@
     if(!email || !email.includes("@")){ $("rEmail").focus(); return; }
     if(!loggedIn){ alert("아끼는 사람을 추가하려면 먼저 로그인해 주세요."); return; }
     if(!pickedTimes.length){ pickedTimes = ["아침 8시"]; }
-    const rec = { name, email, times:[...pickedTimes], tone:pickedTone, bible:bibleAlso };
+    const spM = $("rSpMonth").value, spD = $("rSpDay").value;
+    const specialDate = (spM && spD) ? (String(spM).padStart(2,"0")+"-"+String(spD).padStart(2,"0")) : null;
+    const specialLabel = specialDate ? ($("rSpLabel").value.trim() || "특별한 날") : null;
+    const rec = { name, email, times:[...pickedTimes], tone:pickedTone, bible:bibleAlso, special_date:specialDate, special_label:specialLabel };
     recipients.push(rec);
     // 창고에 저장 (kind: 성경 함께면 'bible', 아니면 'normal')
     const { data, error } = await odoDB.from("odo_recipients")
-      .insert({ sender_id: currentUser.id, name, email, send_times: rec.times, tone: pickedTone, kind: bibleAlso?"bible":"normal" }).select().maybeSingle();
+      .insert({ sender_id: currentUser.id, name, email, send_times: rec.times, tone: pickedTone, kind: bibleAlso?"bible":"normal", special_date: specialDate, special_label: specialLabel }).select().maybeSingle();
     if(!error && data) rec.rowId = data.id;
     else if(error) console.log("수신자 저장 오류:", error);
     // 초기화
     $("rName").value=""; $("rEmail").value="";
+    $("rSpMonth").value=""; $("rSpDay").value=""; $("rSpLabel").value="";
     pickedTimes=["아침 8시"]; pickedTone=null; bibleAlso=false;
     document.querySelectorAll(".tochip").forEach(c=>c.classList.remove("on"));
     renderRecipTimeChips();
@@ -2389,7 +2414,7 @@
       let selfRow = null;
       data.forEach(row=>{
         if(myEmail && row.email === myEmail){ selfRow = row; return; }  // 내 것은 목록에서 빼고 토글로 관리
-        recipients.push({ name:row.name, email:row.email, times:row.send_times||["아침 8시"], tone:row.tone, bible:(row.kind==="bible"), rowId:row.id });
+        recipients.push({ name:row.name, email:row.email, times:row.send_times||["아침 8시"], tone:row.tone, bible:(row.kind==="bible"), special_date:row.special_date||null, special_label:row.special_label||null, rowId:row.id });
       });
       // "나에게 받기" 상태 복원
       const meToggleEl = $("meToggle");
@@ -2405,6 +2430,13 @@
       refreshMeTimeChips();
       renderRecipients();
     } catch(e){ console.log("수신자 불러오기 오류:", e); }
+  }
+
+  function fmtSpecial(md){
+    if(!md) return "";
+    const p = String(md).split("-");
+    if(p.length!==2) return md;
+    return parseInt(p[0],10)+"/"+parseInt(p[1],10);
   }
 
   function renderRecipients(){
@@ -2425,6 +2457,7 @@
             ${r.times.map(t=>`<span class="rtag">${t}</span>`).join("")}
             ${r.tone?`<span class="rtone">${r.tone} 결</span>`:""}
             ${r.bible?`<span class="rtone rbible">✝ 성경 말씀 함께</span>`:""}
+            ${r.special_date?`<span class="rtone rspecial">🎂 ${fmtSpecial(r.special_date)}${r.special_label?" "+r.special_label:""}</span>`:""}
           </div>
         </div>
         <button class="rdel" onclick="delRecipient(${i})">삭제</button>
