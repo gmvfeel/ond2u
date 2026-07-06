@@ -112,6 +112,15 @@
   .back-greet { text-align:center; font-size:13px; color:var(--rose-deep); background:var(--rose-soft);
     border-radius:12px; padding:9px 16px; margin:0 auto 14px; max-width:460px; line-height:1.6; }
   .back-greet b { font-weight:700; }
+  .safenet { background:#f4f1f7; border:1px solid var(--plum-line); border-radius:18px; padding:22px 22px 18px; margin:22px 0 6px; position:relative; }
+  .safenet-x { position:absolute; top:10px; right:13px; background:none; border:none; font-size:20px; color:var(--ink-faint); cursor:pointer; line-height:1; padding:4px; }
+  .safenet-title { font-size:16px; font-weight:700; color:var(--plum-deep); margin-bottom:8px; padding-right:20px; }
+  .safenet-body { font-size:13.5px; line-height:1.75; color:var(--ink-2); margin-bottom:16px; }
+  .safenet-lines { display:flex; flex-direction:column; gap:8px; }
+  .safenet-line { display:flex; flex-direction:column; gap:2px; background:var(--white); border:1px solid var(--plum-line); border-radius:12px; padding:11px 14px; text-decoration:none; }
+  .safenet-line b { font-size:14px; color:var(--plum-deep); font-weight:700; }
+  .safenet-line span { font-size:12px; color:var(--ink-soft); }
+  .safenet-foot { font-size:11.5px; color:var(--ink-faint); margin-top:14px; line-height:1.6; text-align:center; }
   .divider { width:34px; height:3px; background:var(--plum); opacity:.55; margin:0 auto 18px; border-radius:3px; }
 
   .connector {
@@ -923,6 +932,19 @@
       </div>
     </div>
 
+    <!-- 감정 안전망 (무거운 감정이 며칠 이어질 때만, 조용히) -->
+    <div class="safenet" id="safeNet" style="display:none;">
+      <button class="safenet-x" id="safeNetClose" aria-label="닫기">×</button>
+      <div class="safenet-title">요즘 마음이 계속 무거우셨죠</div>
+      <div class="safenet-body">혼자 견디지 않아도 괜찮아요. 잠깐 누군가에게 마음을 털어놓는 것만으로도 한결 나아질 수 있어요. 언제든 곁에 있어 줄 곳들이에요.</div>
+      <div class="safenet-lines">
+        <a href="tel:109" class="safenet-line"><b>자살예방 상담전화 109</b><span>24시간 · 마음이 많이 힘들 때</span></a>
+        <a href="tel:15770199" class="safenet-line"><b>정신건강 상담전화 1577-0199</b><span>정서적 어려움 상담</span></a>
+        <a href="tel:1388" class="safenet-line"><b>청소년 상담전화 1388</b><span>청소년을 위한 상담</span></a>
+      </div>
+      <div class="safenet-foot">오늘도는 의료·심리 상담을 대신하지 않아요. 전문가의 도움이 큰 힘이 될 수 있어요.</div>
+    </div>
+
     <!-- 책으로 남기기 예고 -->
     <div class="book-teaser">
       <div class="bt-badge">OND2U, 곧 만나요</div>
@@ -1705,10 +1727,26 @@
     else { el.style.display="none"; el.innerHTML=""; }
   }
 
+  // 감정 안전망 — 무거운 감정이 최근 며칠 이어질 때만, 조용히 도움을 곁들임
+  function groupOfMood(m){ for(const gg of MOOD_GROUPS){ if(gg.items.includes(m)) return gg.k; } return null; }
+  function renderSafeNet(){
+    const el = $("safeNet"); if(!el) return;
+    if(!loggedIn){ el.style.display="none"; return; }
+    try {
+      const d = localStorage.getItem("odo_safenet_dismissed");
+      if(d){ const days=(Date.now()-Number(d))/(24*3600*1000); if(days<7){ el.style.display="none"; return; } }
+    } catch(e){}
+    const byDate={}, order=[];
+    trace.forEach(t=>{ if(!t.mood) return; if(!(t.date in byDate)){ byDate[t.date]=false; order.push(t.date); } if(groupOfMood(t.mood)==="heavy") byDate[t.date]=true; });
+    const recent = order.slice(-4);
+    const heavyCount = recent.filter(dd=>byDate[dd]).length;
+    el.style.display = (recent.length>=3 && heavyCount>=3) ? "" : "none";
+  }
+
   function show(useMood){
     const {p,i}=pick(useMood); current={p,i};
     updateConnector(useMood);
-    renderBackGreet();
+    renderBackGreet(); renderSafeNet();
     $("content").classList.add("fade"); $("content2").classList.add("fade");
     // 반응 초기화
     document.querySelectorAll(".react-btn").forEach(c=>c.classList.remove("picked")); $("reactDone").style.display="none";
@@ -2154,12 +2192,12 @@
         trace.push({ date, mood:row.mood, level:row.intensity, note:row.note });
       });
     } catch(e){ console.log("기분 불러오기 오류:", e); }
-    renderBackGreet();
+    renderBackGreet(); renderSafeNet();
   }
 
   function updateGiveLabel(){ const b=$("giveBtn"); if(b) b.textContent = selectedMood ? "이 마음에 맞는 한 편" : "오늘의 한 편"; }
-  $("giveBtn").onclick=()=>{ logTrace(); show(true); };
-  $("randomBtn").onclick=()=>{ show(true); };
+  $("giveBtn").onclick=()=>{ logTrace(); show(true); };  $("randomBtn").onclick=()=>{ show(true); };
+  { const c=$("safeNetClose"); if(c) c.onclick=()=>{ try{ localStorage.setItem("odo_safenet_dismissed", String(Date.now())); }catch(e){} const el=$("safeNet"); if(el) el.style.display="none"; }; }
 
   // 읽기 글씨 크기 (− 가 + 스텝퍼) — 선택 저장
   (function(){
