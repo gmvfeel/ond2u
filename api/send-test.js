@@ -40,6 +40,11 @@ export default async function handler(req, res) {
       } catch (e) {}
     }
   }
+  // ── 환영 편지 (welcome=1) ── 가입 직후 첫 편지 1회. welcomed 플래그로 중복 방지(secret 불필요, 가입자 본인에게만 1회).
+  if (req.query.welcome === "1") {
+    return await runWelcome(req, res, { SB_URL, SB_SERVICE });
+  }
+
   if (!isCron && !keyOk && !isAdmin)
     return res.status(401).json({ ok: false, error: "열쇠가 맞지 않아요." });
 
@@ -129,7 +134,7 @@ export default async function handler(req, res) {
 // tone(결)이 있으면: 그 결에 맞는 콘텐츠 + 결 없는(공통) 콘텐츠 중에서만 뽑음.
 //  - 그 결에 해당하는 게 하나도 없으면 전체에서 뽑음(폴백) → 편지가 안 나가는 일은 없음.
 // special(특별한 날 이름표)이 있으면: 평소 편지 대신 축하 편지를 보냄.
-async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, foodPool, to, toName, wantBible, senderId, tone, special, personalNote, SB_URL, SB_SERVICE, SECRET }) {
+async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, foodPool, to, toName, wantBible, senderId, tone, special, personalNote, welcome, SB_URL, SB_SERVICE, SECRET }) {
   let html, quote, subject;
   if (special) {
     html = buildSpecialEmail({ fromName, toName, label: special, recipientEmail: to, senderId, secret: SECRET });
@@ -144,9 +149,12 @@ async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, food
     const pickN = pool[Math.floor(Math.random() * pool.length)];
     let pickB = null;
     if (wantBible && biblePool.length) pickB = biblePool[Math.floor(Math.random() * biblePool.length)];
-    html = buildEmail({ fromName, toName, normal: pickN, bible: pickB, recipientEmail: to, senderId, secret: SECRET, foodPool, personalNote });
+    html = buildEmail({ fromName, toName, normal: pickN, bible: pickB, recipientEmail: to, senderId, secret: SECRET, foodPool, personalNote, welcome });
     quote = (pickN.quote || "").replace(/\\n/g, " ").slice(0, 80);
     const rcpName = (toName && toName !== "나에게") ? toName : "";
+    if (welcome) {
+      subject = rcpName ? (rcpName + "님, 오늘도에 오신 걸 환영해요 \uD83D\uDC8C") : "오늘도에 오신 걸 환영해요 \uD83D\uDC8C";
+    } else {
     const subjPool = rcpName ? [
       rcpName + "님, 오늘의 편지가 도착했어요",
       rcpName + "님, 오늘 하루 어땠나요?",
@@ -161,6 +169,7 @@ async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, food
       "오늘의 마음을 전해요"
     ];
     subject = subjPool[Math.floor(Math.random() * subjPool.length)];
+    }
   }
   const logBase = { sender_id: senderId || null, sender_name: fromName, recipient_email: to, recipient_name: toName || "", content_quote: quote };
 
@@ -341,7 +350,7 @@ function buildSpecialEmail({ fromName, toName, label, recipientEmail, senderId, 
 '</td></tr></table></body></html>';
 }
 
-function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId, secret, foodPool, personalNote }) {
+function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId, secret, foodPool, personalNote, welcome }) {
   const nl = s => (s || "").replace(/\\n/g, "\n");
   const escHtml = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   // 한마디가 여러 줄이면 날마다 번갈아 하나만 실어요
@@ -437,6 +446,14 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
       '<div style="text-align:center; font-size:14px; font-weight:600; color:' + PLUM + '; margin-bottom:14px;">\uC624\uB298\uB3C4 \uB2F9\uC2E0\uC758 \uCD5C\uACE0\uAC00 \uB420 \uAC81\uB2C8\uB2E4. \uD798\uB0B4\uC138\uC694.</div>' +
       '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td width="30" height="3" bgcolor="' + PLUM + '" style="background:' + PLUM + '; font-size:0; line-height:3px; border-radius:3px;">&nbsp;</td></tr></table>' +
       spacer(24) +
+
+      (welcome ?
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#efecf4" style="background:#efecf4; border-radius:14px; border:1px solid #d8d0e4;"><tr><td style="padding:22px; text-align:center;">' +
+          '<div style="font-size:28px; margin-bottom:8px;">\uD83D\uDC8C</div>' +
+          '<div style="font-size:16px; font-weight:800; color:#33283f; margin-bottom:8px;">\uC624\uB298\uB3C4\uC5D0 \uC624\uC2E0 \uAC78 \uD658\uC601\uD574\uC694</div>' +
+          '<div style="font-size:13px; line-height:1.75; color:#5a5560;">\uC624\uB298\uBD80\uD130 \uB9E4\uC77C, \uD55C \uD3B8\uC758 \uC704\uB85C\uAC00 \uB2F9\uC2E0\uC5D0\uAC8C \uB2FF\uC744 \uAC70\uC608\uC694. \uCCAB \uD3B8\uC9C0\uB97C \uC804\uD574\uC694.</div>' +
+        '</td></tr></table>' + spacer(24)
+      : "") +
 
       (noteHtml ?
         '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#fdeef2" style="background:#fdeef2; border-radius:14px; border:1px solid #f3c9d5;"><tr><td style="padding:20px 22px;">' +
@@ -652,4 +669,43 @@ function buildRecapEmail({ name, label, narr, s, email, secret }) {
   spacer(18) +
   '<div style="text-align:center; font-size:12px; color:#b0aab6;">오늘도 · OND2U</div>' +
 '</td></tr></table></body></html>';
+}
+
+// ===== 환영 편지 (가입 직후 1회) =====
+async function runWelcome(req, res, { SB_URL, SB_SERVICE }) {
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  const RESEND_KEY = process.env.RESEND_API_KEY;
+  const FROM = process.env.ODO_FROM_EMAIL || "letter@ond2u.com";
+  const SECRET = process.env.CRON_SECRET;
+  const to = (req.query.to || "").toString().trim();
+  if (!to || !RESEND_KEY || !SB_URL || !SB_SERVICE) return res.status(200).json({ ok: false });
+  const H = { apikey: SB_SERVICE, Authorization: "Bearer " + SB_SERVICE, "Content-Type": "application/json" };
+  try {
+    // 가입자 조회 (welcomed 플래그로 1회 제한)
+    const ur = await fetch(SB_URL + "/rest/v1/odo_users?email=eq." + encodeURIComponent(to) + "&select=id,display_name,welcomed", { headers: H });
+    if (!ur.ok) return res.status(200).json({ ok: false });
+    const rows = await ur.json();
+    const u = rows[0];
+    if (!u) return res.status(200).json({ ok: false, reason: "not_member" });
+    if (u.welcomed) return res.status(200).json({ ok: true, already: true });
+
+    const name = ((u.display_name || "").trim());
+    const normalPool = await fetchContents(SB_URL, SB_SERVICE, "normal");
+    if (!normalPool.length) return res.status(200).json({ ok: false, reason: "no_content" });
+    const foodPool = await fetchFoods(SB_URL, SB_SERVICE);
+
+    await sendOne({
+      RESEND_KEY, FROM, fromName: "오늘도", normalPool, biblePool: [], foodPool,
+      to, toName: name || "", wantBible: false, senderId: u.id || "", tone: "",
+      special: null, personalNote: "", welcome: true, SB_URL, SB_SERVICE, SECRET
+    });
+
+    // 다시 안 보내도록 표시
+    await fetch(SB_URL + "/rest/v1/odo_users?id=eq." + encodeURIComponent(u.id), {
+      method: "PATCH", headers: { ...H, Prefer: "return=minimal" }, body: JSON.stringify({ welcomed: true })
+    });
+    return res.status(200).json({ ok: true, sent: true });
+  } catch (e) {
+    return res.status(200).json({ ok: false, error: String(e && e.message || e) });
+  }
 }
