@@ -344,9 +344,16 @@ function buildSpecialEmail({ fromName, toName, label, recipientEmail, senderId, 
 function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId, secret, foodPool, personalNote }) {
   const nl = s => (s || "").replace(/\\n/g, "\n");
   const escHtml = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  const noteHtml = (personalNote && String(personalNote).trim())
-    ? escHtml(String(personalNote).trim()).replace(/\r?\n/g, "<br>")
-    : "";
+  // 한마디가 여러 줄이면 날마다 번갈아 하나만 실어요
+  const _notes = String(personalNote || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  let _pickedNote = "";
+  if (_notes.length) {
+    const _now = new Date();
+    const _start = new Date(_now.getFullYear(), 0, 0);
+    const _doy = Math.floor((_now - _start) / 86400000);
+    _pickedNote = _notes[_doy % _notes.length];
+  }
+  const noteHtml = _pickedNote ? escHtml(_pickedNote) : "";
   const rParam = encodeURIComponent(recipientEmail || "");
   const unsubTok = secret ? crypto.createHmac("sha256", secret).update(recipientEmail || "").digest("hex").slice(0, 32) : "";
   const unsubUrl = "https://www.ond2u.com/api/unsubscribe?e=" + rParam + "&t=" + unsubTok;
