@@ -322,6 +322,10 @@
   .saved-item .s-care-t { font-size:11px; letter-spacing:0.06em; color:var(--plum); font-weight:600; margin-bottom:6px; }
   .saved-item .s-care-b { font-size:13px; line-height:1.6; color:var(--ink-2); }
   .saved-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:50px 0; }
+  .empty-state { text-align:center; padding:52px 22px; }
+  .empty-state .es-ic { font-size:36px; line-height:1; margin-bottom:16px; }
+  .empty-state .es-t { font-size:15.5px; font-weight:700; color:var(--ink-2); margin-bottom:9px; letter-spacing:-0.01em; }
+  .empty-state .es-d { font-size:13px; color:var(--ink-faint); line-height:1.75; }
 
   /* 내 흔적 (탭3) */
   .trace-item { display:flex; gap:14px; align-items:baseline; padding:16px 34px 16px 0; border-bottom:1px solid var(--line); position:relative; }
@@ -1158,14 +1162,14 @@
   <div class="view" id="view-saved">
     <div class="section-title">담아둔 글</div>
     <div class="section-sub">마음을 움직인 글들이 여기 쌓여요. 언젠가 당신만의 위로 책으로 이어질 거예요.</div>
-    <div id="savedList"><div class="saved-empty">아직 담아둔 글이 없어요.<br>오늘 탭에서 마음에 드는 글을 담아보세요.</div></div>
+    <div id="savedList"><div class="empty-state"><div class="es-ic">🔖</div><div class="es-t">마음에 닿은 글을 담아두세요</div><div class="es-d">오늘 편지에서 <b>♥ 이 글 담아두기</b>를 누르면,<br>이곳에 차곡차곡 쌓여요.</div></div></div>
   </div>
 
   <!-- 내 흔적 -->
   <div class="view" id="view-trace">
     <div class="section-title">내 흔적</div>
     <div class="section-sub">당신이 지나온 마음들이에요. 돌아보면, 그 마음들을 다 건너왔네요.</div>
-    <div id="traceList"><div class="trace-empty">아직 기록이 없어요.<br>오늘 탭에서 마음을 남겨보세요.</div></div>
+    <div id="traceList"><div class="empty-state"><div class="es-ic">🌱</div><div class="es-t">당신의 마음이 그려질 거예요</div><div class="es-d">오늘 탭에서 기분을 남기면,<br>마음의 흐름이 여기 기록돼요.</div></div></div>
   </div>
 
   <!-- 보내는 사람들 -->
@@ -1298,7 +1302,7 @@
       </div>
 
       <div class="list-label" id="listLabel" style="display:none">받는 사람 <b id="rCount">0</b>명</div>
-      <div id="recipientList"><div class="recipient-empty">아직 추가한 사람이 없어요.<br>위에서 아끼는 사람을 한 명 추가해 보세요.</div></div>
+      <div id="recipientList"><div class="empty-state"><div class="es-ic">🕊️</div><div class="es-t">아끼는 사람을 초대해보세요</div><div class="es-d">위에서 한 명 추가하면,<br>매일 그 사람에게 편지가 전해져요.</div></div></div>
     </div>
   </div>
 
@@ -2413,9 +2417,12 @@
       + '</div></div>';
   }
 
+  function emptyState(ic, title, desc){
+    return '<div class="empty-state"><div class="es-ic">'+ic+'</div><div class="es-t">'+title+'</div><div class="es-d">'+desc+'</div></div>';
+  }
   function renderSaved(){
     const guestNote = (!loggedIn && saved.length) ? '<div class="save-guest-note">아직 로그인하지 않으셨어요. 지금 담은 글은 <b>이번 방문에만</b> 보여요 — 다시 오면 사라져요. <a onclick="odoGoLogin()">로그인하고 계속 보관하기 →</a></div>' : '';
-    if(!saved.length){ $("savedList").innerHTML='<div class="saved-empty">아직 담아둔 글이 없어요.<br>오늘 탭에서 마음에 드는 글을 담아보세요.</div>'; return; }
+    if(!saved.length){ $("savedList").innerHTML=emptyState("🔖","마음에 닿은 글을 담아두세요","오늘 편지에서 <b>♥ 이 글 담아두기</b>를 누르면,<br>이곳에 차곡차곡 쌓여요."); return; }
     if(window._savedShow==null) window._savedShow=12;
     const show = Math.min(window._savedShow, saved.length);
     const escS = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -2480,7 +2487,7 @@
   function renderTrace(){
     const wrap = $("traceList");
     if(!wrap) return;
-    if(!trace.length){ wrap.innerHTML='<div class="trace-empty">아직 기록이 없어요.<br>오늘 탭에서 마음을 남겨보세요.</div>'; return; }
+    if(!trace.length){ wrap.innerHTML=emptyState("🌱","당신의 마음이 그려질 거예요","오늘 탭에서 기분을 남기면,<br>마음의 흐름이 여기 기록돼요."); return; }
 
     const POS = ["의욕","설렘","평온","감사","시작"];
     const withMood = trace.filter(t=>t.mood);
@@ -2927,7 +2934,7 @@
 
   function renderRecipients(){
     if(!recipients.length){
-      $("recipientList").innerHTML='<div class="recipient-empty">아직 추가한 사람이 없어요.<br>위에서 아끼는 사람을 한 명 추가해 보세요.</div>';
+      $("recipientList").innerHTML=emptyState("🕊️","아끼는 사람을 초대해보세요","위에서 한 명 추가하면,<br>매일 그 사람에게 편지가 전해져요.");
       $("listLabel").style.display="none";
       return;
     }
@@ -3344,7 +3351,7 @@
     sends.forEach(s => items.push({ type:"sent", id:s.id, email:s.recipient_email, date:s.created_at, name:s.recipient_name||"", quote:s.content_quote||"" }));
 
     if (!items.length) {
-      box.innerHTML = '<div class="recipient-empty">아직 주고받은 마음이 없어요.<br>보내기 탭에서 편지를 보내면 여기 쌓여요.</div>';
+      box.innerHTML = emptyState("💌","곧 따뜻한 마음이 오갈 거예요","보내기 탭에서 아끼는 사람에게 편지를 보내면,<br>받은 답장이 여기 모여요.");
       return;
     }
     items.sort((a,b) => new Date(b.date) - new Date(a.date));
