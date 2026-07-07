@@ -174,7 +174,7 @@
   .save-guest-note { background:var(--rose-soft); border:1px solid var(--rose); border-radius:14px; padding:14px 16px; margin-bottom:16px; font-size:13px; line-height:1.65; color:var(--rose-deep); }
   .save-guest-note a { color:var(--rose-deep); font-weight:700; text-decoration:underline; text-underline-offset:2px; cursor:pointer; white-space:nowrap; }
   .save-btn .heart { font-size:15px; }
-  .kakao-btn { display:inline-flex; align-items:center; gap:7px; font-family:inherit; font-size:14px; font-weight:600; color:#fff; background:var(--plum); border:none; border-radius:30px; padding:11px 20px; cursor:pointer; transition:filter .16s; }
+  .kakao-btn { display:inline-flex; align-items:center; gap:7px; font-family:inherit; font-size:14px; font-weight:600; color:#3c1e1e; background:#fee500; border:none; border-radius:30px; padding:11px 20px; cursor:pointer; transition:filter .16s; }
   .kakao-btn:hover { filter:brightness(0.96); }
 
   .essay-wrap { margin-top:16px; }
@@ -310,7 +310,7 @@
   .saved-item .sq { font-size:16px; font-weight:700; line-height:1.6; }
   .saved-item .sa { font-size:13px; color:var(--ink-soft); margin-top:8px; }
   .saved-item .s-actions { display:flex; align-items:center; gap:12px; margin-top:14px; flex-wrap:wrap; }
-  .saved-item .s-kakao { display:inline-flex; align-items:center; gap:6px; font-family:inherit; font-size:12.5px; font-weight:600; color:#fff; background:var(--plum); border:none; border-radius:20px; padding:8px 15px; cursor:pointer; transition:filter .16s; }
+  .saved-item .s-kakao { display:inline-flex; align-items:center; gap:6px; font-family:inherit; font-size:12.5px; font-weight:600; color:#3c1e1e; background:#fee500; border:none; border-radius:20px; padding:8px 15px; cursor:pointer; transition:filter .16s; }
   .saved-item .s-kakao:hover { filter:brightness(0.96); }
   .saved-item .s-toggle { background:none; border:none; color:var(--plum); font-size:12.5px; font-weight:600; cursor:pointer; padding:4px 0; font-family:inherit; }
   .saved-item .s-toggle:hover { text-decoration:underline; }
@@ -1045,7 +1045,7 @@
 
       <div class="save-row">
         <button class="save-btn" id="saveBtn"><span class="heart">♡</span> <span id="saveLabel">이 글 담아두기</span></button>
-        <button class="kakao-btn" id="kakaoShareBtn"><svg viewBox="0 0 24 24" width="16" height="16" fill="#fff"><path d="M12 3.5C6.75 3.5 2.5 6.86 2.5 11c0 2.67 1.79 5.01 4.48 6.33-.18.63-.66 2.4-.76 2.78-.12.47.17.46.36.34.15-.1 2.4-1.63 3.38-2.3.52.07 1.05.11 1.54.11 5.25 0 9.5-3.36 9.5-7.5S17.25 3.5 12 3.5z"/></svg> 카톡으로 보내기</button>
+        <button class="kakao-btn" id="kakaoShareBtn"><svg viewBox="0 0 24 24" width="16" height="16" fill="#3c1e1e"><path d="M12 3.5C6.75 3.5 2.5 6.86 2.5 11c0 2.67 1.79 5.01 4.48 6.33-.18.63-.66 2.4-.76 2.78-.12.47.17.46.36.34.15-.1 2.4-1.63 3.38-2.3.52.07 1.05.11 1.54.11 5.25 0 9.5-3.36 9.5-7.5S17.25 3.5 12 3.5z"/></svg> 카톡으로 보내기</button>
         <button class="save-btn" id="shareImgBtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> 이미지 공유</button>
         <button class="save-btn" id="readBtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7M19 5a9 9 0 010 14"/></svg> <span id="readLabel">낭독</span></button>
       </div>
@@ -2028,7 +2028,25 @@
   }
 
   function show(useMood){
-    const {p,i}=pick(useMood); current={p,i};
+    let p=null, i=-1;
+    // 카톡 등으로 공유된 링크(?letter=글번호)로 들어오면 그 글을 먼저 보여줘요 (한 번 보여준 뒤 주소는 정리)
+    if(!useMood){
+      try {
+        const params = new URLSearchParams(location.search);
+        const lid = params.get("letter");
+        if(lid){
+          const found = POOL.find(x=>String(x.dbId)===String(lid));
+          if(found){
+            p=found; i=POOL.indexOf(found);
+            params.delete("letter");
+            const qs=params.toString();
+            history.replaceState(null, "", location.pathname + (qs?("?"+qs):""));
+          }
+        }
+      } catch(e){}
+    }
+    if(!p){ const r=pick(useMood); p=r.p; i=r.i; }
+    current={p,i};
     updateConnector(useMood);
     renderBackGreet(); renderSafeNet();
     $("content").classList.add("fade"); $("content2").classList.add("fade");
@@ -2088,7 +2106,8 @@
     if (!window.Kakao || !Kakao.isInitialized()) { alert("카카오톡 공유를 불러오지 못했어요. 잠시 후 다시 시도해 주세요."); return; }
     const q = ($("quote") ? $("quote").innerText : "").replace(/\s+/g,' ').trim();
     const a = ($("author") ? $("author").innerText : "").trim();
-    const shareUrl = 'https://ond2u.com/app.html' + (senderName ? ('?from=' + encodeURIComponent(senderName)) : '');
+    let shareUrl = 'https://ond2u.com/app.html' + ((current && current.p && current.p.dbId!=null) ? ('?letter=' + encodeURIComponent(current.p.dbId)) : '');
+    if(senderName) shareUrl += (shareUrl.indexOf('?')>=0?'&':'?') + 'from=' + encodeURIComponent(senderName);
     Kakao.Share.sendDefault({
       objectType: 'feed',
       content: {
@@ -2404,7 +2423,7 @@
       const hasDetail = essayHtml || careHtml;
       const toggle = hasDetail ? '<button class="s-toggle" onclick="toggleSavedDetail('+idx+')" id="stg-'+idx+'">전체 보기 ▾</button>' : '';
       const detail = hasDetail ? '<div class="s-detail" id="sdetail-'+idx+'" style="display:none;">'+essayHtml+careHtml+'</div>' : '';
-      const kakaoBtn = '<button class="s-kakao" onclick="shareSavedKakao('+idx+')"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff"><path d="M12 3.5C6.75 3.5 2.5 6.86 2.5 11c0 2.67 1.79 5.01 4.48 6.33-.18.63-.66 2.4-.76 2.78-.12.47.17.46.36.34.15-.1 2.4-1.63 3.38-2.3.52.07 1.05.11 1.54.11 5.25 0 9.5-3.36 9.5-7.5S17.25 3.5 12 3.5z"/></svg> 카톡으로 보내기</button>';
+      const kakaoBtn = '<button class="s-kakao" onclick="shareSavedKakao('+idx+')"><svg viewBox="0 0 24 24" width="14" height="14" fill="#3c1e1e"><path d="M12 3.5C6.75 3.5 2.5 6.86 2.5 11c0 2.67 1.79 5.01 4.48 6.33-.18.63-.66 2.4-.76 2.78-.12.47.17.46.36.34.15-.1 2.4-1.63 3.38-2.3.52.07 1.05.11 1.54.11 5.25 0 9.5-3.36 9.5-7.5S17.25 3.5 12 3.5z"/></svg> 카톡으로 보내기</button>';
       return '<div class="saved-item"><button class="item-del" onclick="deleteSaved('+idx+')" aria-label="삭제">✕</button>'
         + '<div class="sdate">'+(s.date?escS(s.date)+" 담음":"담아둔 글")+'</div>'
         + '<div class="sq">'+s.quote.replace(/(\s*(?:<br\s*\/?>|[\r\n])\s*)+/gi,"<br>")+'</div>'
@@ -2428,7 +2447,8 @@
     const s = saved[idx]; if(!s) return;
     const q = (s.quote||"").replace(/<br\s*\/?>/gi," ").replace(/\s+/g,' ').trim();
     const a = (s.author||"").trim();
-    const shareUrl = 'https://ond2u.com/app.html' + (senderName ? ('?from=' + encodeURIComponent(senderName)) : '');
+    let shareUrl = 'https://ond2u.com/app.html' + (s.dbId!=null ? ('?letter=' + encodeURIComponent(s.dbId)) : '');
+    if(senderName) shareUrl += (shareUrl.indexOf('?')>=0?'&':'?') + 'from=' + encodeURIComponent(senderName);
     Kakao.Share.sendDefault({
       objectType: 'feed',
       content: {
