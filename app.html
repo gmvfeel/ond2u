@@ -149,7 +149,7 @@
   .content.fade { opacity:0; }
   .letter-card { background:var(--white); border:1.5px solid var(--rose); border-radius:20px; padding:38px 34px 34px; scroll-margin-top:16px; }
 
-  .quote { font-family:'Pretendard', sans-serif; font-size:30px; line-height:1.5; font-weight:800; letter-spacing:-0.035em; white-space:normal; word-break:keep-all; overflow-wrap:break-word; text-align:center; }
+  .quote { font-family:'Pretendard', sans-serif; font-size:30px; line-height:1.5; font-weight:800; letter-spacing:-0.035em; white-space:normal; word-break:keep-all; overflow-wrap:break-word; text-wrap:balance; text-align:center; }
   .quote.q-mid { font-size:25px; line-height:1.55; }
   .quote.q-long { font-size:21px; line-height:1.6; }
   .quote-en { font-family:'Pretendard', sans-serif; font-size:15px; line-height:1.6; font-weight:500; color:var(--ink-soft); white-space:normal; word-break:keep-all; overflow-wrap:break-word; text-align:center; margin-top:14px; font-style:italic; }
@@ -2059,11 +2059,19 @@
 
     setTimeout(()=>{
       const qEl = $("quote");
-      const qText = (p.quote||"").replace(/\s*[\r\n]+\s*/g," ").trim();
-      qEl.textContent = qText;
+      const raw = (p.quote||"");
+      const qText = raw.replace(/\s*[\r\n]+\s*/g," ").trim();
       qEl.classList.remove("q-mid","q-long");
       if (qText.length > 58) qEl.classList.add("q-long");
       else if (qText.length > 36) qEl.classList.add("q-mid");
+      // 콘텐츠에 줄바꿈이 있으면 그 위치를 그대로 존중(사람이 정한 줄바꿈), 없으면 자동 줄바꿈(+balance)
+      const inner = raw.replace(/^[\r\n]+|[\r\n]+$/g,"");
+      if (/[\r\n]/.test(inner)) {
+        const escq = s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+        qEl.innerHTML = escq(inner).replace(/\s*[\r\n]+\s*/g,"<br>");
+      } else {
+        qEl.textContent = qText;
+      }
       $("author").textContent="— "+p.author;
       $("quoteEn").textContent=p.en||"";
       $("eyebrow").textContent="Today · No. "+String(i+1).padStart(2,"0");
