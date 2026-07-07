@@ -740,6 +740,51 @@
   .dash-refresh:hover { background:var(--plum-soft); }
   /* 돌아보기 (월간) */
   .mn-loading { text-align:center; color:var(--ink-faint); font-size:14px; padding:30px 0; }
+
+  /* 올해의 오늘도 진입 카드 */
+  .year-entry { position:relative; overflow:hidden; cursor:pointer; margin-bottom:22px;
+    background:linear-gradient(135deg, #4a3a63 0%, #2f2440 60%, #3a2c50 100%);
+    border-radius:20px; padding:26px 26px 24px; color:#fff; text-align:left;
+    box-shadow:0 8px 22px rgba(47,36,64,.22); transition:transform .2s ease, box-shadow .2s ease; }
+  .year-entry:hover { transform:translateY(-2px); box-shadow:0 14px 32px rgba(47,36,64,.3); }
+  .year-entry::after { content:""; position:absolute; top:-40px; right:-30px; width:150px; height:150px;
+    background:radial-gradient(circle, rgba(217,124,147,.35) 0%, rgba(217,124,147,0) 70%); pointer-events:none; }
+  .year-entry .ye-badge { display:inline-block; font-size:12px; font-weight:800; letter-spacing:0.12em;
+    color:#f4d9e1; background:rgba(217,124,147,.28); border-radius:20px; padding:4px 13px; margin-bottom:13px; }
+  .year-entry .ye-title { font-size:24px; font-weight:800; letter-spacing:-0.03em; line-height:1.3; }
+  .year-entry .ye-sub { font-size:13.5px; color:rgba(255,255,255,.82); margin-top:8px; line-height:1.6; }
+  .year-entry .ye-go { font-size:14px; font-weight:600; color:#f4d9e1; margin-top:16px; }
+
+  /* 올해의 오늘도 결산 모달 */
+  .year-overlay { position:fixed; inset:0; background:rgba(30,24,38,.6); display:flex; align-items:center; justify-content:center; z-index:130; padding:20px; overflow-y:auto; }
+  .year-overlay.hidden { display:none; }
+  .year-modal { position:relative; background:#faf8fb; border-radius:24px; max-width:440px; width:100%;
+    max-height:92vh; overflow-y:auto; box-shadow:0 20px 60px rgba(30,24,38,.3); }
+  .year-close { position:absolute; top:14px; right:14px; z-index:2; width:34px; height:34px; border:none; border-radius:50%;
+    background:rgba(255,255,255,.85); color:var(--ink-soft); font-size:16px; cursor:pointer; line-height:1; }
+  .year-close:hover { background:#fff; color:var(--ink); }
+  .yw-hero { background:linear-gradient(150deg, #4a3a63 0%, #2f2440 100%); color:#fff; padding:38px 30px 30px; text-align:center; border-radius:24px 24px 0 0; }
+  .yw-hero .yh-badge { display:inline-block; font-size:12px; font-weight:800; letter-spacing:0.14em; color:#f4d9e1; background:rgba(217,124,147,.28); border-radius:20px; padding:4px 14px; margin-bottom:14px; }
+  .yw-hero .yh-title { font-size:26px; font-weight:800; letter-spacing:-0.03em; line-height:1.35; }
+  .yw-hero .yh-name { color:#f4d9e1; }
+  .yw-body { padding:26px 26px 30px; }
+  .yw-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:22px; }
+  .yw-stat { background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px 8px; text-align:center; }
+  .yw-stat .n { font-size:26px; font-weight:800; color:var(--plum-deep); letter-spacing:-0.02em; line-height:1; }
+  .yw-stat .l { font-size:11.5px; color:var(--ink-soft); margin-top:7px; line-height:1.35; }
+  .yw-mood { border-radius:16px; padding:20px 22px; margin-bottom:16px; text-align:center; }
+  .yw-mood.heavy { background:#eef1f6; } .yw-mood.anx { background:#f6f0ec; } .yw-mood.bright { background:#fdf4e8; }
+  .yw-mood .ml { font-size:12px; color:var(--ink-soft); margin-bottom:7px; }
+  .yw-mood .mv { font-size:19px; font-weight:800; letter-spacing:-0.02em; }
+  .yw-mood.heavy .mv { color:#4a6a8a; } .yw-mood.anx .mv { color:#a5713c; } .yw-mood.bright .mv { color:#c98a2e; }
+  .yw-quote { background:var(--plum-soft); border:1px solid var(--plum-line); border-radius:16px; padding:22px 22px; margin-bottom:16px; text-align:center; }
+  .yw-quote .ql { font-size:11px; letter-spacing:0.1em; color:var(--plum); margin-bottom:12px; }
+  .yw-quote .qq { font-size:17px; font-weight:800; color:var(--plum-deep); letter-spacing:-0.02em; line-height:1.6; word-break:keep-all; }
+  .yw-quote .qa { font-size:12.5px; color:var(--ink-faint); margin-top:11px; }
+  .yw-narr { font-size:14.5px; color:var(--ink-2); line-height:1.85; text-align:center; padding:4px 6px; }
+  .yw-narr b { color:var(--plum-deep); font-weight:700; }
+  .yw-empty { text-align:center; color:var(--ink-soft); font-size:14.5px; line-height:1.8; padding:20px 10px; }
+  .yw-loading { text-align:center; color:var(--ink-faint); font-size:14px; padding:40px 0; }
   .mn-book { background:var(--plum-soft); border:1px solid var(--plum-line); border-radius:18px; padding:26px 24px; margin-bottom:18px; text-align:center; }
   .mn-book-eyebrow { font-size:11px; letter-spacing:0.22em; color:var(--plum); margin-bottom:10px; }
   .mn-book-title { font-size:22px; font-weight:800; color:var(--plum-deep); letter-spacing:-0.02em; margin-bottom:14px; }
@@ -919,6 +964,13 @@
     </div>
     <div class="book-note">아직 준비 중인 기능이에요. 준비되면 가장 먼저 알려드릴게요.</div>
     <button class="book-cta" id="bookInterestBtn" onclick="bookInterest()">이 책, 만들어지면 알려주세요</button>
+  </div>
+</div>
+
+<div class="year-overlay hidden" id="yearOverlay" onmousedown="window._ovYearDown=(event.target===this)" onmouseup="if(window._ovYearDown&&event.target===this)closeYearWrap(); window._ovYearDown=false">
+  <div class="year-modal">
+    <button class="year-close" aria-label="닫기" onclick="closeYearWrap()">✕</button>
+    <div id="yearBody"></div>
   </div>
 </div>
 <div class="layout">
@@ -1246,6 +1298,12 @@
       <button class="mn-allbtn" id="mnAllBtn" style="display:none;">이번 달 담은 글</button>
     </div>
     <div class="section-sub" id="mnSub">이번 달, 당신이 쌓아온 마음이에요.</div>
+    <div class="year-entry" id="yearEntry" onclick="openYearWrap()">
+      <div class="ye-badge" id="yeBadge">2026</div>
+      <div class="ye-title">올해의 오늘도</div>
+      <div class="ye-sub" id="yeSub">올해 쌓인 당신의 마음을 한 장에 담았어요</div>
+      <div class="ye-go">지금 만나보기 →</div>
+    </div>
     <div id="monthlyBody">
       <div class="mn-loading">불러오는 중이에요…</div>
     </div>
@@ -2354,6 +2412,13 @@
     const body = $("monthlyBody");
     if (!body) return;
     const now = new Date();
+    // 올해의 오늘도 진입 카드 문구
+    const _yr = now.getFullYear();
+    const _yeb = $("yeBadge"); if(_yeb) _yeb.textContent = _yr;
+    const _yes = $("yeSub");
+    if(_yes) _yes.textContent = (now.getMonth()===11)
+      ? "한 해가 저물어가요. "+_yr+"년의 당신을 만나보세요"
+      : "올해 쌓인 당신의 마음을 한 장에 담았어요";
     const monthLabel = (now.getMonth()+1) + "월";
     const tt = $("mnTitle"), ss = $("mnSub");
     if (tt) tt.textContent = monthLabel + "의 오늘도";
@@ -3232,6 +3297,82 @@
     reflectBookInterest();
   };
   window.closeBookModal = function(){ const o=$("bookOverlay"); if(o) o.classList.add("hidden"); };
+
+  /* ── 올해의 오늘도 (연간 결산) ── */
+  function yearHeroHtml(yr){
+    const nm = (typeof senderName!=="undefined" && senderName) ? senderName : "";
+    const esc0 = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    return '<div class="yw-hero"><div class="yh-badge">'+yr+'</div>'
+      + '<div class="yh-title">'+(nm?'<span class="yh-name">'+esc0(nm)+'</span>님과 함께한<br>':'')+'올해의 오늘도</div></div>';
+  }
+  function buildYearNarr(days, dom){
+    const parts=[];
+    parts.push("올해 <b>"+days+"</b>일, 당신은 이 자리에 마음을 남겼어요.");
+    if(dom==="heavy") parts.push("무거운 날이 많았지만, 그래도 매번 자신을 들여다본 당신이에요.");
+    else if(dom==="anx") parts.push("분주한 한 해였지만, 그 속에서도 잠깐 멈춰 숨을 고른 당신이 대견해요.");
+    else if(dom==="bright") parts.push("밝은 마음이 자주 머문, 따뜻한 한 해였네요.");
+    parts.push("그 하루하루가 모여, 지금의 당신이 되었어요.");
+    return parts.join(" ");
+  }
+  window.openYearWrap = async function(){
+    const ov = $("yearOverlay"), bodyEl = $("yearBody");
+    if(!ov || !bodyEl) return;
+    ov.classList.remove("hidden");
+    const yr = new Date().getFullYear();
+
+    if(!loggedIn || !currentUser){
+      bodyEl.innerHTML = yearHeroHtml(yr) + '<div class="yw-body"><div class="yw-empty">로그인하면 올해 쌓인<br>당신의 마음을 모아 볼 수 있어요.</div></div>';
+      return;
+    }
+    bodyEl.innerHTML = yearHeroHtml(yr) + '<div class="yw-body"><div class="yw-loading">한 해를 모으는 중이에요…</div></div>';
+
+    const yearStart = new Date(yr,0,1).toISOString();
+    let savedRows=[], moodRows=[], reactCount=0;
+    try {
+      const [sv,md,rc] = await Promise.all([
+        odoDB.from("odo_saved").select("content_id, saved_at").gte("saved_at", yearStart).order("saved_at",{ascending:false}),
+        odoDB.from("odo_moods").select("mood, created_at").gte("created_at", yearStart),
+        odoDB.from("odo_reactions").select("id",{count:"exact",head:true}).eq("sender_id",currentUser.id).gte("created_at",yearStart)
+      ]);
+      savedRows=(sv&&sv.data)||[];
+      moodRows=(md&&md.data)||[];
+      reactCount=(rc&&rc.count)||0;
+    } catch(e){
+      bodyEl.innerHTML = yearHeroHtml(yr)+'<div class="yw-body"><div class="yw-empty">불러오지 못했어요.<br>잠시 후 다시 시도해 주세요.</div></div>';
+      return;
+    }
+
+    const esc = s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const groupOf = (mood)=>{ for(const gg of MOOD_GROUPS){ if(gg.items.includes(mood)) return gg.k; } return null; };
+    const kstDay = iso => { const d=new Date(new Date(iso).getTime()+9*3600*1000); return d.getUTCFullYear()+"-"+(d.getUTCMonth()+1)+"-"+d.getUTCDate(); };
+    const days = new Set();
+    moodRows.forEach(r=>{ if(r.created_at) days.add(kstDay(r.created_at)); });
+    savedRows.forEach(r=>{ if(r.saved_at) days.add(kstDay(r.saved_at)); });
+    const activeDays = days.size;
+    const savedN = savedRows.length;
+    const gc={heavy:0,anx:0,bright:0};
+    moodRows.forEach(r=>{ const g=groupOf(r.mood); if(g&&gc[g]!=null) gc[g]++; });
+    let dom=null,domMax=0; for(const k of ["heavy","anx","bright"]){ if(gc[k]>domMax){domMax=gc[k];dom=k;} }
+    const GLABEL={heavy:"무겁고 지친 마음",anx:"불안하고 조급한 마음",bright:"밝은 마음"};
+    let repQuote="", repAuthor="";
+    for(const row of savedRows){ const p=POOL.find(x=>x.dbId===row.content_id); if(p){ repQuote=(p.quote||"").replace(/(\s*(?:<br\s*\/?>|[\r\n])\s*)+/gi," "); repAuthor=p.author||""; break; } }
+
+    if(activeDays===0 && savedN===0 && reactCount===0){
+      bodyEl.innerHTML = yearHeroHtml(yr)+'<div class="yw-body"><div class="yw-empty">아직 올해의 기록이 없어요.<br>오늘 탭에서 마음을 남기고 글을 담아보면,<br>이 자리에 '+yr+'년의 당신이 그려질 거예요.</div></div>';
+      return;
+    }
+
+    const statsHtml = '<div class="yw-stats">'
+      + '<div class="yw-stat"><div class="n">'+activeDays+'</div><div class="l">함께한 날</div></div>'
+      + '<div class="yw-stat"><div class="n">'+savedN+'</div><div class="l">담아둔 글</div></div>'
+      + '<div class="yw-stat"><div class="n">'+reactCount+'</div><div class="l">주고받은 마음</div></div>'
+      + '</div>';
+    const moodHtml = dom ? '<div class="yw-mood '+dom+'"><div class="ml">올해 가장 많이 머문 마음</div><div class="mv">'+GLABEL[dom]+'</div></div>' : "";
+    const quoteHtml = repQuote ? '<div class="yw-quote"><div class="ql">올해의 한 문장</div><div class="qq">"'+esc(repQuote)+'"</div>'+(repAuthor?'<div class="qa">— '+esc(repAuthor)+'</div>':'')+'</div>' : "";
+    const narr = buildYearNarr(activeDays, dom);
+    bodyEl.innerHTML = yearHeroHtml(yr) + '<div class="yw-body">'+statsHtml+moodHtml+quoteHtml+'<div class="yw-narr">'+narr+'</div></div>';
+  };
+  window.closeYearWrap = function(){ const o=$("yearOverlay"); if(o) o.classList.add("hidden"); };
   window.bookInterest = async function(){
     if (!loggedIn || !currentUser) { alert("관심 신청은 로그인 후에 할 수 있어요. 왼쪽에서 로그인해 주세요."); return; }
     const btn = $("bookInterestBtn"); btn.disabled = true; btn.textContent = "신청 중…";
