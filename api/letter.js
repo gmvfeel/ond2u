@@ -29,6 +29,8 @@ export default async function handler(req, res) {
         body: JSON.stringify({ reply })
       });
       if (!r.ok) return res.status(500).json({ ok: false });
+      // 답장이 저장되면, 보낸 사람에게 '답장 도착' 알림 이메일을 보내요 (실패해도 답장 저장은 유지)
+      try { await notifyReply(SB_URL, SB_SERVICE, H, id, reply); } catch (e) {}
       return res.status(200).json({ ok: true });
     } catch (e) { return res.status(500).json({ ok: false }); }
   }
@@ -156,4 +158,84 @@ export default async function handler(req, res) {
     <div class="foot"><a href="https://www.ond2u.com/app.html">\uC624\uB298\uB3C4\uB780? \uB098\uB3C4 \uC704\uB85C \uBC1B\uAE30 \u2192</a></div>`;
 
   return res.status(200).send(page(inner));
+}
+
+// ===== 답장 도착 알림 이메일 =====
+async function notifyReply(SB_URL, SB_SERVICE, H, id, reply) {
+  const RESEND_KEY = process.env.RESEND_API_KEY;
+  const FROM = process.env.ODO_FROM_EMAIL || "letter@ond2u.com";
+  if (!RESEND_KEY) return;
+
+  // 답장이 달린 반응 정보 조회
+  const rr = await fetch(SB_URL + "/rest/v1/odo_reactions?id=eq." + encodeURIComponent(id) + "&select=sender_id,recipient_email,emotion,content_quote", { headers: H });
+  if (!rr.ok) return;
+  const rows = await rr.json();
+  const row = rows[0];
+  if (!row || !row.sender_id) return;
+
+  // 보낸 사람(=알림 받을 사람) 이메일·이름
+  const ur = await fetch(SB_URL + "/rest/v1/odo_users?id=eq." + encodeURIComponent(row.sender_id) + "&select=email,display_name", { headers: H });
+  if (!ur.ok) return;
+  const us = await ur.json();
+  const u = us[0];
+  if (!u || !u.email) return;
+  const senderName = ((u.display_name || "").trim()) || "당신";
+
+  // 답장한 사람(받는 사람) 이름 조회
+  let replierName = "";
+  try {
+    const rc = await fetch(SB_URL + "/rest/v1/odo_recipients?sender_id=eq." + encodeURIComponent(row.sender_id) + "&email=eq." + encodeURIComponent(row.recipient_email) + "&select=name&limit=1", { headers: H });
+    if (rc.ok) { const rcs = await rc.json(); if (rcs[0] && rcs[0].name) replierName = rcs[0].name; }
+  } catch (e) {}
+  const who = replierName || "편지를 받은 분";
+
+  const html = buildReplyNotifyEmail({ senderName, who, emotion: row.emotion || "", reply: reply || "", quote: row.content_quote || "" });
+  const subject = who + "님이 답장을 남겼어요 \uD83D\uDC8C";
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: "오늘도 <" + FROM + ">", to: [u.email], subject, html })
+  });
+}
+
+function buildReplyNotifyEmail({ senderName, who, emotion, reply, quote }) {
+  const PLUM = "#423458", PLUM_DEEP = "#2f2440", ROSE = "#d97c93";
+  const font = "'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif";
+  const spacer = h => '<div style="height:' + h + 'px; line-height:' + h + 'px; font-size:0;">&nbsp;</div>';
+  const emoLine = emotion
+    ? '<div style="display:inline-block; background:#fdeef2; color:' + ROSE + '; font-weight:700; border-radius:20px; padding:5px 15px; font-size:13px;">' + esc(emotion) + '</div>'
+    : "";
+  const quoteLine = quote
+    ? spacer(18) + '<div style="font-size:13px; color:#a8a2af; background:#f7f5fb; border-radius:12px; padding:13px 16px; line-height:1.65; text-align:left;">"' + esc(quote) + '"</div>'
+    : "";
+  return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+'<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"></head>' +
+'<body style="margin:0; padding:0; background:#f3f1ef; font-family:' + font + ';">' +
+'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f3f1ef" style="background:#f3f1ef;"><tr>' +
+'<td align="center" style="padding:36px 12px 56px; font-family:' + font + '; word-break:keep-all;">' +
+  '<table role="presentation" width="620" cellpadding="0" cellspacing="0" border="0" style="width:620px; max-width:620px; background:#ffffff; border-radius:16px; overflow:hidden; border:1px solid #eee;">' +
+    '<tr><td bgcolor="' + PLUM + '" style="background:' + PLUM + '; padding:32px 28px; text-align:center;">' +
+      '<div style="font-size:34px; line-height:1; margin-bottom:12px;">\uD83D\uDC8C</div>' +
+      '<div style="font-size:22px; font-weight:800; color:#ffffff; letter-spacing:-0.02em;">답장이 도착했어요</div>' +
+    '</td></tr>' +
+    '<tr><td bgcolor="#ffffff" style="padding:32px 30px 10px; text-align:center;">' +
+      '<div style="font-size:15px; color:#3a3540;"><b>' + esc(senderName) + '</b>님, <b style="color:' + ROSE + ';">' + esc(who) + '</b>님이 마음을 돌려보냈어요.</div>' +
+      spacer(16) + emoLine +
+      spacer(20) +
+      '<div style="background:#fdeef2; border-radius:14px; padding:20px 22px; text-align:left;">' +
+        '<div style="font-size:11px; letter-spacing:0.08em; color:' + ROSE + '; margin-bottom:9px;">' + esc(who) + '님의 답장</div>' +
+        '<div style="font-size:16px; line-height:1.75; color:#3a3540;">' + esc(reply).replace(/\r?\n/g, "<br>") + '</div>' +
+      '</div>' +
+      quoteLine +
+      spacer(26) +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
+        '<a href="https://www.ond2u.com/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:' + PLUM + '; text-decoration:none; padding:13px 30px; border-radius:30px;">오늘도에서 모두 보기 →</a>' +
+      '</td></tr></table>' +
+      spacer(18) +
+    '</td></tr>' +
+    '<tr><td bgcolor="#f3f1ef" style="padding:18px 28px; border-top:1px solid #eae7e3; text-align:center;">' +
+      '<div style="font-size:12px; color:#b0aab6;">오늘도 · OND2U</div>' +
+    '</td></tr>' +
+  '</table>' +
+'</td></tr></table></body></html>';
 }
