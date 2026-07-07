@@ -3045,7 +3045,7 @@
       const googleName = meta.name || meta.full_name || (currentUser.email ? currentUser.email.split("@")[0] : "나");
       // 창고에서 저장된 '보내는 이름' 불러오기
       try {
-        const { data: prof } = await odoDB.from("odo_users").select("display_name").eq("id", currentUser.id).maybeSingle();
+        const { data: prof } = await odoDB.from("odo_users").select("display_name, welcomed").eq("id", currentUser.id).maybeSingle();
         if (prof && prof.display_name) {
           senderName = prof.display_name;
         } else {
@@ -3053,6 +3053,10 @@
           senderName = googleName;
           await odoDB.from("odo_users").upsert(
             { id: currentUser.id, display_name: googleName, email: currentUser.email }, { onConflict: "id" });
+        }
+        // 환영 편지 (가입 직후 1회) — 서버가 welcomed 재확인 후 발송·플래그 처리
+        if ((!prof || !prof.welcomed) && currentUser.email) {
+          fetch("/api/send-test?welcome=1&to=" + encodeURIComponent(currentUser.email)).catch(()=>{});
         }
       } catch(e){ console.log("프로필 불러오기 오류:", e); senderName = googleName; }
 
