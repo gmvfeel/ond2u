@@ -785,6 +785,10 @@
   .yw-narr b { color:var(--plum-deep); font-weight:700; }
   .yw-empty { text-align:center; color:var(--ink-soft); font-size:14.5px; line-height:1.8; padding:20px 10px; }
   .yw-loading { text-align:center; color:var(--ink-faint); font-size:14px; padding:40px 0; }
+  .yw-share { display:block; width:100%; margin-top:20px; font-family:inherit; font-size:15px; font-weight:600; color:#fff;
+    background:var(--plum); border:none; border-radius:26px; padding:15px; cursor:pointer; transition:background .2s; }
+  .yw-share:hover { background:var(--plum-deep); }
+  .yw-share:disabled { opacity:.6; cursor:default; }
   .mn-book { background:var(--plum-soft); border:1px solid var(--plum-line); border-radius:18px; padding:26px 24px; margin-bottom:18px; text-align:center; }
   .mn-book-eyebrow { font-size:11px; letter-spacing:0.22em; color:var(--plum); margin-bottom:10px; }
   .mn-book-title { font-size:22px; font-weight:800; color:var(--plum-deep); letter-spacing:-0.02em; margin-bottom:14px; }
@@ -3370,9 +3374,106 @@
     const moodHtml = dom ? '<div class="yw-mood '+dom+'"><div class="ml">올해 가장 많이 머문 마음</div><div class="mv">'+GLABEL[dom]+'</div></div>' : "";
     const quoteHtml = repQuote ? '<div class="yw-quote"><div class="ql">올해의 한 문장</div><div class="qq">"'+esc(repQuote)+'"</div>'+(repAuthor?'<div class="qa">— '+esc(repAuthor)+'</div>':'')+'</div>' : "";
     const narr = buildYearNarr(activeDays, dom);
-    bodyEl.innerHTML = yearHeroHtml(yr) + '<div class="yw-body">'+statsHtml+moodHtml+quoteHtml+'<div class="yw-narr">'+narr+'</div></div>';
+    window._yearData = { yr, name:(typeof senderName!=="undefined"&&senderName)?senderName:"", activeDays, savedN, reactCount, dom, domLabel: dom?GLABEL[dom]:"", repQuote, repAuthor };
+    bodyEl.innerHTML = yearHeroHtml(yr) + '<div class="yw-body">'+statsHtml+moodHtml+quoteHtml+'<div class="yw-narr">'+narr+'</div>'
+      + '<button class="yw-share" id="ywShareBtn">이미지로 공유하기</button>'
+      + '</div>';
+    { const sb=$("ywShareBtn"); if(sb) sb.onclick=()=>makeYearImage(); }
   };
   window.closeYearWrap = function(){ const o=$("yearOverlay"); if(o) o.classList.add("hidden"); };
+
+  async function makeYearImage(){
+    const d = window._yearData; if(!d) return;
+    const btn = $("ywShareBtn"); const label = btn ? btn.textContent : "";
+    if(btn){ btn.disabled=true; btn.textContent="이미지 만드는 중…"; }
+    try {
+      try { await document.fonts.ready; } catch(e){}
+      const W=1080, H=1350, cv=document.createElement("canvas");
+      cv.width=W; cv.height=H;
+      const ctx=cv.getContext("2d");
+      const esc = s=>String(s==null?"":s);
+
+      // 배경 그라데이션 (플럼)
+      const g=ctx.createLinearGradient(0,0,W*0.4,H);
+      g.addColorStop(0,"#4a3a63"); g.addColorStop(0.6,"#33283f"); g.addColorStop(1,"#2f2440");
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      // 은은한 로즈 광
+      const rg=ctx.createRadialGradient(W-120,150,20,W-120,150,360);
+      rg.addColorStop(0,"rgba(217,124,147,0.28)"); rg.addColorStop(1,"rgba(217,124,147,0)");
+      ctx.fillStyle=rg; ctx.fillRect(0,0,W,H);
+
+      ctx.textAlign="center";
+      // 상단 배지
+      ctx.fillStyle="#f4d9e1"; ctx.font="700 40px Pretendard, sans-serif";
+      ctx.fillText(d.yr + " 올해의 오늘도", W/2, 150);
+      // 이름
+      if(d.name){
+        ctx.fillStyle="#ffffff"; ctx.font="800 62px Pretendard, sans-serif";
+        ctx.fillText(esc(d.name)+"님의 한 해", W/2, 240);
+      }
+
+      // 숫자 3개
+      const stats=[[d.activeDays,"함께한 날"],[d.savedN,"담아둔 글"],[d.reactCount,"주고받은 마음"]];
+      const cx=[W/2-320, W/2, W/2+320], sy=430;
+      stats.forEach((s,i)=>{
+        ctx.fillStyle="#ffffff"; ctx.font="800 84px Pretendard, sans-serif";
+        ctx.fillText(String(s[0]), cx[i], sy);
+        ctx.fillStyle="rgba(255,255,255,0.7)"; ctx.font="500 28px Pretendard, sans-serif";
+        ctx.fillText(s[1], cx[i], sy+52);
+      });
+
+      // 가장 많이 머문 마음
+      let y=650;
+      if(d.domLabel){
+        ctx.fillStyle="rgba(255,255,255,0.6)"; ctx.font="500 28px Pretendard, sans-serif";
+        ctx.fillText("올해 가장 많이 머문 마음", W/2, y);
+        ctx.fillStyle="#f4d9e1"; ctx.font="800 48px Pretendard, sans-serif";
+        ctx.fillText(d.domLabel, W/2, y+64);
+        y += 150;
+      }
+
+      // 올해의 한 문장
+      if(d.repQuote){
+        ctx.fillStyle="rgba(255,255,255,0.6)"; ctx.font="500 26px Pretendard, sans-serif";
+        ctx.fillText("올해의 한 문장", W/2, y+20);
+        ctx.fillStyle="#ffffff"; ctx.font="800 44px Pretendard, sans-serif";
+        const q = (d.repQuote||"").replace(/(\s*(?:<br\s*\/?>|[\r\n])\s*)+/gi," ");
+        const lines = wrapLines(ctx, '"'+q+'"', W-200).slice(0,4);
+        let qy = y+80;
+        lines.forEach(ln=>{ ctx.fillText(ln, W/2, qy); qy+=62; });
+        if(d.repAuthor){
+          ctx.fillStyle="rgba(255,255,255,0.55)"; ctx.font="500 30px Pretendard, sans-serif";
+          ctx.fillText("— "+esc(d.repAuthor), W/2, qy+10);
+        }
+      }
+
+      // 하단 워터마크
+      ctx.fillStyle="#f4d9e1"; ctx.font="700 34px Pretendard, sans-serif";
+      ctx.fillText("오늘도 · OND2U", W/2, H-120);
+      ctx.fillStyle="rgba(255,255,255,0.6)"; ctx.font="500 26px Pretendard, sans-serif";
+      ctx.fillText("매일 한 줄의 위로가 도착해요 · ond2u.com", W/2, H-78);
+
+      const blob = await new Promise(res=>cv.toBlob(res, "image/png"));
+      if(!blob){ alert("이미지를 만들지 못했어요."); return; }
+      const fileName = "ondu-"+d.yr+"-wrap.png";
+      try {
+        const file = new File([blob], fileName, { type:"image/png" });
+        if (navigator.canShare && navigator.canShare({ files:[file] })){
+          await navigator.share({ files:[file], title:"올해의 오늘도", text:d.yr+"년, 나의 오늘도 · 오늘도\nhttps://ond2u.com" });
+          return;
+        }
+      } catch(e){ if(e && e.name==="AbortError") return; }
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a"); a.href=url; a.download=fileName;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    } catch(e){
+      console.log("올해의 오늘도 이미지 오류:", e);
+      alert("이미지를 만들지 못했어요. 잠시 후 다시 시도해 주세요.");
+    } finally {
+      if(btn){ btn.disabled=false; btn.textContent=label; }
+    }
+  }
   window.bookInterest = async function(){
     if (!loggedIn || !currentUser) { alert("관심 신청은 로그인 후에 할 수 있어요. 왼쪽에서 로그인해 주세요."); return; }
     const btn = $("bookInterestBtn"); btn.disabled = true; btn.textContent = "신청 중…";
