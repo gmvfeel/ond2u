@@ -309,6 +309,18 @@
   .saved-item .sdate { font-size:11px; letter-spacing:0.1em; color:var(--plum); margin-bottom:12px; }
   .saved-item .sq { font-size:16px; font-weight:700; line-height:1.6; }
   .saved-item .sa { font-size:13px; color:var(--ink-soft); margin-top:8px; }
+  .saved-item .s-actions { display:flex; align-items:center; gap:12px; margin-top:14px; flex-wrap:wrap; }
+  .saved-item .s-kakao { display:inline-flex; align-items:center; gap:6px; font-family:inherit; font-size:12.5px; font-weight:600; color:#fff; background:var(--plum); border:none; border-radius:20px; padding:8px 15px; cursor:pointer; transition:filter .16s; }
+  .saved-item .s-kakao:hover { filter:brightness(0.96); }
+  .saved-item .s-toggle { background:none; border:none; color:var(--plum); font-size:12.5px; font-weight:600; cursor:pointer; padding:4px 0; font-family:inherit; }
+  .saved-item .s-toggle:hover { text-decoration:underline; }
+  .saved-item .s-detail { margin-top:12px; border-top:1px dashed var(--plum-line); padding-top:16px; }
+  .saved-item .s-essay .s-essay-t { font-size:14px; font-weight:700; color:var(--plum-deep); margin-bottom:10px; }
+  .saved-item .s-essay p { font-size:13.5px; line-height:1.8; color:var(--ink-2); margin:0 0 10px; }
+  .saved-item .s-essay p:last-child { margin-bottom:0; }
+  .saved-item .s-care { margin-top:16px; background:var(--paper); border-radius:12px; padding:14px 16px; }
+  .saved-item .s-care-t { font-size:11px; letter-spacing:0.06em; color:var(--plum); font-weight:600; margin-bottom:6px; }
+  .saved-item .s-care-b { font-size:13px; line-height:1.6; color:var(--ink-2); }
   .saved-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:50px 0; }
 
   /* 내 흔적 (탭3) */
@@ -1844,9 +1856,17 @@
   function pick(useMood){
     let cand = POOL.map((p,i)=>({p,i}));
     if(useMood && selectedMood){ const tags=MOOD_MAP[selectedMood]||[selectedMood];
-      const f=cand.filter(c=>c.p.mood.some(m=>tags.includes(m))); if(f.length)cand=f; }
-    let ch,g=0; do{ ch=cand[Math.floor(Math.random()*cand.length)]; g++; } while(cand.length>1&&ch.i===lastIndex&&g<10);
-    lastIndex=ch.i; return ch;
+      const f=cand.filter(c=>c.p.mood.some(m=>tags.includes(m))); if(f.length)cand=f;
+      // 기분을 직접 고른 경우엔 그 마음에 맞춰 새로 골라줘요(랜덤)
+      let ch,g=0; do{ ch=cand[Math.floor(Math.random()*cand.length)]; g++; } while(cand.length>1&&ch.i===lastIndex&&g<10);
+      lastIndex=ch.i; return ch;
+    }
+    // 기본 '오늘의 편지' — 하루 동안 고정 (한국 날짜 기준). 새로고침해도 안 바뀌어요.
+    const now = new Date(Date.now()+9*3600*1000);
+    const start = new Date(Date.UTC(now.getUTCFullYear(),0,0));
+    const doy = Math.floor((now - start)/86400000);
+    const ch = cand[doy % cand.length];
+    lastIndex = ch.i; return ch;
   }
 
   function updateConnector(useMood){
@@ -2301,7 +2321,7 @@
     } else {
       // 담기
       const now=new Date(); const d=(now.getMonth()+1)+"월 "+now.getDate()+"일";
-      const item = {i:current.i, quote:current.p.quote, author:current.p.author, date:d};
+      const item = {i:current.i, dbId:current.p.dbId, quote:current.p.quote, author:current.p.author, date:d};
       saved.push(item);
       sb.classList.add("saved"); sb.querySelector(".heart").textContent="♥"; $("saveLabel").textContent="담아둔 글";
       if(loggedIn && current.p.dbId){
@@ -2330,7 +2350,7 @@
           const p = POOL[poolIdx];
           let d = "";
           if(row.saved_at){ const dt=new Date(row.saved_at); d=(dt.getMonth()+1)+"월 "+dt.getDate()+"일"; }
-          saved.push({ i:poolIdx, quote:p.quote, author:p.author, date:d, savedAt:row.saved_at||null, rowId:row.id });
+          saved.push({ i:poolIdx, dbId:row.content_id, quote:p.quote, author:p.author, date:d, savedAt:row.saved_at||null, rowId:row.id });
         }
       });
     } catch(e){ console.log("담은글 불러오기 오류:", e); }
@@ -2372,10 +2392,54 @@
     if(!saved.length){ $("savedList").innerHTML='<div class="saved-empty">아직 담아둔 글이 없어요.<br>오늘 탭에서 마음에 드는 글을 담아보세요.</div>'; return; }
     if(window._savedShow==null) window._savedShow=12;
     const show = Math.min(window._savedShow, saved.length);
-    let html = guestNote + saved.slice(0,show).map((s,idx)=>`<div class="saved-item"><button class="item-del" onclick="deleteSaved(${idx})" aria-label="삭제">✕</button><div class="sdate">${s.date?s.date+" 담음":"담아둔 글"}</div><div class="sq">${s.quote.replace(/(\s*(?:<br\s*\/?>|[\r\n])\s*)+/gi,"<br>")}</div><div class="sa">— ${s.author}</div></div>`).join("");
+    const escS = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    let html = guestNote + saved.slice(0,show).map((s,idx)=>{
+      const p = (s.dbId!=null ? POOL.find(x=>x.dbId===s.dbId) : null) || POOL[s.i] || {};
+      const essayHtml = (p.essay && p.essay.length && p.essay.some(x=>x&&x.trim()))
+        ? '<div class="s-essay">'+(p.essayTitle?'<div class="s-essay-t">'+escS(p.essayTitle)+'</div>':'')+p.essay.filter(x=>x&&x.trim()).map(x=>'<p>'+escS(x)+'</p>').join('')+'</div>'
+        : '';
+      const careHtml = (p.careTitle||p.careBody)
+        ? '<div class="s-care"><div class="s-care-t">오늘의 작은 처방 · '+escS(p.careTitle||"")+'</div><div class="s-care-b">'+escS(p.careBody||"")+'</div></div>'
+        : '';
+      const hasDetail = essayHtml || careHtml;
+      const toggle = hasDetail ? '<button class="s-toggle" onclick="toggleSavedDetail('+idx+')" id="stg-'+idx+'">전체 보기 ▾</button>' : '';
+      const detail = hasDetail ? '<div class="s-detail" id="sdetail-'+idx+'" style="display:none;">'+essayHtml+careHtml+'</div>' : '';
+      const kakaoBtn = '<button class="s-kakao" onclick="shareSavedKakao('+idx+')"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff"><path d="M12 3.5C6.75 3.5 2.5 6.86 2.5 11c0 2.67 1.79 5.01 4.48 6.33-.18.63-.66 2.4-.76 2.78-.12.47.17.46.36.34.15-.1 2.4-1.63 3.38-2.3.52.07 1.05.11 1.54.11 5.25 0 9.5-3.36 9.5-7.5S17.25 3.5 12 3.5z"/></svg> 카톡으로 보내기</button>';
+      return '<div class="saved-item"><button class="item-del" onclick="deleteSaved('+idx+')" aria-label="삭제">✕</button>'
+        + '<div class="sdate">'+(s.date?escS(s.date)+" 담음":"담아둔 글")+'</div>'
+        + '<div class="sq">'+s.quote.replace(/(\s*(?:<br\s*\/?>|[\r\n])\s*)+/gi,"<br>")+'</div>'
+        + '<div class="sa">— '+escS(s.author)+'</div>'
+        + '<div class="s-actions">'+kakaoBtn+toggle+'</div>'
+        + detail
+        + '</div>';
+    }).join("");
     if(saved.length>show) html += '<button class="more-btn" onclick="showMoreSaved()">더 보기 <span>('+(saved.length-show)+'개 남음)</span></button>';
     $("savedList").innerHTML = html;
   }
+  window.toggleSavedDetail = function(idx){
+    const d = $("sdetail-"+idx), b = $("stg-"+idx);
+    if(!d) return;
+    const open = d.style.display!=="none";
+    d.style.display = open ? "none" : "block";
+    if(b) b.textContent = open ? "전체 보기 ▾" : "접기 ▴";
+  };
+  window.shareSavedKakao = function(idx){
+    if (!window.Kakao || !Kakao.isInitialized()) { alert("카카오톡 공유를 불러오지 못했어요. 잠시 후 다시 시도해 주세요."); return; }
+    const s = saved[idx]; if(!s) return;
+    const q = (s.quote||"").replace(/<br\s*\/?>/gi," ").replace(/\s+/g,' ').trim();
+    const a = (s.author||"").trim();
+    const shareUrl = 'https://ond2u.com/app.html' + (senderName ? ('?from=' + encodeURIComponent(senderName)) : '');
+    Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: q,
+        description: josaGaI(senderName || '오늘도') + ' 보내는 편지' + (a ? '  ·  ' + a : ''),
+        imageUrl: 'https://ond2u.com/og3.png',
+        link: { mobileWebUrl: shareUrl, webUrl: shareUrl }
+      },
+      buttons: [{ title: '오늘도에서 편지 보기', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } }]
+    });
+  };
   window.showMoreSaved = function(){ window._savedShow = (window._savedShow||12) + 12; renderSaved(); };
 
   window.deleteSaved = async function(idx){
@@ -2947,6 +3011,9 @@
     renderNavAuth();
     applyAdminUI();
     checkNewReactions();
+    // 로그인 직후엔 '오늘'(메인) 화면으로 — 로그인 폼이 보내기 탭에 있어 그대로 두면 보내기에 머물러요
+    const _homeTab = document.querySelector('.tab[data-view="home"]');
+    if (_homeTab) _homeTab.click();
   }
 
   async function doLogout(){
@@ -4430,7 +4497,7 @@
 
   async function loadFromWarehouse(){
     try {
-      const { data, error } = await odoDB.from("odo_contents").select("*");
+      const { data, error } = await odoDB.from("odo_contents").select("*").order("id", { ascending: true });
       if (error || !data || !data.length) throw error || new Error("empty");
       // 창고 데이터를 화면이 쓰는 형식으로 변환
       // SQL에 저장된 "\n"(백슬래시+n 두 글자)을 진짜 줄바꿈으로 바꿔줌
