@@ -146,7 +146,15 @@ async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, food
       const matched = normalPool.filter(c => c.tone === tone || !c.tone);
       if (matched.length) pool = matched;
     }
-    const pickN = pool[Math.floor(Math.random() * pool.length)];
+    let candidates = pool;
+    try {
+      const recent = await recentQuotes(SB_URL, SB_SERVICE, to, 15);
+      if (recent && recent.size) {
+        const filtered = pool.filter(c => !recent.has((c.quote || "").replace(/\\n/g, " ").slice(0, 80)));
+        if (filtered.length) candidates = filtered; // 다 걸러지면 원래 pool 사용(안전장치)
+      }
+    } catch (e) { /* 조회 실패해도 발송엔 영향 없음 */ }
+    const pickN = candidates[Math.floor(Math.random() * candidates.length)];
     let pickB = null;
     if (wantBible && biblePool.length) pickB = biblePool[Math.floor(Math.random() * biblePool.length)];
     html = buildEmail({ fromName, toName, normal: pickN, bible: pickB, recipientEmail: to, senderId, secret: SECRET, foodPool, personalNote, welcome });
@@ -202,6 +210,19 @@ async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, food
     await logSend(SB_URL, SB_SERVICE, { ...logBase, status: "fail", error: String(e && e.message || e) });
     throw e;
   }
+}
+
+// 최근 이 사람에게 성공 발송한 명언들 (같은 편지가 너무 빨리 다시 오지 않게)
+async function recentQuotes(url, key, email, limit) {
+  const set = new Set();
+  try {
+    const q = url + "/rest/v1/odo_sends?select=content_quote&recipient_email=eq."
+      + encodeURIComponent(email) + "&status=eq.success&order=created_at.desc&limit=" + (limit || 15);
+    const r = await fetch(q, { headers: { apikey: key, Authorization: "Bearer " + key } });
+    const rows = await r.json().catch(() => []);
+    (Array.isArray(rows) ? rows : []).forEach(x => { if (x && x.content_quote) set.add(x.content_quote); });
+  } catch (e) { /* 무시 */ }
+  return set;
 }
 
 // 발송 기록을 창고(odo_sends)에 남김 — 실패해도 발송 자체엔 영향 없음
