@@ -1004,7 +1004,7 @@
 </head>
 <body>
 <div class="top-bar" id="topBar"></div>
-<div class="welcome-overlay" id="welcomeOverlay">
+<div class="welcome-overlay" id="welcomeOverlay" onmousedown="window._ovWelDown=(event.target===this)" onmouseup="if(window._ovWelDown&&event.target===this)closeWelcome(); window._ovWelDown=false">
   <div class="welcome-box">
     <div class="welcome-icon">
       <svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true">
@@ -3692,10 +3692,11 @@
       $("welcomeOverlay").classList.add("hidden");
     }
   } catch(e) {}
-  $("welcomeStart").onclick = () => {
+  window.closeWelcome = function(){
     $("welcomeOverlay").classList.add("hidden");
     try { sessionStorage.setItem("ond2u_welcomed", "1"); } catch(e) {}
   };
+  $("welcomeStart").onclick = () => closeWelcome();
 
   /* ── 콘텐츠 공장 (관리자) ── */
   let admApproved = 0;
