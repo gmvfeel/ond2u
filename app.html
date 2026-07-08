@@ -4266,9 +4266,16 @@
     window._sdAll = out.sends;
     window._sdPage = 1;
     if (window._sdFilter == null) window._sdFilter = "";
+    const orTxt = (out.today_open == null || !out.today_open_checked)
+      ? "—"
+      : Math.round(out.today_open / out.today_open_checked * 100) + "%";
+    const orLbl = (out.today_open == null)
+      ? "오늘 오픈율"
+      : (out.today_open_checked ? "오늘 오픈율 (" + out.today_open + "/" + out.today_open_checked + ")" : "오늘 오픈율");
     const sumHtml = '<div class="sd-sum">'
       + '<div class="box"><div class="n">'+(out.today_success||0)+'</div><div class="lbl">오늘 성공</div></div>'
       + '<div class="box"><div class="n fail">'+(out.today_fail||0)+'</div><div class="lbl">오늘 실패</div></div>'
+      + '<div class="box"><div class="n">'+orTxt+'</div><div class="lbl">'+orLbl+'</div></div>'
       + '<div class="box"><div class="n">'+(out.total||0)+'</div><div class="lbl">최근 기록</div></div>'
       + '</div>';
     if (!out.sends.length){
