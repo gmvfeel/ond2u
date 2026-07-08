@@ -32,11 +32,17 @@ export default async function handler(req, res) {
     const today_success = await countRows(SB_URL, SB_SERVICE, "odo_sends", "status=eq.success&created_at=gte." + todayISO);
     const today_fail = await countRows(SB_URL, SB_SERVICE, "odo_sends", "status=neq.success&created_at=gte." + todayISO);
 
+    // 오늘 성공분의 열람율 (Resend에 편지별로 물어봄) — open tracking 켜져 있어야 값이 잡힘
+    const openStat = await todayOpenStats(SB_URL, SB_SERVICE, process.env.RESEND_API_KEY, todayISO);
+
     return res.status(200).json({
       ok: true,
       sends: Array.isArray(sends) ? sends : [],
       today_success,
       today_fail,
+      today_open: openStat.open,
+      today_open_checked: openStat.checked,
+      today_open_capped: openStat.capped,
       total: Array.isArray(sends) ? sends.length : 0
     });
   } catch (e) {
@@ -58,6 +64,44 @@ async function isAdminReq(req, SB_URL, SB_SERVICE) {
     const admins = (process.env.ADMIN_EMAILS || "").split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
     return !!(email && admins.includes(email));
   } catch (e) { return false; }
+}
+
+// ── 오늘(KST) 성공 발송분의 열람율 (Resend에 편지별로 물어봄) ──
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function todayOpenStats(SB_URL, SB_SERVICE, RESEND_KEY, todayISO) {
+  if (!RESEND_KEY) return { open: null, checked: 0, capped: false };
+  const H = { apikey: SB_SERVICE, Authorization: "Bearer " + SB_SERVICE };
+  const CAP = 120;
+  let ids = [];
+  try {
+    const q = SB_URL + "/rest/v1/odo_sends?select=resend_id&status=eq.success&created_at=gte."
+      + todayISO + "&order=created_at.desc&limit=" + CAP;
+    const r = await fetch(q, { headers: H });
+    const rows = await r.json().catch(() => []);
+    ids = (Array.isArray(rows) ? rows : []).map(x => x && x.resend_id).filter(Boolean);
+  } catch (e) { return { open: null, checked: 0, capped: false }; }
+  if (!ids.length) return { open: 0, checked: 0, capped: false };
+
+  let opened = 0, checked = 0;
+  const RH = { Authorization: "Bearer " + RESEND_KEY };
+  for (let i = 0; i < ids.length; i += 5) {
+    const batch = ids.slice(i, i + 5);
+    const evs = await Promise.all(batch.map(async id => {
+      try {
+        const er = await fetch("https://api.resend.com/emails/" + encodeURIComponent(id), { headers: RH });
+        if (!er.ok) return null;
+        const ed = await er.json();
+        return (ed && ed.last_event) ? String(ed.last_event) : null;
+      } catch (e) { return null; }
+    }));
+    for (const ev of evs) {
+      if (ev == null) continue;
+      checked++;
+      if (ev === "opened" || ev === "clicked") opened++;
+    }
+    await sleep(200);
+  }
+  return { open: opened, checked, capped: ids.length >= CAP };
 }
 
 // ── 특정 조건의 행 개수만 세기 (데이터는 안 가져옴) ──
