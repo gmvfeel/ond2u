@@ -723,59 +723,68 @@
   .time-note { font-size:12px; color:var(--ink-faint); margin-top:8px; line-height:1.6; }
   .me-onboard { display:none; font-size:13px; color:var(--plum-deep); background:var(--plum-soft); border:1px dashed var(--plum-line); border-radius:12px; padding:11px 14px; margin:14px 0 4px; line-height:1.5; }
   .me-onboard.show { display:block; }
-  /* 사용법 */
-  .guide-hero { display:flex; align-items:center; gap:14px; background:linear-gradient(135deg,#f7f1f4,#efecf4); border-radius:16px; padding:18px 20px; margin-bottom:28px; }
-  .guide-hero .gh-ic { flex-shrink:0; width:44px; height:44px; border-radius:14px; background:linear-gradient(140deg,var(--plum),var(--rose)); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(217,124,147,.2); }
-  .guide-hero .gh-ic svg { width:23px; height:23px; fill:none; stroke:#fff; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
-  .guide-hero .gh-tx { font-size:13.5px; line-height:1.65; color:var(--ink-soft); }
-  .guide-hero .gh-tx b { color:var(--plum-deep); font-weight:700; }
-  .gchapter { margin-bottom:30px; }
-  .gc-head { display:flex; align-items:baseline; gap:9px; margin-bottom:5px; padding-left:2px; }
-  .gc-step { font-size:12px; font-weight:800; color:var(--rose-deep); letter-spacing:.05em; }
-  .gc-title { font-size:18px; font-weight:800; color:var(--plum-deep); letter-spacing:-.02em; }
-  .gc-lead { font-size:12.5px; color:var(--ink-faint); margin:0 0 14px 2px; line-height:1.6; }
-  .gc-items { display:flex; flex-direction:column; gap:9px; }
-  .gitem { display:flex; gap:13px; align-items:flex-start; background:var(--white); border:1px solid var(--line); border-radius:14px; padding:15px 17px; transition:border-color .16s, transform .16s; }
-  .gitem:hover { border-color:var(--plum-line); transform:translateY(-1px); }
-  .gi-ic { flex-shrink:0; width:36px; height:36px; border-radius:10px; background:var(--plum-soft); display:flex; align-items:center; justify-content:center; margin-top:1px; }
+  /* ── 사용법 (가이드) : 따뜻한 편지지 톤 재디자인 ── */
+  #view-guide { background:#f7f2e8; border-radius:20px; padding:24px 20px 26px; }
+  #view-guide .section-title { color:var(--plum-deep); }
+  #view-guide .section-sub { color:var(--ink-soft); margin-bottom:22px; }
+  /* 상단 커버(인사) — 진한 플럼 앵커 */
+  .guide-hero { display:flex; align-items:center; gap:15px; background:linear-gradient(145deg,#4a3a63,#2f2440); border-radius:18px; padding:20px 22px; margin-bottom:30px; box-shadow:0 10px 26px rgba(47,36,64,.20); }
+  .guide-hero .gh-ic { flex-shrink:0; width:46px; height:46px; border-radius:14px; background:rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; }
+  .guide-hero .gh-ic svg { width:24px; height:24px; fill:none; stroke:#f3ecdf; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+  .guide-hero .gh-tx { flex:1; min-width:0; }
+  .guide-hero .gh-eyebrow { font-size:10.5px; font-weight:700; letter-spacing:.16em; color:#e6b6c3; margin-bottom:5px; }
+  .guide-hero .gh-line { font-size:14px; line-height:1.6; color:#f3ecdf; font-weight:500; }
+  .guide-hero .gh-line b { color:#fff; font-weight:800; }
+  /* 챕터 헤더 */
+  .gchapter { margin-bottom:26px; }
+  .gc-head { display:flex; align-items:center; gap:10px; margin-bottom:0; padding-bottom:10px; border-bottom:1px solid #e7ddca; }
+  .gc-step { flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:24px; padding:0 7px; background:var(--plum); color:#f3ecdf; font-size:12px; font-weight:800; letter-spacing:.03em; border-radius:7px; }
+  .gc-title { font-size:17.5px; font-weight:800; color:var(--plum-deep); letter-spacing:-.02em; }
+  .gc-lead { font-size:12.5px; color:var(--ink-soft); margin:10px 0 13px 2px; line-height:1.6; }
+  /* 기능 카드 */
+  .gc-items { display:flex; flex-direction:column; gap:8px; }
+  .gitem { display:flex; gap:13px; align-items:flex-start; background:#fffdf9; border:1px solid #ece3d3; border-radius:14px; padding:14px 16px; box-shadow:0 1px 2px rgba(74,58,98,.03); transition:border-color .16s, transform .16s, box-shadow .16s; }
+  .gitem:hover { border-color:var(--rose-line); transform:translateY(-1px); box-shadow:0 5px 15px rgba(74,58,98,.07); }
+  .gi-ic { flex-shrink:0; width:38px; height:38px; border-radius:11px; background:#f3ebdd; display:flex; align-items:center; justify-content:center; margin-top:1px; }
   .gi-ic svg { width:19px; height:19px; fill:none; stroke:var(--plum); stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
   .gi-tx { flex:1; min-width:0; }
   .gi-tx .gi-h { font-size:14px; font-weight:700; color:var(--ink); letter-spacing:-.01em; }
   .gi-tx .gi-d { font-size:12.8px; line-height:1.65; color:var(--ink-soft); margin-top:4px; }
   .gi-tx .gi-d b { color:var(--plum-deep); font-weight:700; }
-  /* 챕터 화면 미리보기 */
-  .gpreview { margin-top:12px; border:1px solid var(--plum-line); border-radius:14px; padding:18px; background:linear-gradient(160deg,#fbf9fc,#f5f1f8); }
-  .gp-cap { font-size:11px; color:var(--ink-faint); text-align:center; margin-top:9px; letter-spacing:.02em; }
+  /* 챕터 화면 미리보기 — 진짜 화면을 엿보는 프레임 */
+  .gpreview { position:relative; margin-top:13px; border:1px solid #e7dcc9; border-radius:16px; padding:18px 18px 16px; background:#fffdf9; box-shadow:0 4px 16px rgba(74,58,98,.06); }
+  .gp-cap { font-size:11px; color:var(--ink-faint); text-align:center; margin-top:11px; letter-spacing:.01em; }
   .gpl { text-align:center; }
-  .gpl .e { font-size:9px; letter-spacing:.16em; color:var(--ink-faint); }
-  .gpl .q { font-size:19px; font-weight:800; color:var(--ink); margin:9px 0 7px; line-height:1.4; letter-spacing:-.02em; }
+  .gpl .e { font-size:9px; letter-spacing:.18em; color:var(--rose-deep); font-weight:700; }
+  .gpl .q { font-size:19px; font-weight:800; color:var(--ink); margin:10px 0 7px; line-height:1.4; letter-spacing:-.02em; }
   .gpl .a { font-size:11px; color:var(--ink-soft); }
-  .gpl .btns { display:flex; gap:6px; justify-content:center; margin-top:13px; flex-wrap:wrap; }
-  .gpl .btns span { font-size:10.5px; border:1px solid var(--line-strong); border-radius:15px; padding:6px 11px; color:var(--ink-soft); }
+  .gpl .btns { display:flex; gap:6px; justify-content:center; margin-top:14px; flex-wrap:wrap; }
+  .gpl .btns span { font-size:10.5px; border:1px solid #e5dcc9; border-radius:15px; padding:6px 11px; color:var(--ink-soft); }
   .gpl .btns .k { background:#fee500; border-color:#fee500; color:#3c1e1e; font-weight:600; }
   .gp-row { display:flex; justify-content:space-between; align-items:center; }
   .gp-lbl { font-size:12.5px; font-weight:600; color:var(--ink); }
   .gp-sw { width:40px; height:23px; border-radius:12px; background:var(--plum); position:relative; flex-shrink:0; }
   .gp-sw i { position:absolute; top:2.5px; right:2.5px; width:18px; height:18px; border-radius:50%; background:#fff; }
   .gp-times { display:flex; gap:6px; margin-top:13px; flex-wrap:wrap; }
-  .gp-times span { font-size:10.5px; border:1px solid var(--line-strong); border-radius:13px; padding:5px 10px; color:var(--ink-soft); }
+  .gp-times span { font-size:10.5px; border:1px solid #e5dcc9; border-radius:13px; padding:5px 10px; color:var(--ink-soft); }
   .gp-times span.on { background:var(--plum); border-color:var(--plum); color:#fff; }
   .gp-field { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
   .gp-flbl { font-size:10.5px; color:var(--ink-faint); width:42px; flex-shrink:0; }
-  .gp-fin { flex:1; font-size:11.5px; color:var(--ink); background:#fff; border:1px solid var(--line); border-radius:8px; padding:7px 10px; }
+  .gp-fin { flex:1; font-size:11.5px; color:var(--ink); background:#faf6ee; border:1px solid #ece3d3; border-radius:8px; padding:7px 10px; }
   .gp-chips { display:flex; gap:6px; margin:10px 0 12px; flex-wrap:wrap; }
-  .gp-chips span { font-size:10.5px; border:1px solid var(--line-strong); border-radius:13px; padding:5px 11px; color:var(--ink-soft); }
+  .gp-chips span { font-size:10.5px; border:1px solid #e5dcc9; border-radius:13px; padding:5px 11px; color:var(--ink-soft); }
   .gp-chips span.on { background:var(--plum); border-color:var(--plum); color:#fff; }
-  .gp-addbtn { text-align:center; font-size:11.5px; font-weight:600; color:#fff; background:var(--plum); border-radius:11px; padding:9px; }
+  .gp-addbtn { text-align:center; font-size:11.5px; font-weight:700; color:#f3ecdf; background:var(--plum); border-radius:11px; padding:9px; }
   .gp-cal { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
-  .gp-cal span { aspect-ratio:1; border-radius:5px; background:#fff; border:1px solid var(--line); }
+  .gp-cal span { aspect-ratio:1; border-radius:5px; background:#faf6ee; border:1px solid #ece3d3; }
   .gp-cal span.h { background:#d9d5e6; border-color:#d9d5e6; }
   .gp-cal span.a { background:#f1d3c2; border-color:#f1d3c2; }
   .gp-cal span.b { background:#f7c2d0; border-color:#f7c2d0; }
   .gp-legend { display:flex; gap:12px; justify-content:center; margin-top:11px; font-size:10px; color:var(--ink-faint); }
   .gp-legend i { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:4px; vertical-align:middle; }
-  .guide-foot { display:flex; flex-direction:column; align-items:center; gap:9px; text-align:center; font-size:14px; font-weight:600; color:var(--plum-deep); background:linear-gradient(135deg,#f8f3f6,#f0edf5); border:1px solid var(--plum-line); border-radius:18px; padding:26px 22px; margin-top:8px; line-height:1.7; }
-  .guide-foot svg { width:26px; height:26px; fill:none; stroke:var(--plum); stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; opacity:.7; }
+  /* 마무리 — 조용한 크림 카드 */
+  .guide-foot { display:flex; flex-direction:column; align-items:center; gap:9px; text-align:center; font-size:14px; font-weight:600; color:var(--plum-deep); background:#fbf6ec; border:1px solid #ebe0cd; border-radius:18px; padding:28px 22px; margin-top:6px; line-height:1.75; }
+  .guide-foot svg { width:27px; height:27px; fill:none; stroke:var(--rose); stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
   .guide-foot .gf-eyebrow { font-size:11px; font-weight:700; letter-spacing:.14em; color:var(--rose-deep); }
   /* 대시보드 */
   .dash-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; }
@@ -1371,7 +1380,10 @@
 
     <div class="guide-hero">
       <div class="gh-ic"><svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M4 7l8 6 8-6"/></svg></div>
-      <div class="gh-tx">매일 한 편의 위로가 <b>나에게</b>, 그리고 <b>내가 아끼는 사람</b>에게 닿아요.</div>
+      <div class="gh-tx">
+        <div class="gh-eyebrow">오늘도 안내서</div>
+        <div class="gh-line">매일 한 편의 위로가 <b>나에게</b>, 그리고 <b>내가 아끼는 사람</b>에게 닿아요.</div>
+      </div>
     </div>
 
     <!-- 1. 받기 -->
