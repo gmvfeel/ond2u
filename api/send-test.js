@@ -344,9 +344,15 @@ function buildSpecialEmail({ fromName, toName, label, recipientEmail, senderId, 
       spacer(24) +
       '<div style="text-align:center; font-size:15px; font-weight:600; color:' + ROSE + ';">' + (isSelf ? '\uC624\uB298\uB3C4\uAC00, \uB2F9\uC2E0\uC758 \uD558\uB8E8\uC5D0.' : (fromName + '\uC758 \uB9C8\uC74C\uC744 \uB2F4\uC544.')) + '</div>' +
       spacer(28) +
-      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
-        '<a href="https://ond2u.com/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:' + PLUM + '; text-decoration:none; padding:13px 28px; border-radius:30px;">\uC624\uB298\uB3C4\uC5D0\uC11C \uB354 \uBCF4\uAE30 \u2192</a>' +
-      '</td></tr></table>' +
+      (!isSelf
+        ? '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
+            '<div style="font-size:13px; color:#7a7580; line-height:1.7; margin-bottom:14px;">\uB2F9\uC2E0\uB3C4 \uB9E4\uC77C \uD55C \uD3B8, \uBC1B\uC544\uBCFC \uC218 \uC788\uC5B4\uC694.</div>' +
+            '<a href="https://ond2u.com/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:' + PLUM + '; text-decoration:none; padding:13px 28px; border-radius:30px;">\uB098\uB3C4 \uC624\uB298\uB3C4 \uC2DC\uC791\uD558\uAE30 \u2192</a>' +
+          '</td></tr></table>'
+        : '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
+            '<a href="https://ond2u.com/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:' + PLUM + '; text-decoration:none; padding:13px 28px; border-radius:30px;">\uC624\uB298\uB3C4\uC5D0\uC11C \uB354 \uBCF4\uAE30 \u2192</a>' +
+          '</td></tr></table>'
+      ) +
     '</td></tr>' +
     '<tr><td bgcolor="#f3f1ef" style="padding:22px 28px; border-top:1px solid #eae7e3; text-align:center;">' +
       '<div style="font-size:11px; color:#b0aab6;">\uC774\uC81C \uADF8\uB9CC \uBC1B\uACE0 \uC2F6\uC73C\uC2DC\uBA74 <a href="' + unsubUrl + '" style="color:#b0aab6;">\uC5EC\uAE30</a>\uB97C \uB20C\uB7EC\uC8FC\uC138\uC694.</div>' +
@@ -528,11 +534,17 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
         '</tr></table>' +
       '</td></tr></table>' +
 
-      // CTA
+      // CTA — 받는 사람(아끼는 사람)에겐 회원 전환 유도, 나에게/환영(이미 회원)은 '더 보기'
       spacer(30) +
-      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
-        '<a href="https://ond2u.com/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:#2b2730; text-decoration:none; padding:13px 28px; border-radius:30px;">\uC624\uB298\uB3C4\uC5D0\uC11C \uB354 \uBCF4\uAE30 \u2192</a>' +
-      '</td></tr></table>' +
+      ((toName !== "\uB098\uC5D0\uAC8C" && !welcome)
+        ? '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
+            '<div style="font-size:13px; color:#7a7580; line-height:1.7; margin-bottom:14px;">\uC774 \uD3B8\uC9C0\uAC00 \uC704\uB85C\uAC00 \uB418\uC5C8\uB098\uC694?<br>\uB2F9\uC2E0\uB3C4 \uB9E4\uC77C \uD55C \uD3B8, \uBC1B\uC544\uBCFC \uC218 \uC788\uC5B4\uC694.</div>' +
+            '<a href="https://ond2u.com/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:' + PLUM + '; text-decoration:none; padding:13px 28px; border-radius:30px;">\uB098\uB3C4 \uC624\uB298\uB3C4 \uC2DC\uC791\uD558\uAE30 \u2192</a>' +
+          '</td></tr></table>'
+        : '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
+            '<a href="https://ond2u.com/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:#2b2730; text-decoration:none; padding:13px 28px; border-radius:30px;">\uC624\uB298\uB3C4\uC5D0\uC11C \uB354 \uBCF4\uAE30 \u2192</a>' +
+          '</td></tr></table>'
+      ) +
     '</td></tr>' +
 
     // 푸터
