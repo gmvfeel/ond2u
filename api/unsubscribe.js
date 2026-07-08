@@ -30,6 +30,21 @@ export default async function handler(req, res) {
 
   const safeEmail = escHtml(e);
 
+  // 원클릭 수신거부 — 메일함(지메일·네이버 등)이 자동으로 보내는 POST 요청 (RFC 8058)
+  // 토큰으로 본인 확인이 끝났으므로 확인 페이지 없이 바로 중지
+  if (req.method === "POST") {
+    if (SB_URL && SB_SERVICE) {
+      try {
+        await fetch(SB_URL + "/rest/v1/odo_recipients?email=eq." + encodeURIComponent(e), {
+          method: "DELETE",
+          headers: { apikey: SB_SERVICE, Authorization: "Bearer " + SB_SERVICE, Prefer: "return=minimal" }
+        });
+      } catch (err) { /* 조용히 무시 */ }
+    }
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    return res.status(200).send("unsubscribed");
+  }
+
   // 아직 확정 전 — 확인 페이지
   if (confirm !== "1") {
     const yesUrl = "/api/unsubscribe?e=" + encodeURIComponent(e) + "&t=" + encodeURIComponent(t) + "&confirm=1";

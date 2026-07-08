@@ -174,11 +174,18 @@ async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, food
   const logBase = { sender_id: senderId || null, sender_name: fromName, recipient_email: to, recipient_name: toName || "", content_quote: quote };
 
   try {
+    const uParam = encodeURIComponent(to || "");
+    const uTok = SECRET ? crypto.createHmac("sha256", SECRET).update(to || "").digest("hex").slice(0, 32) : "";
+    const uUrl = "https://www.ond2u.com/api/unsubscribe?e=" + uParam + "&t=" + uTok;
     const payload = JSON.stringify({
       from: '"오늘도/OND2U" <' + FROM + ">",
       to: [to],
       subject,
-      html
+      html,
+      headers: uTok ? {
+        "List-Unsubscribe": "<" + uUrl + ">",
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+      } : undefined
     });
     const doSend = () => fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -594,11 +601,14 @@ async function runMonthlyRecap(req, res, env) {
     const narr = buildRecapNarr(label, s);
     const html = buildRecapEmail({ name, label, narr, s, email:u.email, secret:SECRET });
     const subject = label + ", 당신의 마음을 담았어요";
+    const rcTok = SECRET ? crypto.createHmac("sha256", SECRET).update(u.email || "").digest("hex").slice(0,32) : "";
+    const rcUnsub = "https://www.ond2u.com/api/unsubscribe?e=" + encodeURIComponent(u.email || "") + "&t=" + rcTok;
     try {
       const r = await fetch("https://api.resend.com/emails", {
         method:"POST",
         headers:{ "Authorization":"Bearer "+RESEND_KEY, "Content-Type":"application/json" },
-        body: JSON.stringify({ from: "오늘도 <"+FROM+">", to:[u.email], subject, html })
+        body: JSON.stringify({ from: "오늘도 <"+FROM+">", to:[u.email], subject, html,
+          headers: rcTok ? { "List-Unsubscribe": "<"+rcUnsub+">", "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } : undefined })
       });
       if (r.ok) { sent++; results.push({ email:u.email, ok:true }); }
       else { failed++; const t = await r.text().catch(()=> ""); results.push({ email:u.email, ok:false, error:t.slice(0,120) }); }
