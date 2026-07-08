@@ -662,6 +662,9 @@
   .make-btn:disabled { opacity:.5; cursor:default; }
   .maker-status { font-size:13px; color:var(--ink-soft); margin-top:14px; min-height:18px; }
   .maker-status.err { color:var(--plum-deep); }
+  .maker-wh { font-size:13px; color:var(--ink-soft); margin-bottom:16px; line-height:1.5; }
+  .maker-wh b { color:var(--plum-deep); font-weight:700; }
+  .maker-wh.low b { color:var(--rose-deep); }
   .approved-bar { font-size:13px; color:var(--plum-deep); background:var(--plum-soft); border-radius:12px; padding:10px 16px; margin-bottom:20px; }
   .approved-bar b { font-weight:700; }
   .adm-set { background:var(--white); border:1px solid var(--plum-line); border-radius:16px; padding:22px 24px; margin-bottom:14px; transition:all .2s; }
@@ -1510,6 +1513,7 @@
     <div class="section-sub">"만들어줘"를 누르면 AI가 명언·에세이·영상 검색어를 세트로 차려와요. 통과시킨 것만 창고에 쌓입니다.</div>
 
     <div class="maker">
+      <div class="maker-wh" id="admWarehouse"></div>
       <div class="maker-row">
         <select id="admTopic">
           <option value="위로와 회복">위로와 회복</option>
@@ -1823,6 +1827,7 @@
     if(key==="members") renderMembers();
     if(key==="sends") renderSends();
     if(key==="foods") renderFoodsAdmin();
+    if(key==="admin") admWarehouseCount();
   }
   document.querySelectorAll(".ops-tab").forEach(t=>{
     t.onclick=()=>{ openOps(t.dataset.ops); window.scrollTo({top:0,behavior:"instant"}); };
@@ -3703,6 +3708,22 @@
     try { return JSON.parse(text); } catch(_){}
     try { return JSON.parse(text.replace(/[\u0000-\u001F]+/g," ")); } catch(_){}
     return null;
+  }
+
+  async function admWarehouseCount(){
+    const el = $("admWarehouse"); if(!el) return;
+    el.className = "maker-wh"; el.textContent = "창고 편수 확인 중…";
+    try {
+      const { count, error } = await odoDB.from("odo_contents").select("id",{count:"exact",head:true}).eq("kind","normal");
+      if(error) throw error;
+      const n = count||0;
+      if(n < 60){
+        el.className = "maker-wh low";
+        el.innerHTML = "지금 창고에 편지 <b>"+n+"편</b>이 있어요. 매일 받는 분들을 위해 슬슬 더 채워두면 좋아요. 🌱";
+      } else {
+        el.innerHTML = "지금 창고에 편지 <b>"+n+"편</b>이 쌓여 있어요.";
+      }
+    } catch(e){ el.className="maker-wh"; el.textContent=""; }
   }
 
   async function admGenerate(){
