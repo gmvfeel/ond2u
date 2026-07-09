@@ -3241,7 +3241,6 @@
     window.location.href = "https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=1b9f9_YPgdsQEBOGd0RU&redirect_uri=" + redirectUri + "&state=" + state;
   };
   $("loginBtn").onclick = async () => {
-    if(!consentOK()) return;
     const email = $("loginEmail").value.trim();
     const pw = $("loginPw").value;
     if (!email || !pw) { alert("이메일과 비밀번호를 입력해 주세요."); return; }
@@ -3252,7 +3251,9 @@
       // 먼저 로그인 시도
       let { error } = await odoDB.auth.signInWithPassword({ email, password: pw });
       if (error) {
-        // 로그인 실패 → 가입 시도
+        // 로그인 실패 → 신규 가입 경로: 이 순간에만 약관 동의 확인
+        if(!consentOK()) return;
+        // 가입 시도
         const { data: signData, error: signErr } = await odoDB.auth.signUp({ email, password: pw });
         if (signErr) {
           if (/already/i.test(signErr.message)) alert("비밀번호가 맞지 않아요. 다시 확인해 주세요.");
