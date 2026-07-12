@@ -124,7 +124,11 @@
     border-radius:30px; padding:15px 36px; cursor:pointer; transition:all .2s; box-shadow:0 5px 13px rgba(66,52,88,.17); }
   .welcome-btn:hover { background:var(--plum-deep); }
   .welcome-sig { font-size:12px; color:var(--plum); margin-top:22px; }
-  .welcome-note { font-size:12.5px; color:var(--ink-faint); margin-top:14px; line-height:1.8; }
+  .welcome-note { font-size:13px; color:var(--plum-deep); font-weight:500; margin-top:16px; line-height:1.7; background:#f4eff9; border:1px solid #e9e0f2; border-radius:12px; padding:11px 14px; }
+  .use-cta { text-align:center; margin:40px auto 44px; }
+  .use-cta-btn { font-family:inherit; font-size:15px; font-weight:600; color:#fff; background:var(--rose); border:none; border-radius:26px; padding:15px 34px; cursor:pointer; box-shadow:0 6px 18px rgba(217,124,147,.30); }
+  .use-cta-btn:hover { background:var(--rose-deep); }
+  .use-cta-note { font-size:12.5px; color:var(--ink-soft); margin-top:12px; line-height:1.6; }
   .streak-wrap { text-align:center; }
   .from-line b { color:var(--ink); font-weight:700; }
   .from-badge { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:var(--plum); color:#fff; font-size:12px; font-weight:700; }
@@ -1212,6 +1216,12 @@
       <div class="bt-body">담아둔 글과 주고받은 편지가 쌓여, 세상에 단 하나뿐인<br>당신의 위로 책으로 만들어드릴 계획이에요.</div>
       <div class="bt-more">→ 어떻게 만들어지는지 보기</div>
     </div>
+
+    <!-- 나도 오늘도 사용하기 CTA (비로그인 시 노출) -->
+    <div class="use-cta" id="useCta" style="display:none;">
+      <button class="use-cta-btn" onclick="odoGoLogin()">나도 오늘도 사용하기 →</button>
+      <div class="use-cta-note">로그인하면 마음에 든 글을 저장하고, 아끼는 사람에게 편지도 보낼 수 있어요.</div>
+    </div>
   </div>
 
   <!-- 담아둔 글 -->
@@ -1240,7 +1250,7 @@
       <div class="gate-sub">위로를 받는 건 로그인 없이도 돼요.<br>내가 아끼는 사람에게 <b>보내려면</b> 계정이 필요해요.</div>
 
       <label class="gate-consent" id="gateConsent">
-        <input type="checkbox" id="consentBox" />
+        <input type="checkbox" id="consentBox" checked />
         <span>만 14세 이상이며, <a href="/terms.html" target="_blank" rel="noopener">이용약관</a> · <a href="/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>에 동의합니다.</span>
       </label>
 
@@ -3032,7 +3042,7 @@
     const nm = sharedFrom || ((loggedIn && senderName) ? senderName : "");
     if (nm) {
       if (fl) fl.innerHTML = '<span class="from-badge">'+nm.charAt(0)+'</span> <b>'+nm+'</b>님이 오늘도 보냅니다';
-      if (es) es.textContent = josaGaI(nm) + " 드려요. 오늘도 좋은 하루 되세요 ^^";
+      if (es) es.textContent = nm + "님이 드려요. 오늘도 좋은 하루 되세요 ^^";
       if (rq) rq.textContent = nm + "님이 보낸 오늘의 한 편, 어떠셨어요?";
       if (rd) rd.textContent = "마음이 " + nm + "님에게 전해졌어요 ♡";
     } else {
@@ -3124,6 +3134,7 @@
   function renderNavAuth(){
     const el = $("navAuth");
     const bar = $("topBar"); if (bar) bar.classList.toggle("on", loggedIn);
+    const uc = $("useCta"); if (uc) uc.style.display = loggedIn ? "none" : "";
     if (!el) return;
     if (loggedIn && currentUser) {
       el.innerHTML = '<div class="nav-user"><span>Hi! <b>'+(senderName||"")+'</b>님</span><button class="nav-logout" id="navLogoutBtn">로그아웃</button></div>';
@@ -3942,7 +3953,7 @@
     const toneOpts = TONES.map(t=>'<option value="'+t+'"'+(t===window._mgTone?' selected':'')+'>'+(t===""?"전체 결":t)+'</option>').join("");
     box.innerHTML = '<div class="mg-top">'
       + '<span id="mgCount">총 <b>'+data.length+'</b>개</span>'
-      + '<button class="mg-btn" id="mgCheckBtn" onclick="mgCheckAll()">⚠ 재생 검사(이 페이지)</button>'
+      + '<button class="mg-btn" id="mgCheckBtn" onclick="mgCheckAll()">⚠ 재생 검사(전체)</button>'
       + '<button class="mg-btn save" id="mgFillBtn" onclick="mgFillBad()" style="display:none">정상 영상으로 자동 채우기</button>'
       + '</div>'
       + '<div id="mgSummary" class="mg-summary">'+mgSum+'</div>'
@@ -3990,8 +4001,11 @@
       const raw = (r.quote||"").replace(/\\n/g," ");
       const q = esc(raw.slice(0,40)) + (raw.length>40?"…":"");
       const toneBadge = r.kind==="bible" ? "성경" : (r.tone || "공통");
-      return '<div class="mg-card" id="mg_'+r.id+'" data-vid="'+esc(r.video_id||"")+'">'
-        + '<div class="mg-head"><div class="mg-q">'+q+'</div><span class="mg-status" id="mgSt_'+r.id+'"></span></div>'
+      const _sv = (window.mgStatusMap && window.mgStatusMap[r.id]) || "";
+      const _svL = _sv==="ok" ? "✅ 정상" : _sv==="bad" ? "⚠ 재생 불가" : _sv==="unknown" ? "? 확인 필요" : "";
+      const _svC = _sv==="ok" ? " ok" : _sv==="bad" ? " bad" : _sv==="unknown" ? " warn" : "";
+      return '<div class="mg-card'+(_sv==="bad"?" bad":"")+'" id="mg_'+r.id+'" data-vid="'+esc(r.video_id||"")+'">'
+        + '<div class="mg-head"><div class="mg-q">'+q+'</div><span class="mg-status'+_svC+'" id="mgSt_'+r.id+'">'+_svL+'</span></div>'
         + '<div class="mg-a">— '+esc(r.author)+' · '+esc(toneBadge)+'</div>'
         + '<div class="mg-cur">현재 영상: <b>'+esc(r.video_id||"(없음)")+'</b>'+(r.video_title?' · 검색어: '+esc(r.video_title):'')+'</div>'
         + '<div class="mg-row">'
@@ -4519,33 +4533,33 @@
   }
   window.mgCheckAll=async function(){
     const btn=$("mgCheckBtn"); const sum=$("mgSummary");
-    const cards=[...document.querySelectorAll(".mg-card")];
-    if(!cards.length) return;
+    const list = mgFiltered();                 // 현재 조건(검색·결)에 해당하는 전체 목록 = 모든 페이지
+    if(!list.length){ alert("검사할 콘텐츠가 없어요."); return; }
+    if(!confirm("전체 "+list.length+"개 콘텐츠의 재생 여부를 한 번에 검사할까요?\n개수가 많으면 몇 분 정도 걸릴 수 있어요.")) return;
     if(btn){ btn.disabled=true; btn.textContent="플레이어 준비 중…"; }
     await mgInitChecker();
-    let bad=0, unknown=0;
+    if(!window.mgStatusMap) window.mgStatusMap={};
+    let ok=0, bad=0, unknown=0;
     const goodVids=[], badIds=[];
-    for(let i=0;i<cards.length;i++){
-      const c=cards[i];
-      const vid=c.getAttribute("data-vid");
-      const st=c.querySelector(".mg-status");
-      if(btn) btn.textContent="검사 중… ("+(i+1)+"/"+cards.length+")";
+    for(let i=0;i<list.length;i++){
+      const r=list[i];
+      const vid=r.video_id;
+      if(btn) btn.textContent="검사 중… ("+(i+1)+"/"+list.length+")";
+      const st=document.getElementById("mgSt_"+r.id);      // 현재 페이지에 보이는 카드면 실시간 표시
       if(st){ st.textContent="검사 중…"; st.className="mg-status checking"; }
-      let r="bad";
-      if(vid) r=await mgCheckOne(vid);
-      if(st){
-        if(r==="ok"){ st.textContent="✅ 정상"; st.className="mg-status ok"; c.classList.remove("bad"); if(vid) goodVids.push(vid); }
-        else if(r==="bad"){ st.textContent="⚠ 재생 불가"; st.className="mg-status bad"; c.classList.add("bad"); badIds.push(c.id.replace("mg_","")); bad++; }
-        else { st.textContent="? 확인 필요"; st.className="mg-status warn"; unknown++; }
-      }
+      let res = vid ? await mgCheckOne(vid) : "bad";
+      window.mgStatusMap[r.id]=res;                          // 결과 저장 → 다른 페이지로 넘어가도 유지
+      const card=document.getElementById("mg_"+r.id);
+      if(res==="ok"){ ok++; if(vid) goodVids.push(vid); if(st){ st.textContent="✅ 정상"; st.className="mg-status ok"; } if(card) card.classList.remove("bad"); }
+      else if(res==="bad"){ bad++; badIds.push(r.id); if(st){ st.textContent="⚠ 재생 불가"; st.className="mg-status bad"; } if(card) card.classList.add("bad"); }
+      else { unknown++; if(st){ st.textContent="? 확인 필요"; st.className="mg-status warn"; } }
     }
-    // 중복 제거한 정상 영상 목록
     window.mgGoodVids = [...new Set(goodVids)];
     window.mgBadIds = badIds;
-    if(btn){ btn.disabled=false; btn.textContent="다시 검사"; }
+    if(btn){ btn.disabled=false; btn.textContent="다시 검사(전체)"; }
     const fillBtn=$("mgFillBtn");
     if(fillBtn) fillBtn.style.display = (bad>0 && window.mgGoodVids.length>0) ? "" : "none";
-    if(sum) sum.textContent="검사 완료 — 재생 불가 "+bad+"개"+(unknown?(", 확인 필요 "+unknown+"개"):"")+". 빨간 카드의 영상을 교체하세요.";
+    if(sum) sum.textContent="검사 완료 — 전체 "+list.length+"개 중 재생 불가 "+bad+"개"+(unknown?(", 확인 필요 "+unknown+"개"):"")+". 빨간 카드의 영상을 교체하세요.";
   };
 
   // 재생 불가 콘텐츠를, 이미 정상으로 확인된 영상들로 돌려가며 자동 교체
