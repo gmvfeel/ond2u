@@ -146,15 +146,7 @@ async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, food
       const matched = normalPool.filter(c => c.tone === tone || !c.tone);
       if (matched.length) pool = matched;
     }
-    let candidates = pool;
-    try {
-      const recent = await recentQuotes(SB_URL, SB_SERVICE, to, 15);
-      if (recent && recent.size) {
-        const filtered = pool.filter(c => !recent.has((c.quote || "").replace(/\\n/g, " ").slice(0, 80)));
-        if (filtered.length) candidates = filtered; // 다 걸러지면 원래 pool 사용(안전장치)
-      }
-    } catch (e) { /* 조회 실패해도 발송엔 영향 없음 */ }
-    const pickN = candidates[Math.floor(Math.random() * candidates.length)];
+    const pickN = pool[Math.floor(Math.random() * pool.length)];
     let pickB = null;
     if (wantBible && biblePool.length) pickB = biblePool[Math.floor(Math.random() * biblePool.length)];
     html = buildEmail({ fromName, toName, normal: pickN, bible: pickB, recipientEmail: to, senderId, secret: SECRET, foodPool, personalNote, welcome });
@@ -182,18 +174,11 @@ async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, food
   const logBase = { sender_id: senderId || null, sender_name: fromName, recipient_email: to, recipient_name: toName || "", content_quote: quote };
 
   try {
-    const uParam = encodeURIComponent(to || "");
-    const uTok = SECRET ? crypto.createHmac("sha256", SECRET).update(to || "").digest("hex").slice(0, 32) : "";
-    const uUrl = "https://www.ond2u.com/api/unsubscribe?e=" + uParam + "&t=" + uTok;
     const payload = JSON.stringify({
       from: '"오늘도/OND2U" <' + FROM + ">",
       to: [to],
       subject,
-      html,
-      headers: uTok ? {
-        "List-Unsubscribe": "<" + uUrl + ">",
-        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
-      } : undefined
+      html
     });
     const doSend = () => fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -210,19 +195,6 @@ async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, food
     await logSend(SB_URL, SB_SERVICE, { ...logBase, status: "fail", error: String(e && e.message || e) });
     throw e;
   }
-}
-
-// 최근 이 사람에게 성공 발송한 명언들 (같은 편지가 너무 빨리 다시 오지 않게)
-async function recentQuotes(url, key, email, limit) {
-  const set = new Set();
-  try {
-    const q = url + "/rest/v1/odo_sends?select=content_quote&recipient_email=eq."
-      + encodeURIComponent(email) + "&status=eq.success&order=created_at.desc&limit=" + (limit || 15);
-    const r = await fetch(q, { headers: { apikey: key, Authorization: "Bearer " + key } });
-    const rows = await r.json().catch(() => []);
-    (Array.isArray(rows) ? rows : []).forEach(x => { if (x && x.content_quote) set.add(x.content_quote); });
-  } catch (e) { /* 무시 */ }
-  return set;
 }
 
 // 발송 기록을 창고(odo_sends)에 남김 — 실패해도 발송 자체엔 영향 없음
@@ -365,15 +337,9 @@ function buildSpecialEmail({ fromName, toName, label, recipientEmail, senderId, 
       spacer(24) +
       '<div style="text-align:center; font-size:15px; font-weight:600; color:' + ROSE + ';">' + (isSelf ? '\uC624\uB298\uB3C4\uAC00, \uB2F9\uC2E0\uC758 \uD558\uB8E8\uC5D0.' : (fromName + '\uC758 \uB9C8\uC74C\uC744 \uB2F4\uC544.')) + '</div>' +
       spacer(28) +
-      (!isSelf
-        ? '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
-            '<div style="font-size:13px; color:#7a7580; line-height:1.7; margin-bottom:14px;">\uB2F9\uC2E0\uB3C4 \uB9E4\uC77C \uD55C \uD3B8, \uBC1B\uC544\uBCFC \uC218 \uC788\uC5B4\uC694.</div>' +
-            '<a href="https://ond2u.com/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:' + PLUM + '; text-decoration:none; padding:13px 28px; border-radius:30px;">\uB098\uB3C4 \uC624\uB298\uB3C4 \uC2DC\uC791\uD558\uAE30 \u2192</a>' +
-          '</td></tr></table>'
-        : '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
-            '<a href="https://ond2u.com/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:' + PLUM + '; text-decoration:none; padding:13px 28px; border-radius:30px;">\uC624\uB298\uB3C4\uC5D0\uC11C \uB354 \uBCF4\uAE30 \u2192</a>' +
-          '</td></tr></table>'
-      ) +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
+        '<a href="https://ond2u.com/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:' + PLUM + '; text-decoration:none; padding:13px 28px; border-radius:30px;">\uC624\uB298\uB3C4\uC5D0\uC11C \uB354 \uBCF4\uAE30 \u2192</a>' +
+      '</td></tr></table>' +
     '</td></tr>' +
     '<tr><td bgcolor="#f3f1ef" style="padding:22px 28px; border-top:1px solid #eae7e3; text-align:center;">' +
       '<div style="font-size:11px; color:#b0aab6;">\uC774\uC81C \uADF8\uB9CC \uBC1B\uACE0 \uC2F6\uC73C\uC2DC\uBA74 <a href="' + unsubUrl + '" style="color:#b0aab6;">\uC5EC\uAE30</a>\uB97C \uB20C\uB7EC\uC8FC\uC138\uC694.</div>' +
@@ -506,7 +472,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
       '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="' + PLUM + '" style="background:' + PLUM + '; border-radius:14px;"><tr><td style="padding:26px 24px;">' +
         (normal.essay_title ? '<div style="font-size:16px; font-weight:700; color:#ffffff; margin-bottom:14px;">' + normal.essay_title + '</div>' : "") +
         essayParas +
-        '<div style="margin-top:20px; text-align:right; font-size:14px; font-weight:500; color:#ffffff;">' + josaGaI(fromName) + ' \uB4DC\uB824\uC694. \uC624\uB298\uB3C4 \uC88B\uC740 \uD558\uB8E8 \uB418\uC138\uC694 ^^</div>' +
+        '<div style="margin-top:20px; text-align:right; font-size:14px; font-weight:500; color:#ffffff;">' + fromName + '\uB2D8\uC774 \uB4DC\uB824\uC694. \uC624\uB298\uB3C4 \uC88B\uC740 \uD558\uB8E8 \uB418\uC138\uC694 ^^</div>' +
       '</td></tr></table>' +
 
       // 처방 카드 (연보라)
@@ -555,17 +521,11 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
         '</tr></table>' +
       '</td></tr></table>' +
 
-      // CTA — 받는 사람(아끼는 사람)에겐 회원 전환 유도, 나에게/환영(이미 회원)은 '더 보기'
+      // CTA
       spacer(30) +
-      ((toName !== "\uB098\uC5D0\uAC8C" && !welcome)
-        ? '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
-            '<div style="font-size:13px; color:#7a7580; line-height:1.7; margin-bottom:14px;">\uC774 \uD3B8\uC9C0\uAC00 \uC704\uB85C\uAC00 \uB418\uC5C8\uB098\uC694?<br>\uB2F9\uC2E0\uB3C4 \uB9E4\uC77C \uD55C \uD3B8, \uBC1B\uC544\uBCFC \uC218 \uC788\uC5B4\uC694.</div>' +
-            '<a href="https://ond2u.com/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:' + PLUM + '; text-decoration:none; padding:13px 28px; border-radius:30px;">\uB098\uB3C4 \uC624\uB298\uB3C4 \uC2DC\uC791\uD558\uAE30 \u2192</a>' +
-          '</td></tr></table>'
-        : '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
-            '<a href="https://ond2u.com/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:#2b2730; text-decoration:none; padding:13px 28px; border-radius:30px;">\uC624\uB298\uB3C4\uC5D0\uC11C \uB354 \uBCF4\uAE30 \u2192</a>' +
-          '</td></tr></table>'
-      ) +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
+        '<a href="https://ond2u.com/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:#2b2730; text-decoration:none; padding:13px 28px; border-radius:30px;">\uC624\uB298\uB3C4\uC5D0\uC11C \uB354 \uBCF4\uAE30 \u2192</a>' +
+      '</td></tr></table>' +
     '</td></tr>' +
 
     // 푸터
@@ -634,14 +594,11 @@ async function runMonthlyRecap(req, res, env) {
     const narr = buildRecapNarr(label, s);
     const html = buildRecapEmail({ name, label, narr, s, email:u.email, secret:SECRET });
     const subject = label + ", 당신의 마음을 담았어요";
-    const rcTok = SECRET ? crypto.createHmac("sha256", SECRET).update(u.email || "").digest("hex").slice(0,32) : "";
-    const rcUnsub = "https://www.ond2u.com/api/unsubscribe?e=" + encodeURIComponent(u.email || "") + "&t=" + rcTok;
     try {
       const r = await fetch("https://api.resend.com/emails", {
         method:"POST",
         headers:{ "Authorization":"Bearer "+RESEND_KEY, "Content-Type":"application/json" },
-        body: JSON.stringify({ from: "오늘도 <"+FROM+">", to:[u.email], subject, html,
-          headers: rcTok ? { "List-Unsubscribe": "<"+rcUnsub+">", "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } : undefined })
+        body: JSON.stringify({ from: "오늘도 <"+FROM+">", to:[u.email], subject, html })
       });
       if (r.ok) { sent++; results.push({ email:u.email, ok:true }); }
       else { failed++; const t = await r.text().catch(()=> ""); results.push({ email:u.email, ok:false, error:t.slice(0,120) }); }
