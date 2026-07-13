@@ -127,7 +127,7 @@
 
   .family { padding:80px 0; border-top:1px solid var(--line); }
   .family-label { text-align:center; font-size:12px; letter-spacing:0.16em; color:var(--ink-faint); margin-bottom:32px; }
-  .family-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; max-width:580px; margin:0 auto; }
+  .family-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; max-width:980px; margin:0 auto; }
   .family-card { display:flex; align-items:center; gap:12px; text-decoration:none; background:var(--white);
     border:1px solid var(--line); border-radius:14px; padding:15px 16px; transition:all .18s; }
   .family-card:hover { border-color:var(--plum); transform:translateY(-1px); }
@@ -163,6 +163,7 @@
     .about-illust { order:-1; }
     .about-illust svg { max-width:200px; }
     .about-copy .section-eyebrow, .about-copy h2 { text-align:center !important; }
+    .family-grid { grid-template-columns:1fr 1fr; }
   }
   @media (max-width:600px) {
     .hero { padding:104px 0 60px; }
