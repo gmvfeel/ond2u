@@ -217,6 +217,7 @@
   .food { background:#fcf2ea; border:1px solid #f0ddcb; border-radius:18px; padding:22px 24px; }
   .food-head { display:flex; align-items:center; gap:13px; margin-bottom:12px; }
   .food-ic { width:38px; height:38px; border-radius:11px; background:var(--white); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:20px; }
+  .food-ic .tw-emo { width:24px; height:24px; }
   .food-label { font-size:11px; letter-spacing:0.1em; color:#c58a5a; }
   .food-title { font-size:16px; font-weight:700; color:#8a5236; margin-top:2px; }
   .food-body { font-size:14px; line-height:1.85; color:var(--ink-2); }
@@ -604,6 +605,7 @@
   .fd-ai-list { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
   .fd-ai-item { display:flex; align-items:flex-start; gap:10px; background:var(--white); border:1px solid var(--plum-line); border-radius:10px; padding:10px 12px; }
   .fd-ai-item .fd-emo { font-size:19px; flex-shrink:0; line-height:1.2; }
+  .fd-ai-item .fd-emo .tw-emo { width:20px; height:20px; vertical-align:middle; }
   .fd-ai-save { font-family:inherit; font-size:14px; font-weight:600; color:#fff; background:var(--rose); border:none; border-radius:10px; padding:11px; width:100%; cursor:pointer; margin-top:12px; }
   .fd-ai-save:hover { background:var(--rose-deep); }
   .fd-ai-save:disabled { opacity:.6; cursor:default; }
@@ -623,6 +625,7 @@
   .fd-count { font-size:14px; color:var(--ink); margin-bottom:10px; }
   .fd-item { display:flex; align-items:flex-start; gap:12px; background:var(--white); border:1px solid var(--plum-line); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
   .fd-item .fd-emo { font-size:22px; flex-shrink:0; line-height:1.2; }
+  .fd-item .fd-emo .tw-emo { width:24px; height:24px; vertical-align:middle; }
   .fd-item .fd-info { flex:1; min-width:0; }
   .fd-item .fd-nm { font-size:14px; font-weight:700; color:var(--ink); }
   .fd-item .fd-meta { font-size:12px; color:var(--ink-faint); margin-top:3px; }
@@ -1011,6 +1014,11 @@
   .add-cancel:hover { border-color:var(--plum-line); color:var(--plum-deep); }
   .recipient-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:44px 0; }
 </style>
+<script>
+  // Twemoji: 이모지를 통일된 디자인 이미지로 표시 (기기와 무관하게 동일하게 보임)
+  window.twCodepoint = function(s){ var r=[],p=0,c,i=0; while(i<s.length){ c=s.charCodeAt(i++); if(p){ r.push((0x10000+((p-0xD800)<<10)+(c-0xDC00)).toString(16)); p=0; } else if(c>=0xD800&&c<=0xDBFF){ p=c; } else if(c!==0xFE0F){ r.push(c.toString(16)); } } return r.join('-'); };
+  window.twEmoji = function(e){ if(!e) e="\uD83C\uDF7D"; var u="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/"+window.twCodepoint(e)+".svg"; return '<img class="tw-emo" src="'+u+'" alt="'+e+'" draggable="false" onerror="var t=document.createTextNode(this.alt);this.replaceWith(t);">'; };
+</script>
 </head>
 <body>
 <div class="top-bar" id="topBar"></div>
@@ -2145,7 +2153,7 @@
     if(!cand.length) cand = FOODS.slice();
     if(!cand.length){ wrap.style.display="none"; return; }
     const f = cand[Math.floor(Math.random()*cand.length)];
-    $("foodIc").textContent = f.emoji || "🍽";
+    $("foodIc").innerHTML = twEmoji(f.emoji || "🍽");
     $("foodTitle").textContent = f.name || "";
     $("foodBody").textContent = f.descr || "";
     wrap.style.display = "";
@@ -4120,7 +4128,7 @@
       pv.innerHTML = '<div class="fd-ai-list">'+foods.map(f=>{
         const meta = f.kind==="season" ? ((f.start_md||"?")+" ~ "+(f.end_md||"?")) : (FD_GROUP_LABEL[f.mood_group]||f.mood_group||"-");
         const tag = f.kind==="season" ? '<span class="fd-tag season">절기</span>' : '<span class="fd-tag mood">기분</span>';
-        return '<div class="fd-ai-item"><span class="fd-emo">'+(esc(f.emoji)||"🍽")+'</span>'
+        return '<div class="fd-ai-item"><span class="fd-emo">'+twEmoji(f.emoji)+'</span>'
           + '<div class="fd-info"><div class="fd-nm">'+tag+esc(f.name)+'</div>'
           + '<div class="fd-meta">'+esc(meta)+'</div>'
           + (f.descr?'<div class="fd-ds">'+esc(f.descr)+'</div>':"")+'</div></div>';
@@ -4217,7 +4225,7 @@
     list.innerHTML = '<div class="fd-count">총 <b>'+rows.length+'</b>개</div>' + rows.map(r=>{
       const tag = r.kind==="season" ? '<span class="fd-tag season">절기</span>' : '<span class="fd-tag mood">기분</span>';
       const meta = r.kind==="season" ? ((r.start_md||"?")+" ~ "+(r.end_md||"?")) : (FD_GROUP_LABEL[r.mood_group]||r.mood_group||"-");
-      return '<div class="fd-item"><span class="fd-emo">'+(esc(r.emoji)||"🍽")+'</span>'
+      return '<div class="fd-item"><span class="fd-emo">'+twEmoji(r.emoji)+'</span>'
         + '<div class="fd-info"><div class="fd-nm">'+tag+esc(r.name)+'</div>'
         + '<div class="fd-meta">'+esc(meta)+(r.active===false?" · 숨김":"")+'</div>'
         + (r.descr?'<div class="fd-ds">'+esc(r.descr)+'</div>':"")
