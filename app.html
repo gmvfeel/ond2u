@@ -1026,6 +1026,25 @@
   .add-cancel { width:100%; font-family:inherit; font-size:14px; font-weight:600; color:var(--ink-soft); background:transparent; border:1px solid var(--line-strong); border-radius:30px; padding:13px; cursor:pointer; transition:all .2s; margin-top:8px; }
   .add-cancel:hover { border-color:var(--plum-line); color:var(--plum-deep); }
   .recipient-empty { text-align:center; color:var(--ink-faint); font-size:14px; padding:44px 0; }
+  .recipient .rdiary { font-family:inherit; font-size:12px; color:var(--plum-deep); background:transparent; border:none; cursor:pointer; padding:4px; font-weight:600; }
+  .recipient .rdiary:hover { color:var(--plum); }
+  .hd-overlay { position:fixed; inset:0; background:rgba(43,39,48,.5); display:flex; align-items:center; justify-content:center; z-index:140; padding:20px; overflow-y:auto; }
+  .hd-modal { position:relative; background:#faf8fb; border-radius:22px; max-width:440px; width:100%; max-height:86vh; overflow-y:auto; padding:26px 24px; box-shadow:0 14px 40px rgba(43,39,48,.18); }
+  .hd-close { position:absolute; top:14px; right:16px; background:none; border:none; font-size:18px; color:var(--ink-faint); cursor:pointer; line-height:1; }
+  .hd-head { display:flex; align-items:center; gap:12px; margin-bottom:18px; padding-right:20px; }
+  .hd-av { width:44px; height:44px; border-radius:50%; background:var(--plum); color:#fff; font-weight:700; font-size:18px; display:flex; align-items:center; justify-content:center; flex:none; }
+  .hd-name { font-size:17px; font-weight:800; color:var(--plum-deep); letter-spacing:-0.02em; }
+  .hd-sub { font-size:12px; color:var(--ink-faint); margin-top:2px; word-break:break-all; }
+  .hd-sum { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .hd-sum span { font-size:12px; color:var(--ink-soft); background:var(--plum-soft); border-radius:14px; padding:6px 12px; }
+  .hd-sum b { color:var(--plum); }
+  .hd-timeline { display:flex; flex-direction:column; gap:12px; }
+  .hd-item { background:#fff; border:1px solid var(--plum-line); border-radius:14px; padding:14px 15px; }
+  .hd-date { font-size:11px; color:var(--ink-faint); margin-bottom:7px; }
+  .hd-emo { display:inline-block; background:#fbeef1; color:#c56179; font-weight:700; border-radius:14px; padding:3px 11px; font-size:12px; }
+  .hd-quote { font-size:12.5px; color:var(--ink-faint); margin-top:9px; line-height:1.6; font-style:italic; }
+  .hd-reply { font-size:14px; color:#3a3540; margin-top:10px; line-height:1.7; background:var(--plum-soft); border-radius:10px; padding:10px 12px; word-break:keep-all; }
+  .hd-empty, .hd-loading { text-align:center; color:var(--ink-faint); font-size:14px; padding:34px 10px; line-height:1.7; }
 </style>
 <script>
   // Twemoji: 이모지를 통일된 디자인 이미지로 표시 (기기와 무관하게 동일하게 보임)
@@ -3030,12 +3049,66 @@
           })()}
         </div>
         <div class="ractions">
+          <button class="rdiary" onclick="openHeartDiary(${i})">마음 일기</button>
           <button class="redit" onclick="editRecipient(${i})">수정</button>
           <button class="rdel" onclick="delRecipient(${i})">삭제</button>
         </div>
       </div>
     `).join("");
   }
+
+  window.openHeartDiary = async function(i){
+    const r = recipients[i];
+    if(!r) return;
+    const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    let ov = document.getElementById("hdOverlay");
+    if(ov) ov.remove();
+    ov = document.createElement("div");
+    ov.id = "hdOverlay"; ov.className = "hd-overlay";
+    ov.innerHTML =
+      '<div class="hd-modal">'
+      + '<button class="hd-close" onclick="closeHeartDiary()">\u2715</button>'
+      + '<div class="hd-head"><div class="hd-av">'+esc(r.name.charAt(0))+'</div>'
+      + '<div><div class="hd-name">'+esc(r.name)+'\uB2D8\uC758 \uB9C8\uC74C \uC77C\uAE30</div>'
+      + '<div class="hd-sub">'+esc(r.email)+'</div></div></div>'
+      + '<div class="hd-body" id="hdBody"><div class="hd-loading">\uBD88\uB7EC\uC624\uB294 \uC911\u2026</div></div>'
+      + '</div>';
+    document.body.appendChild(ov);
+    ov.addEventListener("click", function(e){ if(e.target===ov) closeHeartDiary(); });
+    try {
+      const { data, error } = await odoDB.from("odo_reactions")
+        .select("emotion, content_quote, reply, created_at")
+        .eq("sender_id", currentUser.id)
+        .eq("recipient_email", r.email)
+        .order("created_at", { ascending:false });
+      const body = document.getElementById("hdBody");
+      if(!body) return;
+      if(error){ body.innerHTML = '<div class="hd-empty">\uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC5B4\uC694.</div>'; return; }
+      const rows = data || [];
+      if(!rows.length){ body.innerHTML = '<div class="hd-empty">\uC544\uC9C1 \uB0A8\uAE34 \uB9C8\uC74C\uC774 \uC5C6\uC5B4\uC694.<br>\uD3B8\uC9C0\uAC00 \uC624\uAC00\uACE0 \uBC18\uC751\uC774 \uC313\uC774\uBA74 \uC5EC\uAE30\uC5D0 \uBAA8\uC5EC\uC694.</div>'; return; }
+      const emoCount = {};
+      rows.forEach(function(x){ if(x.emotion) emoCount[x.emotion]=(emoCount[x.emotion]||0)+1; });
+      const topEmo = Object.keys(emoCount).sort(function(a,b){ return emoCount[b]-emoCount[a]; })[0] || "";
+      const replyN = rows.filter(function(x){ return x.reply && x.reply.trim(); }).length;
+      const summary = '<div class="hd-sum"><span><b>'+rows.length+'</b>\uBC88 \uB9C8\uC74C\uC744 \uB0A8\uACBC\uC5B4\uC694</span>'
+        + (topEmo ? '<span>\uAC00\uC7A5 \uB9CE\uC774 \u00B7 <b>'+esc(topEmo)+'</b></span>' : "")
+        + (replyN ? '<span><b>'+replyN+'</b>\uAC1C\uC758 \uB2F5\uC7A5</span>' : "")
+        + '</div>';
+      const items = rows.map(function(x){
+        const d = new Date(x.created_at);
+        const ds = d.getFullYear()+"."+String(d.getMonth()+1).padStart(2,"0")+"."+String(d.getDate()).padStart(2,"0");
+        return '<div class="hd-item"><div class="hd-date">'+ds+'</div>'
+          + (x.emotion ? '<span class="hd-emo">'+esc(x.emotion)+'</span>' : "")
+          + (x.content_quote ? '<div class="hd-quote">\u201C'+esc(x.content_quote)+'\u201D</div>' : "")
+          + (x.reply && x.reply.trim() ? '<div class="hd-reply">\uD83D\uDCAC '+esc(x.reply).replace(/\n/g,"<br>")+'</div>' : "")
+          + '</div>';
+      }).join("");
+      body.innerHTML = summary + '<div class="hd-timeline">'+items+'</div>';
+    } catch(e){
+      const body=document.getElementById("hdBody"); if(body) body.innerHTML='<div class="hd-empty">\uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC5B4\uC694.</div>';
+    }
+  };
+  window.closeHeartDiary = function(){ const ov=document.getElementById("hdOverlay"); if(ov) ov.remove(); };
 
   window.delRecipient = async function(i){
     const rec = recipients[i];
