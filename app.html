@@ -3991,6 +3991,14 @@
   const ODO_KEY = "sb_publishable_4d7_STnlpFQZlWaOQ3RnkQ_GQ3zNKmy";
   const odoDB = window.supabase.createClient(ODO_URL, ODO_KEY);
 
+  // 방문 기록 (세션당 1회) — 관리자 대시보드 방문 통계용
+  try {
+    if (!sessionStorage.getItem("odo_visited")) {
+      sessionStorage.setItem("odo_visited", "1");
+      odoDB.from("odo_visits").insert({ path: "app" }).then(function(){}, function(){});
+    }
+  } catch(e){}
+
   // 로그인 상태가 바뀌면(소셜 로그인 후 돌아왔을 때 포함) 자동으로 반영
   odoDB.auth.onAuthStateChange((event, session) => {
     if (session && session.user && !loggedIn) checkSession();
@@ -4410,7 +4418,9 @@
       + card("담긴 콘텐츠", (s.contents||0), "개", "지금 준비된 편지들")
       + card("오늘 발송", limitNum, "/ 100통", limitSub)
       + card("보낸 편지", (s.sends_total||0), "통", "오늘 <b>"+todayN+"통</b> 나갔어요")
-      + card("받은 반응", (s.reactions_total||0), "개", "오늘 <b>"+(s.reactions_today||0)+"개</b> 도착했어요");
+      + card("받은 반응", (s.reactions_total||0), "개", "오늘 <b>"+(s.reactions_today||0)+"개</b> 도착했어요")
+      + card("오늘 방문", (s.visits_today||0), "회", "오늘 다녀간 방문이에요")
+      + card("전체 방문", (s.visits_total||0), "회", "지금까지 누적 방문이에요");
   }
 
   // ===== 발송 현황 (관리자 전용) =====

@@ -431,5 +431,23 @@
   }
   setInterval(swapLetter, 4000);
 </script>
+<script>
+  // 방문 기록 (세션당 1회) — 관리자 대시보드 방문 통계용
+  try {
+    if (!sessionStorage.getItem("odo_visited_landing")) {
+      sessionStorage.setItem("odo_visited_landing", "1");
+      fetch("https://kulchivdrpqwdbdgqrhj.supabase.co/rest/v1/odo_visits", {
+        method: "POST",
+        headers: {
+          "apikey": "sb_publishable_4d7_STnlpFQZlWaOQ3RnkQ_GQ3zNKmy",
+          "Authorization": "Bearer sb_publishable_4d7_STnlpFQZlWaOQ3RnkQ_GQ3zNKmy",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({ path: "landing" })
+      }).catch(function(){});
+    }
+  } catch(e){}
+</script>
 </body>
 </html>
