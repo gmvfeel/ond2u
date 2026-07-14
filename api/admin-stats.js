@@ -20,17 +20,19 @@ export default async function handler(req, res) {
   const todayISO = kstTodayStartISO();
 
   try {
-    const [members, contents, sends_total, sends_today, reactions_total, reactions_today] = await Promise.all([
+    const [members, contents, sends_total, sends_today, reactions_total, reactions_today, visits_total, visits_today] = await Promise.all([
       countRows(SB_URL, SB_SERVICE, "odo_users"),
       countRows(SB_URL, SB_SERVICE, "odo_contents"),
       countRows(SB_URL, SB_SERVICE, "odo_sends"),
       countRows(SB_URL, SB_SERVICE, "odo_sends", "created_at=gte." + todayISO),
       countRows(SB_URL, SB_SERVICE, "odo_reactions"),
-      countRows(SB_URL, SB_SERVICE, "odo_reactions", "created_at=gte." + todayISO)
+      countRows(SB_URL, SB_SERVICE, "odo_reactions", "created_at=gte." + todayISO),
+      countRows(SB_URL, SB_SERVICE, "odo_visits"),
+      countRows(SB_URL, SB_SERVICE, "odo_visits", "created_at=gte." + todayISO)
     ]);
     return res.status(200).json({
       ok: true,
-      stats: { members, contents, sends_total, sends_today, reactions_total, reactions_today }
+      stats: { members, contents, sends_total, sends_today, reactions_total, reactions_today, visits_total, visits_today }
     });
   } catch (e) {
     return res.status(500).json({ ok: false, error: String(e && e.message || e) });
