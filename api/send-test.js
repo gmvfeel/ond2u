@@ -431,7 +431,10 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
 
     // 헤더
     '<tr><td bgcolor="#ffffff" style="padding:18px 24px; border-bottom:1px solid #eae7e3;">' +
-      '<div style="font-size:16px; font-weight:700; color:#2b2730; margin-bottom:12px;">\uC624\uB298\uB3C4 \u00B7 \uB2F9\uC2E0\uC744 \uC704\uD55C \uD55C \uD3B8</div>' +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:12px;"><tr>' +
+        '<td style="vertical-align:middle; font-size:16px; font-weight:700; color:#2b2730;">\uC624\uB298\uB3C4 \u00B7 \uB2F9\uC2E0\uC744 \uC704\uD55C \uD55C \uD3B8</td>' +
+        '<td style="vertical-align:middle; text-align:right;"><a href="https://ond2u.com/app.html" style="display:inline-block; font-size:12px; font-weight:600; color:' + PLUM + '; background:#f4eef7; text-decoration:none; padding:8px 14px; border-radius:20px; white-space:nowrap;">\uC624\uB298\uB3C4\uC5D0\uC11C \uBCF4\uAE30 \u2192</a></td>' +
+      '</tr></table>' +
       '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>' +
         '<td width="44" style="vertical-align:middle;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="38" height="38" bgcolor="' + PLUM + '" align="center" style="background:' + PLUM + '; border-radius:50%; color:#ffffff; font-weight:700; font-size:15px; line-height:38px;">' + badge + '</td></tr></table></td>' +
         '<td style="vertical-align:middle;"><div style="font-size:13px; font-weight:600; color:#2b2730;">' + fromName + ' <span style="color:#b0aab6; font-weight:400;">\uB2D8\uC774 \uBCF4\uB0C8\uC5B4\uC694. \uC624\uB298\uB3C4 \uCD5C\uACE0\uC758 \uD558\uB8E8\uAC00 \uB418\uAE38</span></div><div style="font-size:12px; color:#b0aab6;">\uC624\uB298\uB3C4 &lt;OND2U&gt;</div></td>' +
