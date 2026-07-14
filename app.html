@@ -1037,8 +1037,11 @@
   .rpreview-link:hover { text-decoration:underline; }
   .pv-overlay { position:fixed; inset:0; background:rgba(43,39,48,.55); display:flex; align-items:center; justify-content:center; z-index:150; padding:16px; }
   .pv-modal { background:#fff; border-radius:18px; width:100%; max-width:560px; height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 14px 40px rgba(43,39,48,.2); }
-  .pv-bar { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); flex:none; }
-  .pv-title { font-size:15px; font-weight:700; color:var(--plum-deep); }
+  .pv-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 18px; border-bottom:1px solid var(--line); flex:none; }
+  .pv-title { font-size:15px; font-weight:700; color:var(--plum-deep); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pv-bar-actions { display:flex; align-items:center; gap:10px; flex:none; }
+  .pv-openbtn { font-family:inherit; font-size:12.5px; font-weight:600; color:var(--plum); background:var(--plum-soft); border:none; border-radius:16px; padding:7px 13px; cursor:pointer; white-space:nowrap; }
+  .pv-openbtn:hover { background:#e7ddf0; }
   .pv-close { background:none; border:none; font-size:18px; color:var(--ink-faint); cursor:pointer; line-height:1; }
   .pv-note { font-size:12px; color:var(--ink-soft); padding:9px 18px; background:var(--plum-soft); flex:none; }
   .pv-frame { flex:1; overflow-x:hidden; overflow-y:auto; background:#f3f1ef; min-height:0; }
@@ -3138,7 +3141,7 @@
     ov.id = "pvOverlay"; ov.className = "pv-overlay";
     ov.innerHTML =
       '<div class="pv-modal">'
-      + '<div class="pv-bar"><span class="pv-title">'+ String(r.name||"").replace(/</g,"&lt;") +'\uB2D8\uC5D0\uAC8C \uAC08 \uD3B8\uC9C0 \uBBF8\uB9AC\uBCF4\uAE30</span><button class="pv-close" onclick="closePreview()">\u2715</button></div>'
+      + '<div class="pv-bar"><span class="pv-title">'+ String(r.name||"").replace(/</g,"&lt;") +'\uB2D8\uC5D0\uAC8C \uAC08 \uD3B8\uC9C0 \uBBF8\uB9AC\uBCF4\uAE30</span><div class="pv-bar-actions"><button class="pv-openbtn" onclick="openPreviewTab()">\uD06C\uAC8C \uBCF4\uAE30 \u2197</button><button class="pv-close" onclick="closePreview()">\u2715</button></div></div>'
       + '<div class="pv-note">\uC608\uC2DC \uD55C \uD3B8\uC774\uC5D0\uC694. \uC2E4\uC81C\uB85C\uB3C4 \uB9E4\uBC88 \uB2E4\uB978 \uAE00\uC774 \uB098\uAC00\uC694.</div>'
       + '<div class="pv-frame" id="pvFrame"><div class="pv-loading">\uBD88\uB7EC\uC624\uB294 \uC911\u2026</div></div>'
       + '</div>';
@@ -3157,6 +3160,7 @@
       const res = await fetch("/api/send-test?"+params.toString(), { headers:{ "Authorization":"Bearer "+token } });
       if(!res.ok){ if(frame) frame.innerHTML='<div class="pv-loading">\uBBF8\uB9AC\uBCF4\uAE30\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC5B4\uC694.</div>'; return; }
       const html = await res.text();
+      ov._pvHtml = html;
       if(!frame) return;
       frame.innerHTML = '<div class="pv-scaler" id="pvScaler"></div>';
       const scaler = document.getElementById("pvScaler");
@@ -3184,6 +3188,14 @@
     }
   };
   window.closePreview = function(){ const ov=document.getElementById("pvOverlay"); if(ov){ if(ov._pvFit) window.removeEventListener("resize", ov._pvFit); ov.remove(); } };
+  window.openPreviewTab = function(){
+    const ov = document.getElementById("pvOverlay");
+    const html = ov && ov._pvHtml;
+    if(!html){ alert("편지를 불러오는 중이에요. 잠시 후 다시 눌러주세요."); return; }
+    const w = window.open("", "_blank");
+    if(!w){ alert("팝업이 차단됐어요. 브라우저에서 팝업 허용 후 다시 시도해 주세요."); return; }
+    w.document.open(); w.document.write(html); w.document.close();
+  };
 
   window.togglePause = async function(i){
     const r = recipients[i];
