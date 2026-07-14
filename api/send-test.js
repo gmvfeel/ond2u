@@ -174,8 +174,9 @@ async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, food
   const logBase = { sender_id: senderId || null, sender_name: fromName, recipient_email: to, recipient_name: toName || "", content_quote: quote };
 
   try {
+    const fromDisplay = (String(fromName || "오늘도").replace(/["<>\r\n]/g, "").trim() || "오늘도") + "님이 보냅니다.(오늘도)";
     const payload = JSON.stringify({
-      from: '"오늘도/OND2U" <' + FROM + ">",
+      from: '"' + fromDisplay + '" <' + FROM + ">",
       to: [to],
       subject,
       html
