@@ -1041,8 +1041,9 @@
   .pv-title { font-size:15px; font-weight:700; color:var(--plum-deep); }
   .pv-close { background:none; border:none; font-size:18px; color:var(--ink-faint); cursor:pointer; line-height:1; }
   .pv-note { font-size:12px; color:var(--ink-soft); padding:9px 18px; background:var(--plum-soft); flex:none; }
-  .pv-frame { flex:1; overflow:auto; background:#f3f1ef; min-height:0; }
-  .pv-iframe { width:100%; height:100%; border:none; display:block; }
+  .pv-frame { flex:1; overflow-x:hidden; overflow-y:auto; background:#f3f1ef; min-height:0; }
+  .pv-scaler { position:relative; width:100%; }
+  .pv-iframe { width:680px; border:none; display:block; transform-origin:top left; }
   .pv-loading { text-align:center; color:var(--ink-faint); font-size:14px; padding:40px 10px; }
   .hd-overlay { position:fixed; inset:0; background:rgba(43,39,48,.5); display:flex; align-items:center; justify-content:center; z-index:140; padding:20px; overflow-y:auto; }
   .hd-modal { position:relative; background:#faf8fb; border-radius:22px; max-width:440px; width:100%; max-height:86vh; overflow-y:auto; padding:26px 24px; box-shadow:0 14px 40px rgba(43,39,48,.18); }
@@ -3156,15 +3157,33 @@
       const res = await fetch("/api/send-test?"+params.toString(), { headers:{ "Authorization":"Bearer "+token } });
       if(!res.ok){ if(frame) frame.innerHTML='<div class="pv-loading">\uBBF8\uB9AC\uBCF4\uAE30\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC5B4\uC694.</div>'; return; }
       const html = await res.text();
+      if(!frame) return;
+      frame.innerHTML = '<div class="pv-scaler" id="pvScaler"></div>';
+      const scaler = document.getElementById("pvScaler");
       const iframe = document.createElement("iframe");
       iframe.className = "pv-iframe";
       iframe.setAttribute("srcdoc", html);
-      if(frame){ frame.innerHTML=""; frame.appendChild(iframe); }
+      scaler.appendChild(iframe);
+      const EMAIL_W = 680;
+      const fit = function(){
+        try {
+          const w = scaler.clientWidth || frame.clientWidth || EMAIL_W;
+          const scale = Math.min(1, w / EMAIL_W);
+          const doc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);
+          const ch = doc ? Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight) : 1000;
+          iframe.style.height = ch + "px";
+          iframe.style.transform = "scale(" + scale + ")";
+          scaler.style.height = (ch * scale) + "px";
+        } catch(e){}
+      };
+      iframe.onload = function(){ fit(); setTimeout(fit, 500); };
+      window.addEventListener("resize", fit);
+      ov._pvFit = fit;
     } catch(e){
       const frame=document.getElementById("pvFrame"); if(frame) frame.innerHTML='<div class="pv-loading">\uBBF8\uB9AC\uBCF4\uAE30\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC5B4\uC694.</div>';
     }
   };
-  window.closePreview = function(){ const ov=document.getElementById("pvOverlay"); if(ov) ov.remove(); };
+  window.closePreview = function(){ const ov=document.getElementById("pvOverlay"); if(ov){ if(ov._pvFit) window.removeEventListener("resize", ov._pvFit); ov.remove(); } };
 
   window.togglePause = async function(i){
     const r = recipients[i];
