@@ -360,6 +360,37 @@ function buildSpecialEmail({ fromName, toName, label, recipientEmail, senderId, 
 '</td></tr></table></body></html>';
 }
 
+// ===== 오늘의 한 줄 질문 (매일 하나씩 잔잔하게) =====
+const DAILY_QUESTIONS = [
+  "\uC624\uB298 \uB098\uC5D0\uAC8C \uAC00\uC7A5 \uACE0\uB9C8\uC6E0\uB358 \uC21C\uAC04\uC740 \uC5B8\uC81C\uC600\uB098\uC694?",
+  "\uC9C0\uAE08 \uB0B4 \uB9C8\uC74C\uC740 \uC5B4\uB5A4 \uC0C9\uC5D0 \uAC00\uAE4C\uC6B4\uAC00\uC694?",
+  "\uC624\uB298 \uD558\uB8E8, \uB098\uB97C \uC6C3\uAC8C \uD55C \uC791\uC740 \uAC83\uC740 \uBB34\uC5C7\uC774\uC5C8\uB098\uC694?",
+  "\uC694\uC998 \uAC00\uC7A5 \uB9C8\uC74C\uC774 \uB180\uC774\uB294 \uC2DC\uAC04\uC740 \uC5B8\uC81C\uC778\uAC00\uC694?",
+  "\uC624\uB298 \uB0B4\uAC00 \uB098\uC5D0\uAC8C \uD574\uC8FC\uACE0 \uC2F6\uC740 \uB9D0\uC740 \uBB34\uC5C7\uC778\uAC00\uC694?",
+  "\uCD5C\uADFC\uC5D0 '\uCC38 \uB2E4\uD589\uC774\uB2E4' \uC2F6\uC5C8\uB358 \uC21C\uAC04\uC774 \uC788\uC5C8\uB098\uC694?",
+  "\uC9C0\uAE08 \uC774 \uC21C\uAC04, \uB0B4 \uBAB8\uC740 \uC5B4\uB5A4 \uC26C\uD568\uC744 \uBC14\uB77C\uACE0 \uC788\uB098\uC694?",
+  "\uC624\uB298 \uC2A4\uCCD0 \uC9C0\uB098\uAC14\uC9C0\uB9CC \uC608\uBABB\uD588\uB358 \uC7A5\uBA74\uC774 \uC788\uC5C8\uB098\uC694?",
+  "\uC694\uC998 \uB098\uB97C \uAC00\uC7A5 \uD798\uB098\uAC8C \uD558\uB294 \uC0AC\uB78C\uC740 \uB204\uAD6C\uC778\uAC00\uC694?",
+  "\uC624\uB298 \uD558\uB8E8 \uC911 \uB2E4\uC2DC \uC0B4\uACE0 \uC2F6\uC740 1\uBD84\uC774 \uC788\uB2E4\uBA74 \uC5B8\uC81C\uC778\uAC00\uC694?",
+  "\uC9C0\uAE08 \uB0B4\uB824\uB193\uC544\uB3C4 \uAD1C\uCC2E\uC740 \uAC71\uC815\uC740 \uBB34\uC5C7\uC77C\uAE4C\uC694?",
+  "\uC624\uB298 \uB098\uB294 \uBB34\uC5C7\uC5D0 \uAC00\uC7A5 \uB9C8\uC74C\uC744 \uB9CE\uC774 \uC37C\uB098\uC694?",
+  "\uCD5C\uADFC\uC5D0 \uB9C8\uC74C\uC774 \uB530\uB73B\uD574\uC84C\uB358 \uB9D0 \uD55C\uB9C8\uB514\uAC00 \uC788\uC5C8\uB098\uC694?",
+  "\uC624\uB298, \uB098\uC5D0\uAC8C \uC791\uC740 \uC120\uBB3C\uC744 \uC900\uB2E4\uBA74 \uBB34\uC5C7\uC744 \uC8FC\uACE0 \uC2F6\uB098\uC694?",
+  "\uC694\uC998 \uB0B4\uAC00 \uC870\uAE08\uC529 \uB098\uC544\uC9C0\uACE0 \uC788\uB294 \uBD80\uBD84\uC740 \uBB34\uC5C7\uC778\uAC00\uC694?",
+  "\uC624\uB298 \uD558\uB8E8\uB97C \uC0C9 \uD558\uB098\uB85C \uD45C\uD604\uD558\uBA74 \uC5B4\uB5A4 \uC0C9\uC77C\uAE4C\uC694?",
+  "\uC624\uB298 \uB0B4\uAC00 \uC798 \uACAC\uB38C\uB0B8 \uC21C\uAC04\uC740 \uC5B8\uC81C\uC600\uB098\uC694?",
+  "\uC694\uC998 \uB098\uB97C \uC124\uB808\uAC8C \uD558\uB294 \uC791\uC740 \uAE30\uB300\uAC00 \uC788\uB098\uC694?",
+  "\uCD5C\uADFC\uC5D0 \uB098\uB3C4 \uBAA8\uB974\uAC8C \uBBF8\uC18C \uC9C0\uC5C8\uB358 \uC21C\uAC04\uC774 \uC788\uC5C8\uB098\uC694?",
+  "\uC624\uB298, \uC870\uAE08 \uCC9C\uCC9C\uD788 \uD574\uB3C4 \uAD1C\uCC2E\uC740 \uC77C\uC740 \uBB34\uC5C7\uC77C\uAE4C\uC694?",
+  "\uC694\uC998 \uB0B4\uAC00 \uAC00\uC7A5 \uB4E3\uACE0 \uC2F6\uC740 \uB9D0\uC740 \uBB34\uC5C7\uC778\uAC00\uC694?",
+  "\uC9C0\uAE08 \uB0B4 \uACC1\uC5D0\uC11C \uB098\uB97C \uC9C0\uCF1C\uC8FC\uB294 \uAC83\uC740 \uBB34\uC5C7\uC778\uAC00\uC694?"
+];
+function pickDailyQuestion() {
+  const k = new Date(Date.now() + 9 * 3600 * 1000); // KST
+  const doy = Math.floor((Date.UTC(k.getUTCFullYear(), k.getUTCMonth(), k.getUTCDate()) - Date.UTC(k.getUTCFullYear(), 0, 0)) / 86400000);
+  return DAILY_QUESTIONS[((doy % DAILY_QUESTIONS.length) + DAILY_QUESTIONS.length) % DAILY_QUESTIONS.length];
+}
+
 function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId, secret, foodPool, personalNote, welcome }) {
   const nl = s => (s || "").replace(/\\n/g, "\n");
   const escHtml = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -383,6 +414,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
   const essayParas = nl(normal.essay).split("\n\n").filter(Boolean)
     .map(p => '<p style="font-size:14px; line-height:1.9; color:#e9e5f0; margin:0 0 13px;">' + p.replace(/\n/g, "<br>") + '</p>').join("");
   const careIc = careEmoji(normal.care_icon);
+  const todayQuestion = pickDailyQuestion();
   // 오늘 이 음식 (절기 우선 → 없으면 랜덤), 한국 날짜(KST) 기준
   const spacer = h => '<div style="height:' + h + 'px; line-height:' + h + 'px; font-size:0;">&nbsp;</div>';
   const _kst = new Date(Date.now() + 9*3600*1000);
@@ -498,6 +530,13 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
         '</tr></table>' +
         '<div style="font-size:13px; line-height:1.8; color:#46414d; margin-top:11px;">' + (normal.care_body || "") + '</div>' +
       '</td></tr></table>' : "") +
+
+      // 오늘의 한 줄 질문
+      spacer(30) +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px dashed ' + ROSE + '; border-radius:14px;"><tr><td style="padding:20px 22px; text-align:center;">' +
+        '<div style="font-size:10px; letter-spacing:0.16em; color:' + ROSE + '; margin-bottom:9px;">\uC624\uB298, \uC2A4\uC2A4\uB85C\uC5D0\uAC8C</div>' +
+        '<div style="font-size:15px; font-weight:600; line-height:1.7; color:' + PLUM_DEEP + ';">' + todayQuestion + '</div>' +
+      '</td></tr></table>' +
 
       foodBlock +
 
