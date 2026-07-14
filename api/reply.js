@@ -48,7 +48,7 @@ export default async function handler(req, res) {
   const H = { "apikey": SB_SERVICE, "Authorization": "Bearer " + SB_SERVICE, "Content-Type": "application/json" };
 
   // 2-1) 하루 답신 한도 (관리자 제외)
-  const DAILY_REPLY_LIMIT = 20;
+  const DAILY_REPLY_LIMIT = 10;
   if (!isAdmin) {
     try {
       const todayISO = kstTodayStartISO();
