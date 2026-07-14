@@ -71,6 +71,13 @@ export default async function handler(req, res) {
 
     const cfg = { RESEND_KEY, FROM, fromName, normalPool, biblePool, foodPool, SB_URL, SB_SERVICE, SECRET };
 
+    // ── 미리보기: 발송하지 않고 편지 HTML만 반환 ──
+    if (req.query.preview === "1") {
+      const pv = await sendOne({ ...cfg, preview: true, to: req.query.to || "preview@ond2u.com", toName: req.query.to_name || "", wantBible: req.query.bible === "1", senderId: req.query.sender_id || "", tone: req.query.tone || "", special: req.query.special || null, personalNote: req.query.note || "" });
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      return res.status(200).send(pv.html);
+    }
+
     if (all) {
       // ── 전체 발송: 수신자 명단 전원에게 ──
       let recipients = await fetchRecipients(SB_URL, SB_SERVICE);
@@ -135,7 +142,7 @@ export default async function handler(req, res) {
 // tone(결)이 있으면: 그 결에 맞는 콘텐츠 + 결 없는(공통) 콘텐츠 중에서만 뽑음.
 //  - 그 결에 해당하는 게 하나도 없으면 전체에서 뽑음(폴백) → 편지가 안 나가는 일은 없음.
 // special(특별한 날 이름표)이 있으면: 평소 편지 대신 축하 편지를 보냄.
-async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, foodPool, to, toName, wantBible, senderId, tone, special, personalNote, welcome, SB_URL, SB_SERVICE, SECRET }) {
+async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, foodPool, to, toName, wantBible, senderId, tone, special, personalNote, welcome, preview, SB_URL, SB_SERVICE, SECRET }) {
   let html, quote, subject;
   if (special) {
     html = buildSpecialEmail({ fromName, toName, label: special, recipientEmail: to, senderId, secret: SECRET });
@@ -172,6 +179,7 @@ async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, food
     subject = subjPool[Math.floor(Math.random() * subjPool.length)];
     }
   }
+  if (preview) return { preview: true, html, subject };
   const logBase = { sender_id: senderId || null, sender_name: fromName, recipient_email: to, recipient_name: toName || "", content_quote: quote };
 
   try {
