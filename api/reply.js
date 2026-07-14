@@ -33,6 +33,9 @@ export default async function handler(req, res) {
   } catch (e) {}
   if (!user || !user.id) return res.status(401).json({ ok: false, error: "로그인 정보를 확인할 수 없어요." });
 
+  const admins = (process.env.ADMIN_EMAILS || "").split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
+  const isAdmin = !!(user.email && admins.includes(user.email.toLowerCase()));
+
   // 2) 입력값
   let body = req.body;
   if (typeof body === "string") { try { body = JSON.parse(body); } catch (e) { body = {}; } }
@@ -43,6 +46,23 @@ export default async function handler(req, res) {
   if (message.length > 1000) return res.status(400).json({ ok: false, error: "답신이 너무 길어요 (1000자 이내)." });
 
   const H = { "apikey": SB_SERVICE, "Authorization": "Bearer " + SB_SERVICE, "Content-Type": "application/json" };
+
+  // 2-1) 하루 답신 한도 (관리자 제외)
+  const DAILY_REPLY_LIMIT = 20;
+  if (!isAdmin) {
+    try {
+      const todayISO = kstTodayStartISO();
+      const cr = await fetch(
+        SB_URL + "/rest/v1/odo_sends?sender_id=eq." + encodeURIComponent(user.id) +
+        "&created_at=gte." + encodeURIComponent(todayISO) +
+        "&content_quote=like." + encodeURIComponent("[\uB2F5\uC2E0]*") + "&select=id",
+        { headers: { "apikey": SB_SERVICE, "Authorization": "Bearer " + SB_SERVICE, "Prefer": "count=exact", "Range": "0-0" } }
+      );
+      const used = parseInt((((cr.headers.get("content-range") || "").split("/")[1]) || "0"), 10) || 0;
+      if (used >= DAILY_REPLY_LIMIT)
+        return res.status(429).json({ ok: false, error: "\uC624\uB298 \uBCF4\uB0BC \uC218 \uC788\uB294 \uB2F5\uC2E0(" + DAILY_REPLY_LIMIT + "\uD1B5)\uC744 \uBAA8\uB450 \uC0AC\uC6A9\uD588\uC5B4\uC694. \uB0B4\uC77C \uB2E4\uC2DC \uC2DC\uB3C4\uD574 \uC8FC\uC138\uC694." });
+    } catch (e) { /* 카운트 실패 시엔 막지 않고 진행 */ }
+  }
 
   // 3) 해당 답장 조회 + 본인 것인지 확인
   let reaction;
@@ -161,4 +181,12 @@ export default async function handler(req, res) {
   } catch (e) {
     return res.status(500).json({ ok: false, error: "발송 중 문제가 생겼어요. 잠시 후 다시 시도해 주세요." });
   }
+}
+
+// 오늘(한국시각) 0시를 UTC ISO로
+function kstTodayStartISO() {
+  const kst = new Date(Date.now() + 9 * 3600 * 1000);
+  const y = kst.getUTCFullYear(), m = kst.getUTCMonth(), d = kst.getUTCDate();
+  const utc = new Date(Date.UTC(y, m, d, 0, 0, 0) - 9 * 3600 * 1000);
+  return utc.toISOString();
 }
