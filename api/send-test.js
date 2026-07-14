@@ -534,7 +534,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
       // 오늘의 한 줄 질문
       spacer(30) +
       '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px dashed ' + ROSE + '; border-radius:14px;"><tr><td style="padding:20px 22px; text-align:center;">' +
-        '<div style="font-size:10px; letter-spacing:0.16em; color:' + ROSE + '; margin-bottom:9px;">\uC624\uB298, \uC2A4\uC2A4\uB85C\uC5D0\uAC8C</div>' +
+        '<div style="font-size:11px; letter-spacing:0.02em; color:' + ROSE + '; margin-bottom:10px;">\uC624\uB298, \uC2A4\uC2A4\uB85C\uC5D0\uAC8C \uAC00\uBCCD\uAC8C \uD55C\uBC88 \uBB3C\uC5B4\uBCF4\uC138\uC694.</div>' +
         '<div style="font-size:15px; font-weight:600; line-height:1.7; color:' + PLUM_DEEP + ';">' + todayQuestion + '</div>' +
       '</td></tr></table>' +
 
