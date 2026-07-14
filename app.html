@@ -2895,8 +2895,9 @@
 
     if (window._editRowId) {
       // 수정 모드: 기존 수신자 갱신
-      const { error } = await odoDB.from("odo_recipients").update(payload).eq("id", window._editRowId);
+      const { data: updRows, error } = await odoDB.from("odo_recipients").update(payload).eq("id", window._editRowId).select();
       if(error){ console.log("수신자 수정 오류:", error); alert("수정에 실패했어요. 잠시 후 다시 시도해 주세요."); return; }
+      if(!updRows || !updRows.length){ alert("수정 내용이 저장되지 않았어요.\nSupabase에서 수신자 '수정(update) 권한'이 빠져 있을 수 있어요."); return; }
       const idx = window._editIdx;
       if (recipients[idx]) recipients[idx] = { name, email, times:[...pickedTimes], tone:pickedTone, bible:bibleAlso, special_date:specialDate, special_label:specialLabel, personal_note:note, rowId: window._editRowId };
       exitEditMode();
@@ -3447,6 +3448,15 @@
       const nm = escR(i.type==="sent" ? (i.name || nameOf(i.email)) : nameOf(i.email));
       const del = '<button class="item-del tl-del" onclick="deleteTimeline(\''+i.type+'\',\''+escR(String(i.id)).replace(/'/g,"&#39;")+'\')" aria-label="삭제">✕</button>';
       if (i.type==="sent") {
+        const isReply = /^\[답신\]/.test(i.quote||"");
+        if (isReply) {
+          const rmsg = escR((i.quote||"").replace(/^\[답신\]\s*/,""));
+          return '<div class="tl-item tl-sent"><div class="tl-ic">'+ODO_IC.chat+'</div><div class="tl-c">' +
+            '<div class="tl-line"><b>'+nm+'</b>님에게 답신을 보냈어요</div>' +
+            '<div class="tl-date">'+fmtR(i.date)+'</div>' +
+            (rmsg?'<div class="tl-reply">'+rmsg+'</div>':'') +
+          '</div>'+del+'</div>';
+        }
         const isCele = /^\[축하\]/.test(i.quote||"");
         if (isCele) {
           const lbl = escR((i.quote||"").replace(/^\[축하\]\s*/,"")) || "특별한 날";
@@ -4383,10 +4393,18 @@
       + '<div class="dash-num">'+num+(unit?'<span class="unit">'+unit+'</span>':'')+'</div>'
       + (sub?'<div class="dash-sub">'+sub+'</div>':'')
       + '</div>';
+    const todayN = s.sends_today||0;
+    const overLimit = todayN>=100, nearLimit = todayN>=80;
+    const limitCol = overLimit ? "#d14343" : (nearLimit ? "#c9820a" : null);
+    const limitNum = limitCol ? '<span style="color:'+limitCol+';">'+todayN+'</span>' : todayN;
+    const limitSub = overLimit ? '<b style="color:#d14343;">무료 한도 도달 — 발송이 막힐 수 있어요</b>'
+                   : nearLimit ? '<b style="color:#c9820a;">한도(100통)에 가까워요</b>'
+                   : '리센드 무료: 하루 100통 · 월 3,000통';
     box.innerHTML =
       card("함께하는 사람", (s.members||0), "명", "오늘도를 쓰는 분들이에요")
       + card("담긴 콘텐츠", (s.contents||0), "개", "지금 준비된 편지들")
-      + card("보낸 편지", (s.sends_total||0), "통", "오늘 <b>"+(s.sends_today||0)+"통</b> 나갔어요")
+      + card("오늘 발송", limitNum, "/ 100통", limitSub)
+      + card("보낸 편지", (s.sends_total||0), "통", "오늘 <b>"+todayN+"통</b> 나갔어요")
       + card("받은 반응", (s.reactions_total||0), "개", "오늘 <b>"+(s.reactions_today||0)+"개</b> 도착했어요");
   }
 
