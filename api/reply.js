@@ -115,9 +115,12 @@ export default async function handler(req, res) {
           '<div style="font-size:12px; letter-spacing:0.14em; color:' + ROSE + '; font-weight:700;">\uC624\uB298\uB3C4 \u00B7 \uB2F5\uC2E0\uC774 \uB3C4\uCC29\uD588\uC5B4\uC694</div>' +
         '</td></tr>' +
         // 헤더 (하트 + 제목)
-        '<tr><td bgcolor="' + ROSE_SOFT + '" style="background:' + ROSE_SOFT + '; padding:40px 28px 32px; text-align:center;">' +
-          '<div style="font-size:44px; line-height:1; margin-bottom:14px;">\u2661</div>' +
-          '<div style="font-size:23px; font-weight:800; color:' + PLUM_DEEP + '; letter-spacing:-0.02em;">' + esc(fromNameSafe) + '\uB2D8\uC758 \uB2F5\uC2E0</div>' +
+        '<tr><td bgcolor="' + ROSE_SOFT + '" style="background:' + ROSE_SOFT + '; padding:38px 28px 30px; text-align:center;">' +
+          '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr>' +
+            '<td width="64" height="64" align="center" valign="middle" bgcolor="' + PLUM + '" style="background:' + PLUM + '; border-radius:50%; color:#ffffff; font-size:28px; line-height:64px;">&#9829;</td>' +
+          '</tr></table>' +
+          '<div style="font-size:22px; font-weight:800; color:' + PLUM_DEEP + '; letter-spacing:-0.02em;">' + esc(fromNameSafe) + '\uB2D8\uC758 \uB2F5\uC2E0</div>' +
+          '<div style="font-size:13px; color:#b08a97; margin-top:7px;">\uB9C8\uC74C\uC744 \uB2F4\uC740 \uB2F5\uC2E0\uC774 \uB3C4\uCC29\uD588\uC5B4\uC694</div>' +
         '</td></tr>' +
         // 본문 메시지
         '<tr><td style="padding:34px 30px 6px;">' +
@@ -126,18 +129,23 @@ export default async function handler(req, res) {
         // 답신을 부른 마음 (인용)
         (reaction.content_quote ?
           '<tr><td style="padding:10px 30px 6px;">' +
-            '<div style="background:#faf7fb; border-left:3px solid ' + ROSE + '; border-radius:0 12px 12px 0; padding:14px 16px;">' +
-              '<div style="font-size:11px; letter-spacing:0.08em; color:' + ROSE + '; font-weight:700; margin-bottom:6px;">\uB2F5\uC2E0\uC744 \uBD80\uB978 \uB9C8\uC74C</div>' +
+            '<div style="background:#f4eef7; border-left:3px solid ' + PLUM + '; border-radius:0 12px 12px 0; padding:14px 16px;">' +
+              '<div style="font-size:11px; letter-spacing:0.08em; color:' + PLUM + '; font-weight:700; margin-bottom:6px;">\uB2F5\uC2E0\uC744 \uBD80\uB978 \uB9C8\uC74C</div>' +
               '<div style="font-size:13.5px; line-height:1.7; color:#8a8194;">&ldquo;' + esc(reaction.content_quote) + '&rdquo;</div>' +
             '</div>' +
           '</td></tr>' : '') +
         // 맺음
-        '<tr><td style="padding:22px 30px 30px; text-align:center;">' +
+        '<tr><td style="padding:20px 30px 6px; text-align:center;">' +
           '<div style="font-size:13px; color:' + ROSE + '; font-weight:600;">\u2014 \uC624\uB298\uB3C4\uAC00 \uB300\uC2E0 \uC804\uD574\uB4DC\uB824\uC694</div>' +
         '</td></tr>' +
+        // 링크 버튼
+        '<tr><td style="padding:8px 30px 30px; text-align:center;">' +
+          '<a href="https://ond2u.com/app.html" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:' + PLUM + '; text-decoration:none; padding:13px 32px; border-radius:30px;">\uC624\uB298\uB3C4\uC5D0\uC11C \uBCF4\uAE30 \u2192</a>' +
+        '</td></tr>' +
         // 푸터
-        '<tr><td bgcolor="#f3f1ef" style="background:#f3f1ef; padding:20px 28px; border-top:1px solid #eae7e3; text-align:center;">' +
-          '<div style="font-size:11px; color:#b0aab6;">\uC624\uB298\uB3C4 \u00B7 ond2u.com</div>' +
+        '<tr><td bgcolor="#f3f1ef" style="background:#f3f1ef; padding:22px 28px; border-top:1px solid #eae7e3; text-align:center;">' +
+          '<div style="font-size:13px; font-weight:800; color:#2b2730; letter-spacing:-0.02em;">\uC624\uB298\uB3C4 <span style="font-size:9px; font-weight:600; color:' + PLUM + '; letter-spacing:0.08em;">OND2U</span></div>' +
+          '<div style="font-size:11px; color:#b0aab6; margin-top:5px;">ond2u.com</div>' +
         '</td></tr>' +
       '</table>' +
     '</td></tr></table>' +
