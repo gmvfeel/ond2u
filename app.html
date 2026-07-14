@@ -4339,18 +4339,19 @@
     const resultEl = $("sendResult");
     const meBtn = $("sendMeBtn"), allBtn = $("sendAllBtn");
     if (!resultEl) return;
-    let token = "", myEmail = "";
+    let token = "", myEmail = "", myId = "";
     try {
       const { data } = await odoDB.auth.getSession();
       token = (data && data.session && data.session.access_token) || "";
       myEmail = (data && data.session && data.session.user && data.session.user.email) || "";
+      myId = (data && data.session && data.session.user && data.session.user.id) || "";
     } catch (e) {}
     if (!token) { resultEl.className = "sp-result err"; resultEl.textContent = "로그인이 필요해요."; return; }
 
     let url = "/api/send-test";
     if (mode === "me") {
       if (!myEmail) { resultEl.className = "sp-result err"; resultEl.textContent = "내 이메일을 찾을 수 없어요."; return; }
-      url += "?to=" + encodeURIComponent(myEmail);
+      url += "?to=" + encodeURIComponent(myEmail) + (myId ? "&sender_id=" + encodeURIComponent(myId) : "");
     } else {
       if (!confirm("명단에 있는 모든 사람에게 지금 편지를 발송할까요?\n(실제로 발송됩니다)")) return;
       url += "?all=1";
