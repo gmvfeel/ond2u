@@ -78,18 +78,50 @@ export default async function handler(req, res) {
   // 5) 이메일 본문
   const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const bodyHtml = esc(message).replace(/\n/g, "<br>");
-  const PLUM = "#423458";
+  const PLUM = "#423458", PLUM_DEEP = "#2f2440", ROSE = "#d97c93", ROSE_SOFT = "#fdeef2";
+  const font = "'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif";
 
   const html =
-    '<div style="max-width:520px; margin:0 auto; font-family:-apple-system,BlinkMacSystemFont,\'Apple SD Gothic Neo\',\'Malgun Gothic\',sans-serif; background:#f6f2f9; padding:24px;">' +
-      '<div style="background:#ffffff; border-radius:18px; padding:30px 26px;">' +
-        '<div style="font-size:13px; color:#8a8194; margin-bottom:6px;">오늘도</div>' +
-        '<div style="font-size:17px; font-weight:700; color:' + PLUM + '; margin-bottom:18px;">' + esc(fromNameSafe) + '님이 답신을 보냈어요</div>' +
-        '<div style="font-size:15px; line-height:1.9; color:#3a3540; word-break:keep-all;">' + bodyHtml + '</div>' +
-        (reaction.content_quote ? '<div style="margin-top:18px; padding-top:14px; border-top:1px solid #eee; font-size:13px; color:#8a8194;">"' + esc(reaction.content_quote) + '"</div>' : '') +
-      '</div>' +
-      '<div style="text-align:center; font-size:11px; color:#b0aab6; margin-top:16px;">오늘도 · ond2u.com</div>' +
-    '</div>';
+    '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>\uB2F5\uC2E0\uC774 \uB3C4\uCC29\uD588\uC5B4\uC694</title>' +
+    '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">' +
+    '</head>' +
+    '<body style="margin:0; padding:0; background:#f3f1ef; font-family:' + font + '; word-break:keep-all;">' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f3f1ef" style="background:#f3f1ef;"><tr>' +
+    '<td align="center" style="padding:36px 14px 48px; font-family:' + font + ';">' +
+      '<table role="presentation" width="520" cellpadding="0" cellspacing="0" border="0" style="width:520px; max-width:520px; background:#ffffff; border:2px solid ' + ROSE + '; border-radius:18px; overflow:hidden;">' +
+        // 상단 라벨
+        '<tr><td style="padding:16px 26px; border-bottom:1px solid #eae7e3;">' +
+          '<div style="font-size:12px; letter-spacing:0.14em; color:' + ROSE + '; font-weight:700;">\uC624\uB298\uB3C4 \u00B7 \uB2F5\uC2E0\uC774 \uB3C4\uCC29\uD588\uC5B4\uC694</div>' +
+        '</td></tr>' +
+        // 헤더 (하트 + 제목)
+        '<tr><td bgcolor="' + ROSE_SOFT + '" style="background:' + ROSE_SOFT + '; padding:40px 28px 32px; text-align:center;">' +
+          '<div style="font-size:44px; line-height:1; margin-bottom:14px;">\u2661</div>' +
+          '<div style="font-size:23px; font-weight:800; color:' + PLUM_DEEP + '; letter-spacing:-0.02em;">' + esc(fromNameSafe) + '\uB2D8\uC758 \uB2F5\uC2E0</div>' +
+        '</td></tr>' +
+        // 본문 메시지
+        '<tr><td style="padding:34px 30px 6px;">' +
+          '<div style="font-size:16px; line-height:1.95; color:#3a3540;">' + bodyHtml + '</div>' +
+        '</td></tr>' +
+        // 답신을 부른 마음 (인용)
+        (reaction.content_quote ?
+          '<tr><td style="padding:10px 30px 6px;">' +
+            '<div style="background:#faf7fb; border-left:3px solid ' + ROSE + '; border-radius:0 12px 12px 0; padding:14px 16px;">' +
+              '<div style="font-size:11px; letter-spacing:0.08em; color:' + ROSE + '; font-weight:700; margin-bottom:6px;">\uB2F5\uC2E0\uC744 \uBD80\uB978 \uB9C8\uC74C</div>' +
+              '<div style="font-size:13.5px; line-height:1.7; color:#8a8194;">&ldquo;' + esc(reaction.content_quote) + '&rdquo;</div>' +
+            '</div>' +
+          '</td></tr>' : '') +
+        // 맺음
+        '<tr><td style="padding:22px 30px 30px; text-align:center;">' +
+          '<div style="font-size:13px; color:' + ROSE + '; font-weight:600;">\u2014 \uC624\uB298\uB3C4\uAC00 \uB300\uC2E0 \uC804\uD574\uB4DC\uB824\uC694</div>' +
+        '</td></tr>' +
+        // 푸터
+        '<tr><td bgcolor="#f3f1ef" style="background:#f3f1ef; padding:20px 28px; border-top:1px solid #eae7e3; text-align:center;">' +
+          '<div style="font-size:11px; color:#b0aab6;">\uC624\uB298\uB3C4 \u00B7 ond2u.com</div>' +
+        '</td></tr>' +
+      '</table>' +
+    '</td></tr></table>' +
+    '</body></html>';
 
   // 6) Resend 발송
   try {
