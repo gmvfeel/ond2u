@@ -140,6 +140,23 @@ export default async function handler(req, res) {
     });
     const data = await r.json();
     if (!r.ok) return res.status(502).json({ ok: false, error: "발송 실패: " + (data && (data.message || JSON.stringify(data))) });
+
+    // 발송 기록 남기기 (타임라인 표시 + 발송량 집계 포함). 실패해도 답신 자체엔 영향 없음.
+    try {
+      await fetch(SB_URL + "/rest/v1/odo_sends", {
+        method: "POST",
+        headers: { "apikey": SB_SERVICE, "Authorization": "Bearer " + SB_SERVICE, "Content-Type": "application/json", "Prefer": "return=minimal" },
+        body: JSON.stringify({
+          sender_id: user.id,
+          sender_name: fromNameSafe,
+          recipient_email: toEmail,
+          recipient_name: "",
+          content_quote: "[\uB2F5\uC2E0] " + message,
+          status: "success"
+        })
+      });
+    } catch (e) { /* 기록 실패는 조용히 무시 */ }
+
     return res.status(200).json({ ok: true, id: data.id || "" });
   } catch (e) {
     return res.status(500).json({ ok: false, error: "발송 중 문제가 생겼어요. 잠시 후 다시 시도해 주세요." });
