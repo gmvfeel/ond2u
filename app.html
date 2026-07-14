@@ -2893,8 +2893,8 @@
     const note = $("rNote").value.trim() || null;
     const payload = { name, email, send_times:[...pickedTimes], tone: pickedTone, kind: bibleAlso?"bible":"normal", special_date: specialDate, special_label: specialLabel, personal_note: note };
 
-    if (!window._editRowId && !isAdmin() && recipients.length >= 5) {
-      alert("받는 사람은 최대 5명까지 추가할 수 있어요.\n(공동 발송 한도를 위해 회원당 5명으로 제한하고 있어요.)");
+    if (!window._editRowId && !isAdmin() && recipients.length >= 3) {
+      alert("받는 사람은 최대 3명까지 추가할 수 있어요.\n(공동 발송 한도를 위해 회원당 3명으로 제한하고 있어요.)");
       return;
     }
 
