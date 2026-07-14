@@ -74,6 +74,7 @@ export default async function handler(req, res) {
     if (all) {
       // ── 전체 발송: 수신자 명단 전원에게 ──
       let recipients = await fetchRecipients(SB_URL, SB_SERVICE);
+      recipients = recipients.filter(rc => !rc.paused);   // 쉬어가기(일시정지) 중인 사람은 발송 제외
       if (!recipients.length)
         return res.status(200).json({ ok: true, message: "보낼 수신자가 없어요. (odo_recipients 비어있음)", sent: 0 });
 
