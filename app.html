@@ -1033,6 +1033,17 @@
   .recipient.paused { opacity:0.66; }
   .recipient.paused .rav { filter:grayscale(0.4); }
   .rpause-badge { display:inline-block; font-size:11px; font-weight:600; color:#b0446a; background:#fdeef2; border:1px solid #f3c9d5; border-radius:12px; padding:2px 8px; margin-left:6px; vertical-align:middle; }
+  .rpreview-link { display:inline-block; margin-top:11px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--plum); background:none; border:none; padding:0; cursor:pointer; }
+  .rpreview-link:hover { text-decoration:underline; }
+  .pv-overlay { position:fixed; inset:0; background:rgba(43,39,48,.55); display:flex; align-items:center; justify-content:center; z-index:150; padding:16px; }
+  .pv-modal { background:#fff; border-radius:18px; width:100%; max-width:560px; height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 14px 40px rgba(43,39,48,.2); }
+  .pv-bar { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); flex:none; }
+  .pv-title { font-size:15px; font-weight:700; color:var(--plum-deep); }
+  .pv-close { background:none; border:none; font-size:18px; color:var(--ink-faint); cursor:pointer; line-height:1; }
+  .pv-note { font-size:12px; color:var(--ink-soft); padding:9px 18px; background:var(--plum-soft); flex:none; }
+  .pv-frame { flex:1; overflow:auto; background:#f3f1ef; min-height:0; }
+  .pv-iframe { width:100%; height:100%; border:none; display:block; }
+  .pv-loading { text-align:center; color:var(--ink-faint); font-size:14px; padding:40px 10px; }
   .hd-overlay { position:fixed; inset:0; background:rgba(43,39,48,.5); display:flex; align-items:center; justify-content:center; z-index:140; padding:20px; overflow-y:auto; }
   .hd-modal { position:relative; background:#faf8fb; border-radius:22px; max-width:440px; width:100%; max-height:86vh; overflow-y:auto; padding:26px 24px; box-shadow:0 14px 40px rgba(43,39,48,.18); }
   .hd-close { position:absolute; top:14px; right:16px; background:none; border:none; font-size:18px; color:var(--ink-faint); cursor:pointer; line-height:1; }
@@ -3052,6 +3063,7 @@
             const more = notes.length>1 ? ` <span class="r-note-more">외 ${notes.length-1}개 번갈아</span>` : "";
             return `<div class="r-note">"${esc(notes[0])}"${more}</div>`;
           })()}
+          <button class="rpreview-link" onclick="previewLetter(${i})">오늘 편지 미리보기 →</button>
         </div>
         <div class="ractions">
           <button class="rdiary" onclick="openHeartDiary(${i})">마음 일기</button>
@@ -3115,6 +3127,44 @@
     }
   };
   window.closeHeartDiary = function(){ const ov=document.getElementById("hdOverlay"); if(ov) ov.remove(); };
+
+  window.previewLetter = async function(i){
+    const r = recipients[i];
+    if(!r) return;
+    let ov = document.getElementById("pvOverlay");
+    if(ov) ov.remove();
+    ov = document.createElement("div");
+    ov.id = "pvOverlay"; ov.className = "pv-overlay";
+    ov.innerHTML =
+      '<div class="pv-modal">'
+      + '<div class="pv-bar"><span class="pv-title">'+ String(r.name||"").replace(/</g,"&lt;") +'\uB2D8\uC5D0\uAC8C \uAC08 \uD3B8\uC9C0 \uBBF8\uB9AC\uBCF4\uAE30</span><button class="pv-close" onclick="closePreview()">\u2715</button></div>'
+      + '<div class="pv-note">\uC608\uC2DC \uD55C \uD3B8\uC774\uC5D0\uC694. \uC2E4\uC81C\uB85C\uB3C4 \uB9E4\uBC88 \uB2E4\uB978 \uAE00\uC774 \uB098\uAC00\uC694.</div>'
+      + '<div class="pv-frame" id="pvFrame"><div class="pv-loading">\uBD88\uB7EC\uC624\uB294 \uC911\u2026</div></div>'
+      + '</div>';
+    document.body.appendChild(ov);
+    ov.addEventListener("click", function(e){ if(e.target===ov) closePreview(); });
+    try {
+      let token = "";
+      try { const { data } = await odoDB.auth.getSession(); token = (data&&data.session&&data.session.access_token)||""; } catch(e){}
+      const frame = document.getElementById("pvFrame");
+      if(!token){ if(frame) frame.innerHTML='<div class="pv-loading">\uB85C\uADF8\uC778\uC774 \uD544\uC694\uD574\uC694.</div>'; return; }
+      const params = new URLSearchParams({ preview:"1", to:r.email, to_name:r.name||"", sender_id:(currentUser&&currentUser.id)||"" });
+      if(typeof senderName !== "undefined" && senderName) params.set("from_name", senderName);
+      if(r.tone) params.set("tone", r.tone);
+      if(r.bible) params.set("bible", "1");
+      if(r.personal_note) params.set("note", r.personal_note);
+      const res = await fetch("/api/send-test?"+params.toString(), { headers:{ "Authorization":"Bearer "+token } });
+      if(!res.ok){ if(frame) frame.innerHTML='<div class="pv-loading">\uBBF8\uB9AC\uBCF4\uAE30\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC5B4\uC694.</div>'; return; }
+      const html = await res.text();
+      const iframe = document.createElement("iframe");
+      iframe.className = "pv-iframe";
+      iframe.setAttribute("srcdoc", html);
+      if(frame){ frame.innerHTML=""; frame.appendChild(iframe); }
+    } catch(e){
+      const frame=document.getElementById("pvFrame"); if(frame) frame.innerHTML='<div class="pv-loading">\uBBF8\uB9AC\uBCF4\uAE30\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC5B4\uC694.</div>';
+    }
+  };
+  window.closePreview = function(){ const ov=document.getElementById("pvOverlay"); if(ov) ov.remove(); };
 
   window.togglePause = async function(i){
     const r = recipients[i];
