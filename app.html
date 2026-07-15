@@ -3881,8 +3881,9 @@
     const items = [];
     const recvGroups = {};
     reactions.forEach(r => {
-      const day = (r.created_at||"").slice(0,10);
-      const key = (r.recipient_email||"") + "|" + day + "|" + (r.content_quote||"");
+      const dd = new Date(r.created_at);
+      const day = isNaN(dd) ? "" : (dd.getFullYear()+"-"+(dd.getMonth()+1)+"-"+dd.getDate()); // 화면에 보이는 날짜 기준
+      const key = (r.recipient_email||"") + "|" + day;
       let g = recvGroups[key];
       if (!g) { g = recvGroups[key] = { type:"recv", email:r.recipient_email, date:r.created_at, quote:r.content_quote||"", emos:[], ids:[], reply:"", repId:r.id }; items.push(g); }
       if (r.emotion && g.emos.indexOf(r.emotion)===-1) g.emos.push(r.emotion);
