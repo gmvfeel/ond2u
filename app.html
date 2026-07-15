@@ -1054,6 +1054,10 @@
   .pv-openbtn:hover { background:#e7ddf0; }
   .pv-close { background:none; border:none; font-size:18px; color:var(--ink-faint); cursor:pointer; line-height:1; }
   .pv-note { font-size:12px; color:var(--ink-soft); padding:9px 18px; background:var(--plum-soft); flex:none; }
+  .pv-tones { display:flex; flex-wrap:wrap; gap:7px; padding:12px 18px 4px; flex:none; }
+  .pv-tone { font-family:inherit; font-size:12.5px; color:var(--plum-deep); background:var(--plum-soft); border:none; border-radius:20px; padding:6px 13px; cursor:pointer; }
+  .pv-tone.on { background:#c56179; color:#fff; }
+  .pv-tonehint { font-size:11.5px; color:var(--ink-faint); padding:0 18px 10px; flex:none; }
   .pv-frame { flex:1; overflow-x:hidden; overflow-y:auto; background:#f3f1ef; min-height:0; }
   .pv-scaler { position:relative; width:100%; }
   .pv-iframe { width:680px; border:none; display:block; transform-origin:top left; }
@@ -3261,33 +3265,21 @@
   };
   window.closeHeartDiary = function(){ const ov=document.getElementById("hdOverlay"); if(ov) ov.remove(); };
 
-  window.previewLetter = async function(i){
-    const r = recipients[i];
-    if(!r) return;
-    let ov = document.getElementById("pvOverlay");
-    if(ov) ov.remove();
-    ov = document.createElement("div");
-    ov.id = "pvOverlay"; ov.className = "pv-overlay";
-    ov.innerHTML =
-      '<div class="pv-modal">'
-      + '<div class="pv-bar"><span class="pv-title">'+ String(r.name||"").replace(/</g,"&lt;") +'\uB2D8\uC5D0\uAC8C \uAC08 \uD3B8\uC9C0 \uBBF8\uB9AC\uBCF4\uAE30</span><div class="pv-bar-actions"><button class="pv-openbtn" onclick="openPreviewTab()">\uD06C\uAC8C \uBCF4\uAE30 \u2197</button><button class="pv-close" onclick="closePreview()">\u2715</button></div></div>'
-      + '<div class="pv-note">\uC608\uC2DC \uD55C \uD3B8\uC774\uC5D0\uC694. \uC2E4\uC81C\uB85C\uB3C4 \uB9E4\uBC88 \uB2E4\uB978 \uAE00\uC774 \uB098\uAC00\uC694.</div>'
-      + '<div class="pv-frame" id="pvFrame"><div class="pv-loading">\uBD88\uB7EC\uC624\uB294 \uC911\u2026</div></div>'
-      + '</div>';
-    document.body.appendChild(ov);
-    ov.addEventListener("click", function(e){ if(e.target===ov) closePreview(); });
+  async function renderPreview(ov, r, tone){
+    ov._pvTone = tone;
+    const frame = document.getElementById("pvFrame");
+    if(frame) frame.innerHTML = '<div class="pv-loading">불러오는 중…</div>';
     try {
       let token = "";
       try { const { data } = await odoDB.auth.getSession(); token = (data&&data.session&&data.session.access_token)||""; } catch(e){}
-      const frame = document.getElementById("pvFrame");
-      if(!token){ if(frame) frame.innerHTML='<div class="pv-loading">\uB85C\uADF8\uC778\uC774 \uD544\uC694\uD574\uC694.</div>'; return; }
+      if(!token){ if(frame) frame.innerHTML='<div class="pv-loading">로그인이 필요해요.</div>'; return; }
       const params = new URLSearchParams({ preview:"1", to:r.email, to_name:r.name||"", sender_id:(currentUser&&currentUser.id)||"" });
       if(typeof senderName !== "undefined" && senderName) params.set("from_name", senderName);
-      if(r.tone) params.set("tone", r.tone);
+      if(tone) params.set("tone", tone);
       if(r.bible) params.set("bible", "1");
       if(r.personal_note) params.set("note", r.personal_note);
       const res = await fetch("/api/send-test?"+params.toString(), { headers:{ "Authorization":"Bearer "+token } });
-      if(!res.ok){ if(frame) frame.innerHTML='<div class="pv-loading">\uBBF8\uB9AC\uBCF4\uAE30\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC5B4\uC694.</div>'; return; }
+      if(!res.ok){ if(frame) frame.innerHTML='<div class="pv-loading">미리보기를 불러오지 못했어요.</div>'; return; }
       const html = await res.text();
       ov._pvHtml = html;
       if(!frame) return;
@@ -3310,11 +3302,47 @@
         } catch(e){}
       };
       iframe.onload = function(){ fit(); setTimeout(fit, 500); };
+      if(ov._pvFit) window.removeEventListener("resize", ov._pvFit);
       window.addEventListener("resize", fit);
       ov._pvFit = fit;
     } catch(e){
-      const frame=document.getElementById("pvFrame"); if(frame) frame.innerHTML='<div class="pv-loading">\uBBF8\uB9AC\uBCF4\uAE30\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC5B4\uC694.</div>';
+      const f2=document.getElementById("pvFrame"); if(f2) f2.innerHTML='<div class="pv-loading">미리보기를 불러오지 못했어요.</div>';
     }
+  }
+
+  window.previewLetter = async function(i){
+    const r = recipients[i];
+    if(!r) return;
+    let ov = document.getElementById("pvOverlay");
+    if(ov) ov.remove();
+    ov = document.createElement("div");
+    ov.id = "pvOverlay"; ov.className = "pv-overlay";
+    const initTone = r.tone || "";
+    const toneChipList = [["위로","위로"],["응원","응원"],["평온","평온"],["시작","시작"],["","전체"]];
+    const chipsHtml = toneChipList.map(function(t){ return '<button class="pv-tone'+(t[0]===initTone?" on":"")+'" data-tone="'+t[0]+'">'+t[1]+'</button>'; }).join("");
+    ov.innerHTML =
+      '<div class="pv-modal">'
+      + '<div class="pv-bar"><span class="pv-title">'+ String(r.name||"").replace(/</g,"&lt;") +'님에게 갈 편지 미리보기</span><div class="pv-bar-actions"><button class="pv-openbtn" onclick="openPreviewTab()">크게 보기 ↗</button><button class="pv-close" onclick="closePreview()">✕</button></div></div>'
+      + '<div class="pv-note">예시 한 편이에요. 실제로도 매번 다른 글이 나가요.</div>'
+      + '<div class="pv-tones" id="pvTones">'+chipsHtml+'</div>'
+      + '<div class="pv-tonehint">결을 눌러 비교해보세요 · 실제 발송은 이 사람 설정대로예요</div>'
+      + '<div class="pv-frame" id="pvFrame"><div class="pv-loading">불러오는 중…</div></div>'
+      + '</div>';
+    document.body.appendChild(ov);
+    ov.addEventListener("click", function(e){ if(e.target===ov) closePreview(); });
+    const tonesWrap = document.getElementById("pvTones");
+    if(tonesWrap){
+      tonesWrap.addEventListener("click", function(e){
+        const btn = e.target.closest ? e.target.closest(".pv-tone") : null;
+        if(!btn) return;
+        const t = btn.getAttribute("data-tone") || "";
+        if(t === ov._pvTone) return;
+        tonesWrap.querySelectorAll(".pv-tone").forEach(function(c){ c.classList.remove("on"); });
+        btn.classList.add("on");
+        renderPreview(ov, r, t);
+      });
+    }
+    renderPreview(ov, r, initTone);
   };
   window.closePreview = function(){ const ov=document.getElementById("pvOverlay"); if(ov){ if(ov._pvFit) window.removeEventListener("resize", ov._pvFit); ov.remove(); } };
   window.openPreviewTab = function(){
