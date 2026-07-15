@@ -93,6 +93,10 @@
   .tab:hover svg { opacity:1; }
   .tab.on { color:var(--rose); font-weight:700; }
   .tab.on svg { opacity:1; }
+  .theme-tab { font-family:inherit; font-size:14px; color:var(--ink-soft); background:transparent; border:none; border-radius:10px; padding:11px 12px; cursor:pointer; transition:all .16s; text-align:left; width:100%; display:flex; align-items:center; }
+  .theme-tab:hover { color:var(--rose); }
+  .theme-tab svg { width:18px; height:18px; margin-right:11px; flex-shrink:0; opacity:.82; }
+  .theme-tab:hover svg { opacity:1; }
   .tab-sec { font-size:11px; font-weight:700; color:var(--ink-faint); letter-spacing:.06em; padding:15px 12px 5px; user-select:none; }
   .tab-div { height:1px; background:var(--line); margin:12px 10px 8px; }
   .ops-tabs { display:flex; gap:4px 8px; flex-wrap:wrap; margin:16px 0 22px; border-bottom:1px solid var(--line); }
@@ -462,9 +466,7 @@
   .welcome-bar { background:var(--plum-soft); border-radius:14px; padding:14px 18px; font-size:13px; color:var(--plum-deep); margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; }
   .welcome-bar .logout { font-family:inherit; font-size:12px; color:var(--plum); background:transparent; border:none; cursor:pointer; text-decoration:underline; }
   .wb-actions { display:inline-flex; align-items:center; gap:8px; }
-  .theme-toggle { font-family:inherit; font-size:15px; line-height:1; background:transparent; border:none; cursor:pointer; padding:2px 4px; color:var(--ink-soft); display:inline-flex; align-items:center; transition:color .15s; }
-  .theme-toggle:hover { color:var(--plum); }
-  .theme-toggle svg { display:block; }
+  .theme-tab svg { display:block; }
   .nav-auth { display:flex; justify-content:center; margin-bottom:22px; }
   /* 즉시 발송 패널 */
   .send-panel { margin-top:26px; background:var(--white); border:1px solid var(--plum-line); border-radius:16px; padding:20px; }
@@ -1214,6 +1216,8 @@
 
     <div class="tab-div tab-sec-admin"></div>
     <button class="tab tab-admin" data-view="ops"><svg viewBox="0 0 24 24"><path d="M4 6h9M18 6h2M4 12h2M11 12h9M4 18h12"/><circle cx="15.5" cy="6" r="1.9"/><circle cx="8" cy="12" r="1.9"/><circle cx="18" cy="18" r="1.9"/></svg>운영</button>
+    <div class="tab-div"></div>
+    <button class="theme-tab" id="navThemeToggle" type="button" title="화면 모드 전환"></button>
   </div>
 </nav>
 <div class="stage">
@@ -3428,12 +3432,19 @@
 
   var _ICON_MOON='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
   var _ICON_SUN='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"/></svg>';
+  function paintThemeToggle(){
+    var dark = document.body.classList.contains("dark");
+    var btn = document.getElementById("navThemeToggle");
+    if(!btn) return;
+    btn.innerHTML = (dark ? _ICON_SUN : _ICON_MOON) + '<span>' + (dark ? "라이트 모드" : "다크 모드") + '</span>';
+    btn.onclick = window.toggleTheme;
+  }
   window.toggleTheme = function(){
     const dark = document.body.classList.toggle("dark");
     try { localStorage.setItem("odo_theme", dark ? "dark" : "light"); } catch(e){}
-    document.querySelectorAll(".theme-toggle").forEach(function(b){ b.innerHTML = dark ? _ICON_SUN : _ICON_MOON; });
+    paintThemeToggle();
   };
-  function initThemeToggle(btn){ if(!btn) return; btn.innerHTML = document.body.classList.contains("dark") ? _ICON_SUN : _ICON_MOON; btn.onclick = toggleTheme; }
+  paintThemeToggle();
 
   window.sendNow = async function(i, btn){
     const r = recipients[i];
@@ -3548,9 +3559,8 @@
     $("welcomeBar").innerHTML =
       '<span>안녕하세요, <b>'+(name||"")+'</b>님 · 편지는 <b>'+(senderName||name||"")+'</b> 이름으로 나가요 '+
       '<button class="namebtn" id="editNameBtn">이름 바꾸기</button></span>'+
-      '<span class="wb-actions"><button class="theme-toggle" id="themeToggle" title="다크/라이트 전환" aria-label="다크/라이트 전환">🌙</button><button class="logout" id="logoutBtn">로그아웃</button></span>';
+      '<span class="wb-actions"><button class="logout" id="logoutBtn">로그아웃</button></span>';
     $("editNameBtn").onclick = () => editSenderName();
-    { const _tt=$("themeToggle"); initThemeToggle(_tt); }
     updateFromLine();
     loadSaved();
     loadTrace();
@@ -3609,13 +3619,11 @@
     const uc = $("useCta"); if (uc) uc.style.display = loggedIn ? "none" : "";
     if (!el) return;
     if (loggedIn && currentUser) {
-      el.innerHTML = '<div class="nav-user"><span>Hi! <b>'+(senderName||"")+'</b>님</span><button class="theme-toggle" id="navThemeToggle" title="다크/라이트 전환" aria-label="다크/라이트 전환">🌙</button><button class="nav-logout" id="navLogoutBtn">로그아웃</button></div>';
+      el.innerHTML = '<div class="nav-user"><span>Hi! <b>'+(senderName||"")+'</b>님</span><button class="nav-logout" id="navLogoutBtn">로그아웃</button></div>';
       $("navLogoutBtn").onclick = () => doLogout();
-      initThemeToggle($("navThemeToggle"));
     } else {
-      el.innerHTML = '<button class="theme-toggle" id="navThemeToggle" title="다크/라이트 전환" aria-label="다크/라이트 전환" style="margin-right:8px;">🌙</button><button class="nav-login-btn" id="navLoginBtn">로그인 / 가입</button>';
+      el.innerHTML = '<button class="nav-login-btn" id="navLoginBtn">로그인 / 가입</button>';
       $("navLoginBtn").onclick = () => { const t = document.querySelector('.tab[data-view="send"]'); if (t) t.click(); };
-      initThemeToggle($("navThemeToggle"));
     }
   }
 
