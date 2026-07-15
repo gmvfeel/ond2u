@@ -97,6 +97,8 @@
   .theme-tab:hover { color:var(--rose); }
   .theme-tab svg { width:18px; height:18px; margin-right:11px; flex-shrink:0; opacity:.82; }
   .theme-tab:hover svg { opacity:1; }
+  .theme-mini { display:none; background:transparent; border:none; cursor:pointer; padding:2px 4px; color:var(--ink-soft); align-items:center; }
+  .theme-mini svg { display:block; width:17px; height:17px; }
   .tab-sec { font-size:11px; font-weight:700; color:var(--ink-faint); letter-spacing:.06em; padding:15px 12px 5px; user-select:none; }
   .tab-div { height:1px; background:var(--line); margin:12px 10px 8px; }
   .ops-tabs { display:flex; gap:4px 8px; flex-wrap:wrap; margin:16px 0 22px; border-bottom:1px solid var(--line); }
@@ -385,6 +387,8 @@
 
   @media (max-width: 1080px) {
     .nav-auth { position:absolute; top:44px; right:16px; margin:0; z-index:70; }
+    .theme-tab { display:none !important; }
+    .theme-mini { display:inline-flex; }
     .layout { display: block; }
     .leftnav { width: 100%; max-width: 600px; margin: 0 auto 24px; position: static; }
     .leftnav .brand { margin-bottom: 16px; }
@@ -3434,10 +3438,10 @@
   var _ICON_SUN='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"/></svg>';
   function paintThemeToggle(){
     var dark = document.body.classList.contains("dark");
-    var btn = document.getElementById("navThemeToggle");
-    if(!btn) return;
-    btn.innerHTML = (dark ? _ICON_SUN : _ICON_MOON) + '<span>' + (dark ? "라이트 모드" : "다크 모드") + '</span>';
-    btn.onclick = window.toggleTheme;
+    var icon = dark ? _ICON_SUN : _ICON_MOON;
+    var label = dark ? "라이트 모드" : "다크 모드";
+    document.querySelectorAll(".theme-tab").forEach(function(b){ b.innerHTML = icon + '<span>' + label + '</span>'; b.onclick = window.toggleTheme; });
+    document.querySelectorAll(".theme-mini").forEach(function(b){ b.innerHTML = icon; b.title = label; b.onclick = window.toggleTheme; });
   }
   window.toggleTheme = function(){
     const dark = document.body.classList.toggle("dark");
@@ -3619,12 +3623,13 @@
     const uc = $("useCta"); if (uc) uc.style.display = loggedIn ? "none" : "";
     if (!el) return;
     if (loggedIn && currentUser) {
-      el.innerHTML = '<div class="nav-user"><span>Hi! <b>'+(senderName||"")+'</b>님</span><button class="nav-logout" id="navLogoutBtn">로그아웃</button></div>';
+      el.innerHTML = '<div class="nav-user"><span>Hi! <b>'+(senderName||"")+'</b>님</span><button class="theme-mini" type="button" aria-label="화면 모드 전환"></button><button class="nav-logout" id="navLogoutBtn">로그아웃</button></div>';
       $("navLogoutBtn").onclick = () => doLogout();
     } else {
-      el.innerHTML = '<button class="nav-login-btn" id="navLoginBtn">로그인 / 가입</button>';
+      el.innerHTML = '<button class="theme-mini" type="button" aria-label="화면 모드 전환" style="margin-right:8px;"></button><button class="nav-login-btn" id="navLoginBtn">로그인 / 가입</button>';
       $("navLoginBtn").onclick = () => { const t = document.querySelector('.tab[data-view="send"]'); if (t) t.click(); };
     }
+    paintThemeToggle();
   }
 
   // 보내는 이름 정하기/바꾸기
