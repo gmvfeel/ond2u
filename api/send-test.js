@@ -130,7 +130,7 @@ export default async function handler(req, res) {
       if (!to) return res.status(400).json({ ok: false, error: "받을 이메일(to)이 없어요. (전체 발송은 주소 끝에 all=1)" });
       const toName = req.query.to_name || "";
       const wantBible = req.query.bible === "1";
-      const id = await sendOne({ ...cfg, to, toName, wantBible, senderId: req.query.sender_id || "", tone: req.query.tone || "", special: req.query.special || null, personalNote: req.query.note || "" });
+      const id = await sendOne({ ...cfg, to, toName, wantBible, senderId: req.query.sender_id || "", tone: req.query.tone || "", special: req.query.special || null, personalNote: req.query.note || "", welcome: req.query.welcome_recipient === "1" ? "recipient" : undefined });
       return res.status(200).json({ ok: true, message: "보냈어요!", to, id });
     }
   } catch (e) {
@@ -542,8 +542,11 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
       (welcome ?
         '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#efecf4" style="background:#efecf4; border-radius:14px; border:1px solid #d8d0e4;"><tr><td style="padding:22px; text-align:center;">' +
           '<div style="font-size:28px; margin-bottom:8px;">\uD83D\uDC8C</div>' +
-          '<div style="font-size:16px; font-weight:800; color:#33283f; margin-bottom:8px;">\uC624\uB298\uB3C4\uC5D0 \uC624\uC2E0 \uAC78 \uD658\uC601\uD574\uC694</div>' +
-          '<div style="font-size:13px; line-height:1.75; color:#5a5560;">\uC624\uB298\uBD80\uD130 \uB9E4\uC77C, \uD55C \uD3B8\uC758 \uC704\uB85C\uAC00 \uB2F9\uC2E0\uC5D0\uAC8C \uB2FF\uC744 \uAC70\uC608\uC694. \uCCAB \uD3B8\uC9C0\uB97C \uC804\uD574\uC694.</div>' +
+          (welcome === "recipient"
+            ? '<div style="font-size:16px; font-weight:800; color:#33283f; margin-bottom:8px;">반가워요 :)</div>' +
+              '<div style="font-size:13px; line-height:1.75; color:#5a5560;">' + escHtml(fromName) + '님이 오늘부터 당신에게 매일 마음을 전하기로 했어요. 하루 한 편, 따뜻한 글이 도착할 거예요.</div>'
+            : '<div style="font-size:16px; font-weight:800; color:#33283f; margin-bottom:8px;">\uC624\uB298\uB3C4\uC5D0 \uC624\uC2E0 \uAC78 \uD658\uC601\uD574\uC694</div>' +
+              '<div style="font-size:13px; line-height:1.75; color:#5a5560;">\uC624\uB298\uBD80\uD130 \uB9E4\uC77C, \uD55C \uD3B8\uC758 \uC704\uB85C\uAC00 \uB2F9\uC2E0\uC5D0\uAC8C \uB2FF\uC744 \uAC70\uC608\uC694. \uCCAB \uD3B8\uC9C0\uB97C \uC804\uD574\uC694.</div>') +
         '</td></tr></table>' + spacer(24)
       : "") +
 
