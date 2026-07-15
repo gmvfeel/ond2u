@@ -1058,6 +1058,12 @@
   .hd-sum { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
   .hd-sum span { font-size:12px; color:var(--ink-soft); background:var(--plum-soft); border-radius:14px; padding:6px 12px; }
   .hd-sum b { color:var(--plum); }
+  .hd-bar { display:flex; height:10px; border-radius:6px; overflow:hidden; margin:2px 0 10px; background:#eee; }
+  .hd-legend { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+  .hd-leg { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; color:var(--ink-soft); }
+  .hd-leg i { width:9px; height:9px; border-radius:3px; display:inline-block; flex:none; }
+  .hd-insight { font-size:12px; color:var(--ink-soft); background:var(--plum-soft); border-radius:12px; padding:9px 12px; margin-bottom:16px; text-align:center; }
+  .hd-insight b { color:var(--plum); }
   .hd-timeline { display:flex; flex-direction:column; gap:12px; }
   .hd-item { background:#fff; border:1px solid var(--plum-line); border-radius:14px; padding:14px 15px; }
   .hd-date { font-size:11px; color:var(--ink-faint); margin-bottom:7px; }
@@ -3161,12 +3167,34 @@
       if(!rows.length){ body.innerHTML = '<div class="hd-empty">\uC544\uC9C1 \uB0A8\uAE34 \uB9C8\uC74C\uC774 \uC5C6\uC5B4\uC694.<br>\uD3B8\uC9C0\uAC00 \uC624\uAC00\uACE0 \uBC18\uC751\uC774 \uC313\uC774\uBA74 \uC5EC\uAE30\uC5D0 \uBAA8\uC5EC\uC694.</div>'; return; }
       const emoCount = {};
       rows.forEach(function(x){ if(x.emotion) emoCount[x.emotion]=(emoCount[x.emotion]||0)+1; });
-      const topEmo = Object.keys(emoCount).sort(function(a,b){ return emoCount[b]-emoCount[a]; })[0] || "";
+      const emoEntries = Object.keys(emoCount).map(function(k){ return { k:k, n:emoCount[k] }; }).sort(function(a,b){ return b.n-a.n; });
+      const topEmo = emoEntries.length ? emoEntries[0].k : "";
       const replyN = rows.filter(function(x){ return x.reply && x.reply.trim(); }).length;
+      // 감정 분포 막대
+      const palette = ["#d97c93","#423458","#e0a3b4","#6b5b8a","#c56179","#8a7fa8"];
+      let barSeg = "", legend = "";
+      emoEntries.forEach(function(e, idx){
+        const col = palette[idx % palette.length];
+        barSeg += '<div style="flex:'+e.n+'; background:'+col+';"></div>';
+        legend += '<span class="hd-leg"><i style="background:'+col+';"></i>'+esc(e.k)+' '+e.n+'</span>';
+      });
+      const emoBar = emoEntries.length ? ('<div class="hd-bar">'+barSeg+'</div><div class="hd-legend">'+legend+'</div>') : "";
+      // 함께한 기간 · 마지막 반응
+      const nowT = Date.now();
+      const firstT = new Date(rows[rows.length-1].created_at).getTime();
+      const lastT = new Date(rows[0].created_at).getTime();
+      const daysLast = Math.floor((nowT - lastT)/86400000);
+      const lastTxt = daysLast<=0 ? "\uC624\uB298" : (daysLast===1 ? "\uC5B4\uC81C" : daysLast+"\uC77C \uC804");
+      const periodDays = Math.floor((nowT - firstT)/86400000);
+      let periodTxt;
+      if(periodDays < 1) periodTxt = "\uC624\uB298 \uCC98\uC74C";
+      else if(periodDays < 30) periodTxt = periodDays+"\uC77C\uC9F8";
+      else periodTxt = Math.floor(periodDays/30)+"\uAC1C\uC6D4\uC9F8";
+      const insight = '<div class="hd-insight">\uD568\uAED8\uD55C \uC9C0 <b>'+periodTxt+'</b> \u00B7 \uB9C8\uC9C0\uB9C9 \uBC18\uC751 <b>'+lastTxt+'</b></div>';
       const summary = '<div class="hd-sum"><span><b>'+rows.length+'</b>\uBC88 \uB9C8\uC74C\uC744 \uB0A8\uACBC\uC5B4\uC694</span>'
         + (topEmo ? '<span>\uAC00\uC7A5 \uB9CE\uC774 \u00B7 <b>'+esc(topEmo)+'</b></span>' : "")
         + (replyN ? '<span><b>'+replyN+'</b>\uAC1C\uC758 \uB2F5\uC7A5</span>' : "")
-        + '</div>';
+        + '</div>' + emoBar + insight;
       const items = rows.map(function(x){
         const d = new Date(x.created_at);
         const ds = d.getFullYear()+"."+String(d.getMonth()+1).padStart(2,"0")+"."+String(d.getDate()).padStart(2,"0");
