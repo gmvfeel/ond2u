@@ -828,6 +828,17 @@
   .dash-num { font-size:34px; font-weight:800; color:var(--plum-deep); letter-spacing:-0.03em; line-height:1.1; margin-top:8px; }
   .dash-num .unit { font-size:16px; font-weight:700; color:var(--ink-soft); margin-left:3px; }
   .dash-sub { font-size:12.5px; color:var(--ink-faint); margin-top:8px; }
+  .trend-legend { font-size:11px; display:flex; gap:14px; margin:6px 0 14px; }
+  .trend-legend .tl-s { color:#6b5b8a; }
+  .trend-legend .tl-r { color:#c56179; }
+  .trend-chart { display:flex; align-items:flex-end; justify-content:space-between; gap:6px; }
+  .trend-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .trend-val { font-size:11px; font-weight:700; color:var(--plum-deep); }
+  .trend-bars { display:flex; align-items:flex-end; gap:3px; height:70px; }
+  .trend-bar { width:9px; border-radius:3px 3px 0 0; }
+  .trend-bar.s { background:#6b5b8a; }
+  .trend-bar.r { background:#c56179; }
+  .trend-day { font-size:10.5px; color:var(--ink-faint); }
   .dash-sub b { color:var(--plum); font-weight:700; }
   .dash-refresh { margin-top:16px; font-family:inherit; font-size:13px; font-weight:600; color:var(--plum); background:transparent; border:1px solid var(--plum-line); border-radius:20px; padding:8px 18px; cursor:pointer; }
   .dash-refresh:hover { background:var(--plum-soft); }
@@ -4780,14 +4791,37 @@
     const limitSub = overLimit ? '<b style="color:#d14343;">무료 한도 도달 — 발송이 막힐 수 있어요</b>'
                    : nearLimit ? '<b style="color:#c9820a;">한도(100통)에 가까워요</b>'
                    : '리센드 무료: 하루 100통 · 월 3,000통';
+    const rate = (s.sends_total>0) ? Math.round((s.reactions_total||0)/s.sends_total*100) : 0;
+    const daily = Array.isArray(out.daily) ? out.daily : [];
+    let trendHtml = "";
+    if (daily.length){
+      const maxV = Math.max(1, ...daily.map(d=>Math.max(d.sends||0, d.reactions||0)));
+      const H = 70;
+      const cols = daily.map(function(d){
+        const sh = Math.max((d.sends?2:0), Math.round((d.sends||0)/maxV*H));
+        const rh = Math.max((d.reactions?2:0), Math.round((d.reactions||0)/maxV*H));
+        return '<div class="trend-col">'
+          + '<div class="trend-val">'+(d.sends||0)+'</div>'
+          + '<div class="trend-bars"><div class="trend-bar s" style="height:'+sh+'px" title="발송 '+(d.sends||0)+'"></div><div class="trend-bar r" style="height:'+rh+'px" title="반응 '+(d.reactions||0)+'"></div></div>'
+          + '<div class="trend-day">'+(d.wd||d.label||"")+'</div>'
+          + '</div>';
+      }).join("");
+      trendHtml = '<div class="dash-card wide">'
+        + '<div class="dash-label">최근 7일 추이</div>'
+        + '<div class="trend-legend"><span class="tl-s">■ 발송</span><span class="tl-r">■ 반응</span></div>'
+        + '<div class="trend-chart">'+cols+'</div>'
+        + '</div>';
+    }
     box.innerHTML =
       card("함께하는 사람", (s.members||0), "명", "오늘도를 쓰는 분들이에요")
       + card("담긴 콘텐츠", (s.contents||0), "개", "지금 준비된 편지들")
       + card("오늘 발송", limitNum, "/ 100통", limitSub)
       + card("보낸 편지", (s.sends_total||0), "통", "오늘 <b>"+todayN+"통</b> 나갔어요")
       + card("받은 반응", (s.reactions_total||0), "개", "오늘 <b>"+(s.reactions_today||0)+"개</b> 도착했어요")
+      + card("참여율", rate, "%", "보낸 편지 대비 받은 반응")
       + card("오늘 방문", (s.visits_today||0), "회", "오늘 다녀간 방문이에요")
-      + card("전체 방문", (s.visits_total||0), "회", "지금까지 누적 방문이에요");
+      + card("전체 방문", (s.visits_total||0), "회", "지금까지 누적 방문이에요")
+      + trendHtml;
   }
 
   // ===== 발송 현황 (관리자 전용) =====
