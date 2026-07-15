@@ -3877,9 +3877,18 @@
     const reactions = (reactRes && reactRes.data) || [];
     const sends = ((sendRes && sendRes.data) || []).filter(s => s.status !== "fail");
 
-    // 통합 타임라인 항목
+    // 통합 타임라인 항목 — 받은 반응은 같은 사람+같은 편지(같은 날) 묶기
     const items = [];
-    reactions.forEach(r => items.push({ type:"recv", id:r.id, email:r.recipient_email, date:r.created_at, emo:r.emotion||"", reply:r.reply||"", quote:r.content_quote||"" }));
+    const recvGroups = {};
+    reactions.forEach(r => {
+      const day = (r.created_at||"").slice(0,10);
+      const key = (r.recipient_email||"") + "|" + day + "|" + (r.content_quote||"");
+      let g = recvGroups[key];
+      if (!g) { g = recvGroups[key] = { type:"recv", email:r.recipient_email, date:r.created_at, quote:r.content_quote||"", emos:[], ids:[], reply:"", repId:r.id }; items.push(g); }
+      if (r.emotion && g.emos.indexOf(r.emotion)===-1) g.emos.push(r.emotion);
+      g.ids.push(r.id);
+      if (r.reply && !g.reply) g.reply = r.reply;
+    });
     sends.forEach(s => items.push({ type:"sent", id:s.id, email:s.recipient_email, date:s.created_at, name:s.recipient_name||"", quote:s.content_quote||"" }));
 
     if (!items.length) {
@@ -3895,7 +3904,7 @@
 
     // 요약
     const sentN = shown.filter(i=>i.type==="sent").length;
-    const recvN = shown.filter(i=>i.type==="recv").length;
+    const recvN = shown.filter(i=>i.type==="recv").reduce((n,g)=>n+(g.ids?g.ids.length:1),0);
     const whoTxt = cur ? escR(nameOf(cur))+"님과 " : "";
 
     // 필터 칩
@@ -3912,7 +3921,8 @@
     const tlShowN = Math.min(window._tlShow, shown.length);
     const body = shown.slice(0,tlShowN).map(i => {
       const nm = escR(i.type==="sent" ? (i.name || nameOf(i.email)) : nameOf(i.email));
-      const del = '<button class="item-del tl-del" onclick="deleteTimeline(\''+i.type+'\',\''+escR(String(i.id)).replace(/'/g,"&#39;")+'\')" aria-label="삭제">✕</button>';
+      const delId = i.type==="recv" ? (i.ids||[]).join(",") : i.id;
+      const del = '<button class="item-del tl-del" onclick="deleteTimeline(\''+i.type+'\',\''+escR(String(delId)).replace(/'/g,"&#39;")+'\')" aria-label="삭제">✕</button>';
       if (i.type==="sent") {
         const isReply = /^\[답신\]/.test(i.quote||"");
         if (isReply) {
@@ -3937,7 +3947,8 @@
           (i.quote?'<div class="tl-quote">"'+escR(i.quote)+'"</div>':'') +
         '</div>'+del+'</div>';
       }
-      const rid = escR(String(i.id)).replace(/'/g,"&#39;");
+      const rid = escR(String(i.repId)).replace(/'/g,"&#39;");
+      const emoTxt = (i.emos&&i.emos.length) ? i.emos.slice().reverse().map(e=>'<span class="tl-emo">'+escR(e)+'</span>').join(' · ') : '마음을 남겼어요';
       const replyUI = i.email ? (
         '<button class="tl-replybtn" onclick="toggleReplyBox(\''+rid+'\')">'+ODO_IC.chat+' 답신 보내기</button>' +
         '<div class="tl-replybox" id="rb_'+rid+'" style="display:none;">' +
@@ -3950,7 +3961,7 @@
         '</div>'
       ) : '';
       return '<div class="tl-item tl-recv"><div class="tl-ic">'+ODO_IC.heart+'</div><div class="tl-c">' +
-        '<div class="tl-line"><b>'+nm+'</b>님이 '+(i.emo?'<span class="tl-emo">'+escR(i.emo)+'</span>':'마음을 남겼어요') + '</div>' +
+        '<div class="tl-line"><b>'+nm+'</b>님이 '+emoTxt+'</div>' +
         '<div class="tl-date">'+fmtR(i.date)+'</div>' +
         (i.reply?'<div class="tl-reply"><span class="tl-reply-ic">'+ODO_IC.chat+'</span>'+escR(i.reply)+'</div>':'') +
         (i.quote?'<div class="tl-quote">"'+escR(i.quote)+'"</div>':'') +
@@ -4008,7 +4019,11 @@
   window.deleteTimeline = async function(type, id){
     if(!confirm("이 기록을 지울까요?")) return;
     const table = type==="sent" ? "odo_sends" : "odo_reactions";
-    try{ await odoDB.from(table).delete().eq("id", id); }catch(e){ console.log("기록 삭제 오류:", e); }
+    const ids = String(id).split(",").filter(Boolean);
+    try{
+      if(ids.length>1){ await odoDB.from(table).delete().in("id", ids); }
+      else { await odoDB.from(table).delete().eq("id", ids[0]||id); }
+    }catch(e){ console.log("기록 삭제 오류:", e); }
     renderReactions();
   };
 
