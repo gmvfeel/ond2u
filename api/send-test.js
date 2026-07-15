@@ -391,6 +391,36 @@ function pickDailyQuestion() {
   return DAILY_QUESTIONS[((doy % DAILY_QUESTIONS.length) + DAILY_QUESTIONS.length) % DAILY_QUESTIONS.length];
 }
 
+// ===== 오늘의 작은 실천 (미션) =====
+const DAILY_MISSIONS = [
+  "오늘, 고마운 사람에게 짧게 안부 한 줄 보내보기",
+  "오늘 하루, 나에게 '수고했어' 하고 말해주기",
+  "창문을 열고 바깥 공기를 크게 세 번 들이마셔보기",
+  "오늘은 물 한 잔 더 챙겨 마셔보기",
+  "잠들기 전, 오늘 좋았던 일 한 가지 떠올려보기",
+  "오늘, 5분만 아무 생각 없이 멍하니 쉬어보기",
+  "좋아하는 노래 한 곡을 처음부터 끝까지 들어보기",
+  "오늘 만나는 누군가에게 먼저 웃어주기",
+  "잠깐 스트레칭으로 어깨를 쭉 펴보기",
+  "오늘은 나를 위한 작은 간식 하나 챙기기",
+  "하늘을 한 번 올려다보며 잠깐 멈춰보기",
+  "미뤄둔 일 중 가장 작은 것 하나만 해보기",
+  "오늘, 스스로에게 칭찬 한마디 건네보기",
+  "따뜻한 차 한 잔을 천천히 음미해보기",
+  "오늘은 조금 일찍 잠자리에 들어보기",
+  "고마운 마음을 한 사람에게 마음속으로 전해보기"
+];
+// 하루는 질문, 다음 날은 작은 실천처럼 번갈아 나와요
+function pickDailyReflection() {
+  const k = new Date(Date.now() + 9 * 3600 * 1000); // KST
+  const doy = Math.floor((Date.UTC(k.getUTCFullYear(), k.getUTCMonth(), k.getUTCDate()) - Date.UTC(k.getUTCFullYear(), 0, 0)) / 86400000);
+  const half = Math.floor(doy / 2);
+  if (doy % 2 === 0) {
+    return { label: "오늘, 스스로에게 가볍게 한번 물어보세요.", text: DAILY_QUESTIONS[((half % DAILY_QUESTIONS.length) + DAILY_QUESTIONS.length) % DAILY_QUESTIONS.length] };
+  }
+  return { label: "오늘, 이런 작은 실천은 어때요?", text: DAILY_MISSIONS[((half % DAILY_MISSIONS.length) + DAILY_MISSIONS.length) % DAILY_MISSIONS.length] };
+}
+
 // ===== 요일별 인사 (요일마다 살짝 다른 결) =====
 const WEEKDAY_GREETINGS = [
   "\uC624\uB298\uC740 \uC544\uBB34\uAC83\uB3C4 \uC548 \uD574\uB3C4 \uAD1C\uCC2E\uC740 \uB0A0\uC774\uC5D0\uC694.",
@@ -429,7 +459,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
   const essayParas = nl(normal.essay).split("\n\n").filter(Boolean)
     .map(p => '<p style="font-size:14px; line-height:1.9; color:#e9e5f0; margin:0 0 13px;">' + p.replace(/\n/g, "<br>") + '</p>').join("");
   const careIc = careEmoji(normal.care_icon);
-  const todayQuestion = pickDailyQuestion();
+  const reflection = pickDailyReflection();
   const weekdayGreeting = pickWeekdayGreeting();
   // 오늘 이 음식 (절기 우선 → 없으면 랜덤), 한국 날짜(KST) 기준
   const spacer = h => '<div style="height:' + h + 'px; line-height:' + h + 'px; font-size:0;">&nbsp;</div>';
@@ -551,8 +581,8 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
       // 오늘의 한 줄 질문
       spacer(30) +
       '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px dashed ' + ROSE + '; border-radius:14px;"><tr><td style="padding:20px 22px; text-align:center;">' +
-        '<div style="font-size:11px; letter-spacing:0.02em; color:' + ROSE + '; margin-bottom:10px;">\uC624\uB298, \uC2A4\uC2A4\uB85C\uC5D0\uAC8C \uAC00\uBCCD\uAC8C \uD55C\uBC88 \uBB3C\uC5B4\uBCF4\uC138\uC694.</div>' +
-        '<div style="font-size:15px; font-weight:600; line-height:1.7; color:' + PLUM_DEEP + ';">' + todayQuestion + '</div>' +
+        '<div style="font-size:11px; letter-spacing:0.02em; color:' + ROSE + '; margin-bottom:10px;">' + reflection.label + '</div>' +
+        '<div style="font-size:15px; font-weight:600; line-height:1.7; color:' + PLUM_DEEP + ';">' + reflection.text + '</div>' +
       '</td></tr></table>' +
 
       foodBlock +
