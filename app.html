@@ -3405,8 +3405,9 @@
   window.toggleTheme = function(){
     const dark = document.body.classList.toggle("dark");
     try { localStorage.setItem("odo_theme", dark ? "dark" : "light"); } catch(e){}
-    const tt = document.getElementById("themeToggle"); if(tt) tt.textContent = dark ? "☀️" : "🌙";
+    document.querySelectorAll(".theme-toggle").forEach(function(b){ b.textContent = dark ? "☀️" : "🌙"; });
   };
+  function initThemeToggle(btn){ if(!btn) return; btn.textContent = document.body.classList.contains("dark") ? "☀️" : "🌙"; btn.onclick = toggleTheme; }
 
   window.sendNow = async function(i, btn){
     const r = recipients[i];
@@ -3523,7 +3524,7 @@
       '<button class="namebtn" id="editNameBtn">이름 바꾸기</button></span>'+
       '<span class="wb-actions"><button class="theme-toggle" id="themeToggle" title="다크/라이트 전환" aria-label="다크/라이트 전환">🌙</button><button class="logout" id="logoutBtn">로그아웃</button></span>';
     $("editNameBtn").onclick = () => editSenderName();
-    { const _tt=$("themeToggle"); if(_tt){ _tt.textContent = document.body.classList.contains("dark") ? "☀️" : "🌙"; _tt.onclick = toggleTheme; } }
+    { const _tt=$("themeToggle"); initThemeToggle(_tt); }
     updateFromLine();
     loadSaved();
     loadTrace();
@@ -3582,11 +3583,13 @@
     const uc = $("useCta"); if (uc) uc.style.display = loggedIn ? "none" : "";
     if (!el) return;
     if (loggedIn && currentUser) {
-      el.innerHTML = '<div class="nav-user"><span>Hi! <b>'+(senderName||"")+'</b>님</span><button class="nav-logout" id="navLogoutBtn">로그아웃</button></div>';
+      el.innerHTML = '<div class="nav-user"><span>Hi! <b>'+(senderName||"")+'</b>님</span><button class="theme-toggle" id="navThemeToggle" title="다크/라이트 전환" aria-label="다크/라이트 전환">🌙</button><button class="nav-logout" id="navLogoutBtn">로그아웃</button></div>';
       $("navLogoutBtn").onclick = () => doLogout();
+      initThemeToggle($("navThemeToggle"));
     } else {
-      el.innerHTML = '<button class="nav-login-btn" id="navLoginBtn">로그인 / 가입</button>';
+      el.innerHTML = '<button class="theme-toggle" id="navThemeToggle" title="다크/라이트 전환" aria-label="다크/라이트 전환" style="margin-right:8px;">🌙</button><button class="nav-login-btn" id="navLoginBtn">로그인 / 가입</button>';
       $("navLoginBtn").onclick = () => { const t = document.querySelector('.tab[data-view="send"]'); if (t) t.click(); };
+      initThemeToggle($("navThemeToggle"));
     }
   }
 
