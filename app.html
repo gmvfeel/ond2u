@@ -1035,6 +1035,9 @@
   .rpause-badge { display:inline-block; font-size:11px; font-weight:600; color:#b0446a; background:#fdeef2; border:1px solid #f3c9d5; border-radius:12px; padding:2px 8px; margin-left:6px; vertical-align:middle; }
   .rpreview-link { display:inline-block; margin-top:11px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--plum); background:none; border:none; padding:0; cursor:pointer; }
   .rpreview-link:hover { text-decoration:underline; }
+  .rsend-now { display:inline-block; margin-top:11px; margin-left:14px; font-family:inherit; font-size:12.5px; font-weight:600; color:#c56179; background:none; border:none; padding:0; cursor:pointer; }
+  .rsend-now:hover { text-decoration:underline; }
+  .rsend-now:disabled { opacity:0.5; cursor:default; text-decoration:none; }
   .pv-overlay { position:fixed; inset:0; background:rgba(43,39,48,.55); display:flex; align-items:center; justify-content:center; z-index:150; padding:16px; }
   .pv-modal { background:#fff; border-radius:18px; width:100%; max-width:560px; height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 14px 40px rgba(43,39,48,.2); }
   .pv-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 18px; border-bottom:1px solid var(--line); flex:none; }
@@ -3125,6 +3128,7 @@
             return `<div class="r-note">"${esc(notes[0])}"${more}</div>`;
           })()}
           <button class="rpreview-link" onclick="previewLetter(${i})">오늘 편지 미리보기 →</button>
+          <button class="rsend-now" onclick="sendNow(${i}, this)">지금 보내기</button>
         </div>
         <div class="ractions">
           <button class="rdiary" onclick="openHeartDiary(${i})">마음 일기</button>
@@ -3274,6 +3278,33 @@
     const w = window.open("", "_blank");
     if(!w){ alert("팝업이 차단됐어요. 브라우저에서 팝업 허용 후 다시 시도해 주세요."); return; }
     w.document.open(); w.document.write(html); w.document.close();
+  };
+
+  window.sendNow = async function(i, btn){
+    const r = recipients[i];
+    if(!r) return;
+    if(r.paused){ if(!confirm(r.name + "님은 지금 '쉬어가기' 중이에요. 그래도 한 통 보낼까요?")) return; }
+    else if(!confirm(r.name + "님에게 지금 편지 한 통을 보낼까요?")) return;
+    if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
+    try {
+      let token = "";
+      try { const { data } = await odoDB.auth.getSession(); token = (data&&data.session&&data.session.access_token)||""; } catch(e){}
+      if(!token){ alert("로그인이 필요해요."); return; }
+      const params = new URLSearchParams({ to:r.email, to_name:r.name||"", sender_id:(currentUser&&currentUser.id)||"" });
+      if(typeof senderName !== "undefined" && senderName) params.set("from_name", senderName);
+      if(r.tone) params.set("tone", r.tone);
+      if(r.bible) params.set("bible", "1");
+      if(r.personal_note) params.set("note", r.personal_note);
+      const res = await fetch("/api/send-test?"+params.toString(), { headers:{ "Authorization":"Bearer "+token } });
+      const out = await res.json().catch(function(){ return {}; });
+      if(res.ok && out.ok){ alert(r.name + "님에게 편지를 보냈어요 💌"); }
+      else if(res.status === 401){ alert("지금 보내기는 관리자 계정에서만 가능해요."); }
+      else { alert("보내지 못했어요. " + (out.error || "잠시 후 다시 시도해 주세요.")); }
+    } catch(e){
+      alert("보내지 못했어요. 잠시 후 다시 시도해 주세요.");
+    } finally {
+      if(btn){ btn.disabled = false; btn.textContent = "지금 보내기"; }
+    }
   };
 
   window.togglePause = async function(i){
