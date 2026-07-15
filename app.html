@@ -3041,6 +3041,9 @@
       const { data, error } = await odoDB.from("odo_recipients").insert({ sender_id: currentUser.id, ...payload }).select().maybeSingle();
       if(!error && data) rec.rowId = data.id;
       else if(error) console.log("수신자 저장 오류:", error);
+      if(!error && data && isAdmin()){
+        if(confirm(name + "님에게 지금 환영 편지를 보낼까요?")) { await sendWelcome(rec); }
+      }
     }
     // 초기화
     $("rName").value=""; $("rEmail").value="";
@@ -3371,6 +3374,24 @@
   };
 
   window.setRecipSort = function(v){ recipientSort = v || "added"; renderRecipients(); };
+
+  async function sendWelcome(rec){
+    try {
+      let token = "";
+      try { const { data } = await odoDB.auth.getSession(); token = (data&&data.session&&data.session.access_token)||""; } catch(e){}
+      if(!token){ alert("로그인이 필요해요."); return; }
+      const params = new URLSearchParams({ to:rec.email, to_name:rec.name||"", sender_id:(currentUser&&currentUser.id)||"", welcome_recipient:"1" });
+      if(typeof senderName !== "undefined" && senderName) params.set("from_name", senderName);
+      if(rec.tone) params.set("tone", rec.tone);
+      if(rec.bible) params.set("bible", "1");
+      if(rec.personal_note) params.set("note", rec.personal_note);
+      const res = await fetch("/api/send-test?"+params.toString(), { headers:{ "Authorization":"Bearer "+token } });
+      const out = await res.json().catch(function(){ return {}; });
+      if(res.ok && out.ok){ alert(rec.name + "님에게 환영 편지를 보냈어요 💌"); }
+      else if(res.status === 401){ alert("환영 편지는 관리자 계정에서만 보낼 수 있어요."); }
+      else { alert("환영 편지를 보내지 못했어요. " + (out.error || "잠시 후 다시 시도해 주세요.")); }
+    } catch(e){ alert("환영 편지를 보내지 못했어요."); }
+  }
 
   window.sendNow = async function(i, btn){
     const r = recipients[i];
