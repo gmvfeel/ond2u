@@ -504,7 +504,8 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
     '<tr><td bgcolor="#ffffff" style="padding:36px 28px 30px;">' +
       '<div style="text-align:center; font-size:20px; font-weight:800; letter-spacing:-0.04em; color:#2b2730; margin-bottom:22px;">\uC624\uB298\uB3C4 <span style="font-size:11px; font-weight:600; color:' + PLUM + '; letter-spacing:0.08em;">OND2U</span></div>' +
       '<div style="text-align:center; font-size:13px; color:#7a7580; margin:0 0 12px;"><b style="color:#2b2730;">' + fromName + '</b>\uB2D8\uC774 \uC624\uB298\uB3C4 \uBCF4\uB0C5\uB2C8\uB2E4</div>' +
-      '<div style="text-align:center; font-size:14px; font-weight:600; color:' + PLUM + '; margin-bottom:14px;">' + weekdayGreeting + '</div>' +
+      '<div style="text-align:center; font-size:14px; font-weight:600; color:' + PLUM + '; margin-bottom:6px;">' + weekdayGreeting + '</div>' +
+      '<div style="text-align:center; font-size:14px; font-weight:600; color:' + PLUM + '; margin-bottom:14px;">\uC624\uB298\uB3C4 \uB2F9\uC2E0\uC758 \uCD5C\uACE0\uAC00 \uB420 \uAC81\uB2C8\uB2E4. \uD798\uB0B4\uC138\uC694.</div>' +
       '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td width="30" height="3" bgcolor="' + PLUM + '" style="background:' + PLUM + '; font-size:0; line-height:3px; border-radius:3px;">&nbsp;</td></tr></table>' +
       spacer(24) +
 
