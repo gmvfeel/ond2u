@@ -1042,6 +1042,8 @@
   .rlast.quiet { color:#c56179; font-weight:600; }
   .quiet-nudge { background:#fdeef2; border:1px solid #f3c9d5; border-radius:14px; padding:14px 16px; margin-bottom:14px; font-size:13px; color:#8a4a5c; line-height:1.7; }
   .quiet-nudge b { color:#c56179; }
+  .list-label-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .recip-sort { font-family:inherit; font-size:12.5px; color:var(--plum-deep); background:var(--plum-soft); border:none; border-radius:20px; padding:6px 12px; cursor:pointer; }
   .pv-overlay { position:fixed; inset:0; background:rgba(43,39,48,.55); display:flex; align-items:center; justify-content:center; z-index:150; padding:16px; }
   .pv-modal { background:#fff; border-radius:18px; width:100%; max-width:560px; height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 14px 40px rgba(43,39,48,.2); }
   .pv-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 18px; border-bottom:1px solid var(--line); flex:none; }
@@ -1451,7 +1453,7 @@
         <div class="add-hint">추가 전에 "매일 좋은 글 보낼게, 받을래?" 하고 한 번 물어봐 주세요. 편지 맨 밑엔 언제든 '그만 받기'가 있어요.</div>
       </div>
 
-      <div class="list-label" id="listLabel" style="display:none">받는 사람 <b id="rCount">0</b>명</div>
+      <div class="list-label" id="listLabel" style="display:none"><div class="list-label-row"><span>받는 사람 <b id="rCount">0</b>명</span><select id="recipSort" class="recip-sort" onchange="setRecipSort(this.value)"><option value="added">추가순</option><option value="name">이름순</option><option value="recent">최근 반응순</option><option value="quiet">잠잠한 순</option></select></div></div>
       <div id="recipientList"><div class="empty-state"><div class="es-ic"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="M4 7l8 6 8-6"/></svg></div><div class="es-t">아끼는 사람을 초대해보세요</div><div class="es-d">위에서 한 명 추가하면,<br>매일 그 사람에게 편지가 전해져요.</div></div></div>
     </div>
   </div>
@@ -2946,6 +2948,7 @@
   const TIMES = ["아침 8시","점심 12시","저녁 6시","밤 10시"];
   const TONES = ["위로","응원","평온","시작"];
   const recipients = [];
+  let recipientSort = "added";
   let pickedTimes = ["아침 8시"];
   let pickedTone = null;
   let bibleAlso = false;   // 성경 말씀도 함께 보낼지 (기본 꺼짐)
@@ -3074,7 +3077,7 @@
       let selfRow = null;
       data.forEach(row=>{
         if(myEmail && row.email === myEmail){ selfRow = row; return; }  // 내 것은 목록에서 빼고 토글로 관리
-        recipients.push({ name:row.name, email:row.email, times:row.send_times||["아침 8시"], tone:row.tone, bible:(row.kind==="bible"), special_date:row.special_date||null, special_label:row.special_label||null, personal_note:row.personal_note||null, paused:!!row.paused, rowId:row.id });
+        recipients.push({ name:row.name, email:row.email, times:row.send_times||["아침 8시"], tone:row.tone, bible:(row.kind==="bible"), special_date:row.special_date||null, special_label:row.special_label||null, personal_note:row.personal_note||null, paused:!!row.paused, rowId:row.id, _ord:recipients.length });
       });
       // "나에게 받기" 상태 복원
       const meToggleEl = $("meToggle");
@@ -3122,6 +3125,14 @@
     }
     $("listLabel").style.display="block";
     $("rCount").textContent = recipients.length;
+    // 정렬
+    (function(){
+      const lastT = function(r){ return r.lastReact ? new Date(r.lastReact).getTime() : null; };
+      if(recipientSort === "name") recipients.sort(function(a,b){ return String(a.name).localeCompare(String(b.name),"ko"); });
+      else if(recipientSort === "recent") recipients.sort(function(a,b){ const A=lastT(a),B=lastT(b); if(A===B) return 0; if(A===null) return 1; if(B===null) return -1; return B-A; });
+      else if(recipientSort === "quiet") recipients.sort(function(a,b){ const A=lastT(a),B=lastT(b); if(A===B) return 0; if(A===null) return 1; if(B===null) return -1; return A-B; });
+      else recipients.sort(function(a,b){ return (a._ord||0)-(b._ord||0); });
+    })();
     const quietOnes = recipients.filter(function(r){ if(r.paused||!r.lastReact) return false; return Math.floor((Date.now()-new Date(r.lastReact).getTime())/86400000) >= 14; });
     const quietNudge = quietOnes.length ? ('<div class="quiet-nudge"><b>💗 요즘 챙기면 좋은 분</b><br>' + quietOnes.map(function(r){ return r.name; }).join(", ") + '님이 한동안 조용해요. 오늘 한 통 어때요?</div>') : "";
     $("recipientList").innerHTML = quietNudge + recipients.map((r,i)=>`
@@ -3301,6 +3312,8 @@
     if(!w){ alert("팝업이 차단됐어요. 브라우저에서 팝업 허용 후 다시 시도해 주세요."); return; }
     w.document.open(); w.document.write(html); w.document.close();
   };
+
+  window.setRecipSort = function(v){ recipientSort = v || "added"; renderRecipients(); };
 
   window.sendNow = async function(i, btn){
     const r = recipients[i];
