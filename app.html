@@ -1040,6 +1040,8 @@
   .rsend-now:disabled { opacity:0.5; cursor:default; text-decoration:none; }
   .rlast { font-size:12px; color:var(--ink-faint); margin-top:9px; }
   .rlast.quiet { color:#c56179; font-weight:600; }
+  .quiet-nudge { background:#fdeef2; border:1px solid #f3c9d5; border-radius:14px; padding:14px 16px; margin-bottom:14px; font-size:13px; color:#8a4a5c; line-height:1.7; }
+  .quiet-nudge b { color:#c56179; }
   .pv-overlay { position:fixed; inset:0; background:rgba(43,39,48,.55); display:flex; align-items:center; justify-content:center; z-index:150; padding:16px; }
   .pv-modal { background:#fff; border-radius:18px; width:100%; max-width:560px; height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 14px 40px rgba(43,39,48,.2); }
   .pv-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 18px; border-bottom:1px solid var(--line); flex:none; }
@@ -3120,7 +3122,9 @@
     }
     $("listLabel").style.display="block";
     $("rCount").textContent = recipients.length;
-    $("recipientList").innerHTML = recipients.map((r,i)=>`
+    const quietOnes = recipients.filter(function(r){ if(r.paused||!r.lastReact) return false; return Math.floor((Date.now()-new Date(r.lastReact).getTime())/86400000) >= 14; });
+    const quietNudge = quietOnes.length ? ('<div class="quiet-nudge"><b>💗 요즘 챙기면 좋은 분</b><br>' + quietOnes.map(function(r){ return r.name; }).join(", ") + '님이 한동안 조용해요. 오늘 한 통 어때요?</div>') : "";
+    $("recipientList").innerHTML = quietNudge + recipients.map((r,i)=>`
       <div class="recipient${r.paused?' paused':''}">
         <div class="rav">${r.name.charAt(0)}</div>
         <div class="rinfo">
