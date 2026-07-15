@@ -611,13 +611,23 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
       spacer(32) +
       '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="' + PLUM_SOFT + '" style="background:' + PLUM_SOFT + '; border-radius:14px;"><tr><td align="center" style="padding:22px;">' +
         '<div style="font-size:13px; color:' + PLUM_DEEP + '; margin-bottom:16px;">\uC774 \uD3B8\uC9C0, ' + (toName ? toName + " \uB9C8\uC74C" : "\uB2F9\uC2E0 \uB9C8\uC74C") + '\uC5D4 \uC5B4\uB5A0\uC168\uC5B4\uC694?</div>' +
-        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr>' +
-          reactBtn(reactUrl("\uC704\uB85C\uB410\uC5B4\uC694"), "\uC704\uB85C\uB410\uC5B4\uC694 \u2661", PLUM_DEEP, ROSE) +
-          '<td width="7" style="font-size:0; line-height:0;">&nbsp;</td>' +
-          reactBtn(reactUrl("\uD798\uC774 \uB098\uC694"), "\uD798\uC774 \uB098\uC694", PLUM_DEEP, ROSE) +
-          '<td width="7" style="font-size:0; line-height:0;">&nbsp;</td>' +
-          reactBtn(reactUrl("\uACE0\uB9C8\uC6CC\uC694"), "\uACE0\uB9C8\uC6CC\uC694", PLUM_DEEP, ROSE) +
-        '</tr></table>' +
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;">' +
+          '<tr>' +
+            reactBtn(reactUrl("위로됐어요"), "위로됐어요 ♡", PLUM_DEEP, ROSE) +
+            '<td width="7" style="font-size:0; line-height:0;">&nbsp;</td>' +
+            reactBtn(reactUrl("힘이 나요"), "힘이 나요", PLUM_DEEP, ROSE) +
+            '<td width="7" style="font-size:0; line-height:0;">&nbsp;</td>' +
+            reactBtn(reactUrl("고마워요"), "고마워요", PLUM_DEEP, ROSE) +
+          '</tr>' +
+          '<tr><td colspan="5" height="8" style="font-size:0; line-height:0;">&nbsp;</td></tr>' +
+          '<tr><td colspan="5" align="center">' +
+            '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr>' +
+              reactBtn(reactUrl("뭉클해요"), "뭉클해요", PLUM_DEEP, ROSE) +
+              '<td width="7" style="font-size:0; line-height:0;">&nbsp;</td>' +
+              reactBtn(reactUrl("오늘 딱 맞아요"), "오늘 딱 맞아요", PLUM_DEEP, ROSE) +
+            '</tr></table>' +
+          '</td></tr>' +
+        '</table>' +
       '</td></tr></table>' +
 
       // CTA
