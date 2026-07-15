@@ -1038,6 +1038,8 @@
   .rsend-now { display:inline-block; margin-top:11px; margin-left:14px; font-family:inherit; font-size:12.5px; font-weight:600; color:#c56179; background:none; border:none; padding:0; cursor:pointer; }
   .rsend-now:hover { text-decoration:underline; }
   .rsend-now:disabled { opacity:0.5; cursor:default; text-decoration:none; }
+  .rlast { font-size:12px; color:var(--ink-faint); margin-top:9px; }
+  .rlast.quiet { color:#c56179; font-weight:600; }
   .pv-overlay { position:fixed; inset:0; background:rgba(43,39,48,.55); display:flex; align-items:center; justify-content:center; z-index:150; padding:16px; }
   .pv-modal { background:#fff; border-radius:18px; width:100%; max-width:560px; height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 14px 40px rgba(43,39,48,.2); }
   .pv-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 18px; border-bottom:1px solid var(--line); flex:none; }
@@ -3089,6 +3091,16 @@
       const sf = $("meSpecialField"); if(sf){ sf.style.opacity = selfRow ? "1" : "0.4"; sf.style.pointerEvents = selfRow ? "auto" : "none"; }
       const ob = $("meOnboard"); if (ob) ob.classList.toggle("show", !selfRow);
       refreshMeTimeChips();
+      // 각 받는 사람의 마지막 반응 시점 (한 번의 조회로)
+      try {
+        const uid = currentUser && currentUser.id;
+        if(uid){
+          const { data: rxs } = await odoDB.from("odo_reactions").select("recipient_email, created_at").eq("sender_id", uid).order("created_at", { ascending:false });
+          const lastByEmail = {};
+          (rxs||[]).forEach(function(x){ if(x.recipient_email && !lastByEmail[x.recipient_email]) lastByEmail[x.recipient_email] = x.created_at; });
+          recipients.forEach(function(r){ r.lastReact = lastByEmail[r.email] || null; });
+        }
+      } catch(e){}
       renderRecipients();
     } catch(e){ console.log("수신자 불러오기 오류:", e); }
   }
@@ -3126,6 +3138,12 @@
             if(!notes.length) return "";
             const more = notes.length>1 ? ` <span class="r-note-more">외 ${notes.length-1}개 번갈아</span>` : "";
             return `<div class="r-note">"${esc(notes[0])}"${more}</div>`;
+          })()}
+          ${(()=>{ if(!r.lastReact) return "";
+            const days = Math.floor((Date.now()-new Date(r.lastReact).getTime())/86400000);
+            const txt = days<=0?"오늘":(days===1?"어제":days+"일 전");
+            const quiet = days>=14;
+            return `<div class="rlast${quiet?' quiet':''}">💗 마지막 반응 ${txt}${quiet?' · 요즘 잠잠해요':''}</div>`;
           })()}
           <button class="rpreview-link" onclick="previewLetter(${i})">오늘 편지 미리보기 →</button>
           <button class="rsend-now" onclick="sendNow(${i}, this)">지금 보내기</button>
