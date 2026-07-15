@@ -30,9 +30,22 @@ export default async function handler(req, res) {
       countRows(SB_URL, SB_SERVICE, "odo_visits"),
       countRows(SB_URL, SB_SERVICE, "odo_visits", "created_at=gte." + todayISO)
     ]);
+
+    // 최근 7일(한국시각) 일별 발송·반응
+    const dayDefs = [];
+    for (let i = 6; i >= 0; i--) dayDefs.push(kstDayRange(i));
+    const daily = await Promise.all(dayDefs.map(async d => {
+      const [sends, reactions] = await Promise.all([
+        countRows(SB_URL, SB_SERVICE, "odo_sends", "created_at=gte." + d.startISO + "&created_at=lt." + d.endISO),
+        countRows(SB_URL, SB_SERVICE, "odo_reactions", "created_at=gte." + d.startISO + "&created_at=lt." + d.endISO)
+      ]);
+      return { label: d.label, wd: d.wd, sends, reactions };
+    }));
+
     return res.status(200).json({
       ok: true,
-      stats: { members, contents, sends_total, sends_today, reactions_total, reactions_today, visits_total, visits_today }
+      stats: { members, contents, sends_total, sends_today, reactions_total, reactions_today, visits_total, visits_today },
+      daily
     });
   } catch (e) {
     return res.status(500).json({ ok: false, error: String(e && e.message || e) });
@@ -72,4 +85,17 @@ function kstTodayStartISO() {
   const y = kst.getUTCFullYear(), m = kst.getUTCMonth(), d = kst.getUTCDate();
   const utc = new Date(Date.UTC(y, m, d, 0, 0, 0) - 9 * 3600 * 1000);
   return utc.toISOString();
+}
+
+// ── daysAgo일 전(한국시각) 하루의 UTC 시작/끝 ISO + 라벨 ──
+function kstDayRange(daysAgo) {
+  const kstNow = new Date(Date.now() + 9 * 3600 * 1000);
+  const y = kstNow.getUTCFullYear(), m = kstNow.getUTCMonth(), d = kstNow.getUTCDate();
+  const dayKstTs = Date.UTC(y, m, d, 0, 0, 0) - daysAgo * 86400000; // 그날 한국시각 자정(=UTC필드로 표현)
+  const startUTC = new Date(dayKstTs - 9 * 3600 * 1000);
+  const endUTC = new Date(dayKstTs - 9 * 3600 * 1000 + 86400000);
+  const ld = new Date(dayKstTs); // 라벨용 (UTC필드 = 한국 달력 날짜)
+  const wd = ["일", "월", "화", "수", "목", "금", "토"][ld.getUTCDay()];
+  const label = (ld.getUTCMonth() + 1) + "/" + ld.getUTCDate();
+  return { startISO: startUTC.toISOString(), endISO: endUTC.toISOString(), wd, label };
 }
