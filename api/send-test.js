@@ -391,6 +391,21 @@ function pickDailyQuestion() {
   return DAILY_QUESTIONS[((doy % DAILY_QUESTIONS.length) + DAILY_QUESTIONS.length) % DAILY_QUESTIONS.length];
 }
 
+// ===== 요일별 인사 (요일마다 살짝 다른 결) =====
+const WEEKDAY_GREETINGS = [
+  "\uC624\uB298\uC740 \uC544\uBB34\uAC83\uB3C4 \uC548 \uD574\uB3C4 \uAD1C\uCC2E\uC740 \uB0A0\uC774\uC5D0\uC694.",
+  "\uC0C8\uB85C\uC6B4 \uD55C \uC8FC, \uCC9C\uCC9C\uD788 \uC2DC\uC791\uD574\uB3C4 \uB3FC\uC694.",
+  "\uC624\uB298\uB3C4 \uB2F9\uC2E0\uC758 \uC18D\uB3C4\uB85C \uAC78\uC5B4\uAC00\uC694.",
+  "\uD55C \uC8FC\uC758 \uD55C\uAC00\uC6B4\uB370, \uC7A0\uAE50 \uC228 \uACE0\uB974\uBA70 \uAC00\uC694.",
+  "\uC870\uAE08\uB9CC \uB354, \uC798 \uD574\uC624\uACE0 \uC788\uC5B4\uC694.",
+  "\uD55C \uC8FC \uC560\uC4F4 \uB2F9\uC2E0, \uC815\uB9D0 \uACE0\uC0DD \uB9CE\uC558\uC5B4\uC694.",
+  "\uC624\uB298\uC740 \uB2F9\uC2E0\uC744 \uC704\uD55C \uC5EC\uC720\uB97C \uCC59\uACA8\uBCF4\uC138\uC694."
+];
+function pickWeekdayGreeting() {
+  const k = new Date(Date.now() + 9 * 3600 * 1000); // KST
+  return WEEKDAY_GREETINGS[k.getUTCDay()];
+}
+
 function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId, secret, foodPool, personalNote, welcome }) {
   const nl = s => (s || "").replace(/\\n/g, "\n");
   const escHtml = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -415,6 +430,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
     .map(p => '<p style="font-size:14px; line-height:1.9; color:#e9e5f0; margin:0 0 13px;">' + p.replace(/\n/g, "<br>") + '</p>').join("");
   const careIc = careEmoji(normal.care_icon);
   const todayQuestion = pickDailyQuestion();
+  const weekdayGreeting = pickWeekdayGreeting();
   // 오늘 이 음식 (절기 우선 → 없으면 랜덤), 한국 날짜(KST) 기준
   const spacer = h => '<div style="height:' + h + 'px; line-height:' + h + 'px; font-size:0;">&nbsp;</div>';
   const _kst = new Date(Date.now() + 9*3600*1000);
@@ -488,7 +504,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
     '<tr><td bgcolor="#ffffff" style="padding:36px 28px 30px;">' +
       '<div style="text-align:center; font-size:20px; font-weight:800; letter-spacing:-0.04em; color:#2b2730; margin-bottom:22px;">\uC624\uB298\uB3C4 <span style="font-size:11px; font-weight:600; color:' + PLUM + '; letter-spacing:0.08em;">OND2U</span></div>' +
       '<div style="text-align:center; font-size:13px; color:#7a7580; margin:0 0 12px;"><b style="color:#2b2730;">' + fromName + '</b>\uB2D8\uC774 \uC624\uB298\uB3C4 \uBCF4\uB0C5\uB2C8\uB2E4</div>' +
-      '<div style="text-align:center; font-size:14px; font-weight:600; color:' + PLUM + '; margin-bottom:14px;">\uC624\uB298\uB3C4 \uB2F9\uC2E0\uC758 \uCD5C\uACE0\uAC00 \uB420 \uAC81\uB2C8\uB2E4. \uD798\uB0B4\uC138\uC694.</div>' +
+      '<div style="text-align:center; font-size:14px; font-weight:600; color:' + PLUM + '; margin-bottom:14px;">' + weekdayGreeting + '</div>' +
       '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td width="30" height="3" bgcolor="' + PLUM + '" style="background:' + PLUM + '; font-size:0; line-height:3px; border-radius:3px;">&nbsp;</td></tr></table>' +
       spacer(24) +
 
