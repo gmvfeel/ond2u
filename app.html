@@ -1044,6 +1044,7 @@
   .quiet-nudge b { color:#c56179; }
   .list-label-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .recip-sort { font-family:inherit; font-size:12.5px; color:var(--plum-deep); background:var(--plum-soft); border:none; border-radius:20px; padding:6px 12px; cursor:pointer; }
+  .home-hello { font-size:15px; font-weight:600; color:var(--plum-deep); background:var(--plum-soft); border-radius:14px; padding:14px 16px; margin-bottom:18px; }
   .pv-overlay { position:fixed; inset:0; background:rgba(43,39,48,.55); display:flex; align-items:center; justify-content:center; z-index:150; padding:16px; }
   .pv-modal { background:#fff; border-radius:18px; width:100%; max-width:560px; height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 14px 40px rgba(43,39,48,.2); }
   .pv-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 18px; border-bottom:1px solid var(--line); flex:none; }
@@ -1173,6 +1174,7 @@
   <div class="view on" id="view-home">
     <div class="section-title">오늘</div>
     <div class="section-sub">오늘 당신에게 도착한 한 편이에요. 천천히 마음으로 읽어보세요.</div>
+    <div class="home-hello" id="homeHello" style="display:none;"></div>
     <div id="onThisDay"></div>
     <div class="letter-card">
     <div class="greet-row">
@@ -3107,6 +3109,7 @@
         }
       } catch(e){}
       renderRecipients();
+      updateHomeHello();
     } catch(e){ console.log("수신자 불러오기 오류:", e); }
   }
 
@@ -3115,6 +3118,16 @@
     const p = String(md).split("-");
     if(p.length!==2) return md;
     return parseInt(p[0],10)+"/"+parseInt(p[1],10);
+  }
+
+  function updateHomeHello(){
+    const el = document.getElementById("homeHello");
+    if(!el) return;
+    const nm = (typeof senderName !== "undefined" && senderName) ? senderName : "";
+    const cnt = recipients.length;
+    const prefix = nm ? (nm + "님, ") : "";
+    el.textContent = cnt > 0 ? (prefix + "오늘도 " + cnt + "명에게 마음이 전해질 거예요.") : (prefix + "오늘도 따뜻한 하루 되세요.");
+    el.style.display = "block";
   }
 
   function renderRecipients(){
@@ -3554,6 +3567,7 @@
           fetch("/api/send-test?welcome=1&to=" + encodeURIComponent(currentUser.email)).catch(()=>{});
         }
       } catch(e){ console.log("프로필 불러오기 오류:", e); senderName = googleName; }
+      try { updateHomeHello(); } catch(e){}
 
       // ── 연속 방문 기록 (오늘 처음 들어왔으면 갱신) ──
       try {
