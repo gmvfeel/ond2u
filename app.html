@@ -507,7 +507,7 @@
   .tl-item { background:var(--white); border:1px solid var(--line); border-radius:16px; padding:16px 40px 16px 18px; margin-bottom:10px; display:flex; align-items:flex-start; gap:13px; position:relative; }
   .tl-item.tl-sent { border-color:var(--plum-line); background:var(--plum-soft); }
   .tl-item.tl-cele { border-color:var(--plum); }
-  .tl-item.tl-recv { border-color:#f3c9d5; background:#fdeef2; }
+  .tl-item.tl-recv { border-color:var(--rose-line); background:var(--rose-soft); }
   .tl-ic { font-size:20px; flex-shrink:0; line-height:1.3; }
   .tl-ic svg { width:21px; height:21px; display:block; }
   .tl-item.tl-sent .tl-ic { color:var(--plum); }
@@ -830,14 +830,14 @@
   .dash-sub { font-size:12.5px; color:var(--ink-faint); margin-top:8px; }
   .trend-legend { font-size:11px; display:flex; gap:14px; margin:6px 0 14px; }
   .trend-legend .tl-s { color:#6b5b8a; }
-  .trend-legend .tl-r { color:#c56179; }
+  .trend-legend .tl-r { color:var(--rose-deep); }
   .trend-chart { display:flex; align-items:flex-end; justify-content:space-between; gap:6px; }
   .trend-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; }
   .trend-val { font-size:11px; font-weight:700; color:var(--plum-deep); }
   .trend-bars { display:flex; align-items:flex-end; gap:3px; height:70px; }
   .trend-bar { width:9px; border-radius:3px 3px 0 0; }
   .trend-bar.s { background:#6b5b8a; }
-  .trend-bar.r { background:#c56179; }
+  .trend-bar.r { background:var(--rose-deep); }
   .trend-day { font-size:10.5px; color:var(--ink-faint); }
   .dash-sub b { color:var(--plum); font-weight:700; }
   .dash-refresh { margin-top:16px; font-family:inherit; font-size:13px; font-weight:600; color:var(--plum); background:transparent; border:1px solid var(--plum-line); border-radius:20px; padding:8px 18px; cursor:pointer; }
@@ -1026,8 +1026,8 @@
   .recipient .rtag { font-size:12px; color:var(--plum-deep); background:var(--plum-soft); border-radius:20px; padding:4px 10px; }
   .recipient .rtone { font-size:12px; color:var(--ink-soft); background:var(--paper); border:1px solid var(--line); border-radius:20px; padding:4px 10px; }
   .recipient .rtone.rbible { color:var(--plum-deep); background:var(--plum-soft); border-color:var(--plum-line); font-weight:600; }
-  .recipient .rtone.rspecial { color:#b0446a; background:#fdeef2; border-color:#f3c9d5; font-weight:600; }
-  .recipient .r-note { font-size:12.5px; color:#b0446a; margin-top:9px; line-height:1.6; font-style:italic; word-break:keep-all; }
+  .recipient .rtone.rspecial { color:var(--rose-deep); background:var(--rose-soft); border-color:var(--rose-line); font-weight:600; }
+  .recipient .r-note { font-size:12.5px; color:var(--rose-deep); margin-top:9px; line-height:1.6; font-style:italic; word-break:keep-all; }
   .recipient .r-note-more { font-style:normal; color:#c98aa0; font-size:11.5px; }
   .recipient .ractions { display:flex; flex-direction:column; gap:2px; flex-shrink:0; align-items:flex-end; }
   .recipient .redit { font-family:inherit; font-size:12px; color:var(--plum-deep); background:transparent; border:none; cursor:pointer; padding:4px; font-weight:600; }
@@ -1043,19 +1043,19 @@
   .recipient .rpause:hover { color:var(--plum); }
   .recipient.paused { opacity:0.66; }
   .recipient.paused .rav { filter:grayscale(0.4); }
-  .rpause-badge { display:inline-block; font-size:11px; font-weight:600; color:#b0446a; background:#fdeef2; border:1px solid #f3c9d5; border-radius:12px; padding:2px 8px; margin-left:6px; vertical-align:middle; }
+  .rpause-badge { display:inline-block; font-size:11px; font-weight:600; color:var(--rose-deep); background:var(--rose-soft); border:1px solid var(--rose-line); border-radius:12px; padding:2px 8px; margin-left:6px; vertical-align:middle; }
   .rpreview-link { display:inline-block; margin-top:11px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--plum); background:none; border:none; padding:0; cursor:pointer; }
   .rpreview-link:hover { text-decoration:underline; }
-  .rsend-now { display:inline-block; margin-top:11px; margin-left:14px; font-family:inherit; font-size:12.5px; font-weight:600; color:#c56179; background:none; border:none; padding:0; cursor:pointer; }
+  .rsend-now { display:inline-block; margin-top:11px; margin-left:14px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--rose-deep); background:none; border:none; padding:0; cursor:pointer; }
   .rsend-now:hover { text-decoration:underline; }
   .rsend-now:disabled { opacity:0.5; cursor:default; text-decoration:none; }
   .rlast { font-size:12px; color:var(--ink-faint); margin-top:9px; }
-  .rlast.quiet { color:#c56179; font-weight:600; }
-  .quiet-nudge { background:#fdeef2; border:1px solid #f3c9d5; border-radius:14px; padding:14px 16px; margin-bottom:14px; font-size:13px; color:#8a4a5c; line-height:1.7; }
-  .quiet-nudge b { color:#c56179; }
+  .rlast.quiet { color:var(--rose-deep); font-weight:600; }
+  .quiet-nudge { background:var(--rose-soft); border:1px solid var(--rose-line); border-radius:14px; padding:14px 16px; margin-bottom:14px; font-size:13px; color:var(--rose-deep); line-height:1.7; }
+  .quiet-nudge b { color:var(--rose-deep); }
   .list-label-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .recip-sort { font-family:inherit; font-size:12.5px; color:var(--plum-deep); background:var(--plum-soft); border:none; border-radius:20px; padding:6px 12px; cursor:pointer; }
-  .home-hello { font-size:13.5px; font-weight:500; text-align:center; color:#c56179; margin-bottom:16px; }
+  .home-hello { font-size:13.5px; font-weight:500; text-align:center; color:var(--rose-deep); margin-bottom:16px; }
   .pv-overlay { position:fixed; inset:0; background:rgba(43,39,48,.55); display:flex; align-items:center; justify-content:center; z-index:150; padding:16px; }
   .pv-modal { background:#fff; border-radius:18px; width:100%; max-width:560px; height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 14px 40px rgba(43,39,48,.2); }
   .pv-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 18px; border-bottom:1px solid var(--line); flex:none; }
@@ -1067,7 +1067,7 @@
   .pv-note { font-size:12px; color:var(--ink-soft); padding:9px 18px; background:var(--plum-soft); flex:none; }
   .pv-tones { display:flex; flex-wrap:wrap; gap:7px; padding:12px 18px 4px; flex:none; }
   .pv-tone { font-family:inherit; font-size:12.5px; color:var(--plum-deep); background:var(--plum-soft); border:none; border-radius:20px; padding:6px 13px; cursor:pointer; }
-  .pv-tone.on { background:#c56179; color:#fff; }
+  .pv-tone.on { background:var(--rose-deep); color:#fff; }
   .pv-tonehint { font-size:11.5px; color:var(--ink-faint); padding:0 18px 10px; flex:none; }
   .pv-frame { flex:1; overflow-x:hidden; overflow-y:auto; background:#f3f1ef; min-height:0; }
   .pv-scaler { position:relative; width:100%; }
@@ -1092,7 +1092,7 @@
   .hd-timeline { display:flex; flex-direction:column; gap:12px; }
   .hd-item { background:#fff; border:1px solid var(--plum-line); border-radius:14px; padding:14px 15px; }
   .hd-date { font-size:11px; color:var(--ink-faint); margin-bottom:7px; }
-  .hd-emo { display:inline-block; background:#fbeef1; color:#c56179; font-weight:700; border-radius:14px; padding:3px 11px; font-size:12px; }
+  .hd-emo { display:inline-block; background:var(--rose-soft); color:var(--rose-deep); font-weight:700; border-radius:14px; padding:3px 11px; font-size:12px; }
   .hd-quote { font-size:12.5px; color:var(--ink-faint); margin-top:9px; line-height:1.6; font-style:italic; }
   .hd-reply { font-size:14px; color:#3a3540; margin-top:10px; line-height:1.7; background:var(--plum-soft); border-radius:10px; padding:10px 12px; word-break:keep-all; }
   .hd-empty, .hd-loading { text-align:center; color:var(--ink-faint); font-size:14px; padding:34px 10px; line-height:1.7; }
@@ -3694,7 +3694,7 @@
     if (!email || !pw) { alert("이메일과 비밀번호를 입력해 주세요."); return; }
     if (pw.length < 6) { alert("비밀번호는 6자 이상으로 입력해 주세요."); return; }
     const btn = $("loginBtn");
-    btn.disabled = true; btn.textContent = "잠시만요...";
+    btn.disabled = true; btn.textContent = "잠시만요…";
     try {
       // 먼저 로그인 시도
       let { error } = await odoDB.auth.signInWithPassword({ email, password: pw });
