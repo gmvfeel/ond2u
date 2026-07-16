@@ -255,61 +255,81 @@ async function renderBox(req, res, env) {
   const SECRET = process.env.CRON_SECRET;
   const expect = (SECRET && email) ? crypto.createHmac("sha256", SECRET).update(email).digest("hex").slice(0, 32) : "";
 
-  const kstKey = iso => { const d = new Date(new Date(iso).getTime() + 9 * 3600 * 1000); return d.getUTCFullYear() + "-" + (d.getUTCMonth() + 1) + "-" + d.getUTCDate(); };
-  const kstFmt = iso => { const d = new Date(new Date(iso).getTime() + 9 * 3600 * 1000); return d.getUTCFullYear() + ". " + (d.getUTCMonth() + 1) + ". " + d.getUTCDate(); };
+  const kstParts = iso => { const d = new Date(new Date(iso).getTime() + 9 * 3600 * 1000); return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate() }; };
+  const kstKey = iso => { const p = kstParts(iso); return p.y + "-" + p.m + "-" + p.d; };
+  const thisYear = kstParts(new Date().toISOString()).y;
 
-  const boxPage = (inner, title, count) => `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>\uBC1B\uC740 \uD3B8\uC9C0 \xB7 \uC624\uB298\uB3C4</title>
+  const boxPage = (inner, title, sub) => `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>\uBC1B\uC740 \uD3B8\uC9C0 \xB7 \uC624\uB298\uB3C4</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
-  *{box-sizing:border-box;} body{margin:0;background:#f3f1ef;color:#2b2730;font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;line-height:1.6;}
-  .bx-wrap{max-width:520px;margin:0 auto;padding:0 0 48px;}
-  .bx-head{background:#423458;color:#fff;padding:38px 24px 30px;text-align:center;border-radius:0 0 24px 24px;}
-  .bx-logo{font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.72);margin-bottom:12px;}
-  .bx-title{font-size:22px;font-weight:800;letter-spacing:-.02em;}
-  .bx-sub{font-size:13px;color:rgba(255,255,255,.82);margin-top:8px;} .bx-sub b{color:#fff;}
-  .bx-list{padding:22px 16px 0;}
-  .bx-card{background:#fdfbf5;border:1px solid #efe8dd;border-radius:16px;padding:18px 18px 16px;margin-bottom:12px;box-shadow:0 4px 14px rgba(80,60,70,.05);}
-  .bx-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-  .bx-date{font-size:12px;color:#a8a2af;font-weight:600;}
-  .bx-from{font-size:12px;color:#423458;font-weight:700;}
-  .bx-quote{font-size:15.5px;color:#2b2730;line-height:1.7;font-weight:500;}
-  .bx-celebrate{font-size:15.5px;color:#c56179;font-weight:700;}
-  .bx-react{margin-top:12px;padding-top:11px;border-top:1px solid #efe8dd;font-size:12.5px;color:#c56179;font-weight:600;}
-  .bx-empty{margin:60px 20px;text-align:center;color:#7a7580;font-size:15px;line-height:1.9;}
-  .bx-foot{margin-top:26px;text-align:center;}
-  .bx-foot a{font-size:13px;color:#7a7580;text-decoration:none;border:1px solid #d8d0e4;border-radius:22px;padding:11px 22px;display:inline-block;}
+  *{box-sizing:border-box;} body{margin:0;background:#f2ede4;color:#2b2730;font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;padding:22px 15px;}
+  .bx-wrap{max-width:500px;margin:0 auto;padding:0 0 44px;background:#faf7f0;border:1px solid #ece2d2;border-radius:22px;overflow:hidden;box-shadow:0 14px 44px rgba(95,72,40,.11);}
+  .bx-head{background:linear-gradient(160deg,#4a3b64,#2d2239);color:#fff;padding:46px 24px 38px;text-align:center;}
+  .bx-logo{font-size:11px;letter-spacing:.16em;color:rgba(255,255,255,.6);margin-bottom:16px;}
+  .bx-title{font-size:23px;font-weight:800;letter-spacing:-.02em;line-height:1.35;}
+  .bx-sub{font-size:13px;color:rgba(255,255,255,.78);margin-top:11px;} .bx-sub b{color:#fff;font-weight:700;}
+  .bx-body{padding:6px 18px 0;}
+  .bx-month{font-size:12.5px;font-weight:700;color:#a99f8c;letter-spacing:.03em;margin:28px 6px 13px;display:flex;align-items:center;gap:10px;}
+  .bx-month::after{content:"";flex:1;height:1px;background:#ece2d2;}
+  .bx-card{background:#fffdf7;border-radius:15px;padding:19px 20px;margin-bottom:10px;border:1px solid #f1e9d8;box-shadow:0 4px 14px rgba(95,72,40,.07);}
+  .bx-day{font-size:11.5px;color:#b3a996;font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .bx-from{color:#8a7096;font-weight:700;}
+  .bx-quote{font-size:16px;color:#28242f;line-height:1.72;font-weight:500;letter-spacing:-.01em;}
+  .bx-celebrate{font-size:16px;color:#c56179;font-weight:700;letter-spacing:-.01em;}
+  .bx-react{margin-top:14px;padding-top:12px;border-top:1px solid #f2ebdb;font-size:12.5px;color:#c56179;font-weight:600;}
+  .bx-react .h{margin-right:3px;}
+  .bx-empty{margin:64px 24px;text-align:center;color:#8b8494;font-size:15px;line-height:1.95;}
+  .bx-foot{margin-top:34px;text-align:center;}
+  .bx-foot a{font-size:13px;color:#7a7060;text-decoration:none;border:1px solid #e5dbc9;border-radius:22px;padding:11px 24px;display:inline-block;background:#fffdf7;}
 </style></head><body><div class="bx-wrap">
-  <div class="bx-head"><div class="bx-logo">\uC624\uB298\uB3C4 \xB7 OND2U</div><div class="bx-title">${title || "\uBC1B\uC740 \uD3B8\uC9C0"}</div>${count != null ? `<div class="bx-sub">\uC9C0\uAE08\uAE4C\uC9C0 <b>${count}</b>\uD1B5\uC758 \uB9C8\uC74C\uC774 \uB3C4\uCC29\uD588\uC5B4\uC694</div>` : ""}</div>
+  <div class="bx-head"><div class="bx-logo">\uC624\uB298\uB3C4 \xB7 OND2U</div><div class="bx-title">${title || "\uBC1B\uC740 \uD3B8\uC9C0"}</div>${sub ? `<div class="bx-sub">${sub}</div>` : ""}</div>
   ${inner}
   <div class="bx-foot"><a href="https://www.ond2u.com/app.html">\uC624\uB298\uB3C4\uB780? \uB098\uB3C4 \uBC1B\uC544\uBCF4\uAE30 \u2192</a></div>
 </div></body></html>`;
 
   if (!email || !token || !expect || token !== expect) {
-    return res.status(200).send(boxPage(`<div class="bx-empty">\uB9C1\uD06C\uAC00 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694.<br>\uD3B8\uC9C0 \uc18d <b>'\uB0B4\uAC00 \uBC1B\uC740 \uD3B8\uC9C0 \uBAA8\uC544\uBCF4\uAE30'</b> \uB9C1\uD06C\uB85C \uB2E4\uC2DC \uB4E4\uC5B4\uC640 \uC8FC\uC138\uC694.</div>`, "\uD3B8\uC9C0\uD568"));
+    return res.status(200).send(boxPage(`<div class="bx-empty">\uB9C1\uD06C\uAC00 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694.<br>\uD3B8\uC9C0 \uc18d <b>'\uB0B4\uAC00 \uBC1B\uC740 \uD3B8\uC9C0 \uBAA8\uC544\uBCF4\uAE30'</b> \uB9C1\uD06C\uB85C \uB2E4\uC2DC \uB4E4\uC5B4\uC640 \uC8FC\uC138\uC694.</div>`, "\uD3B8\uC9C0\uD568", ""));
   }
 
   let sends = [], reactions = [];
   try { const sr = await fetch(SB_URL + "/rest/v1/odo_sends?recipient_email=eq." + encodeURIComponent(email) + "&status=eq.success&select=content_quote,sender_name,recipient_name,created_at&order=created_at.desc&limit=300", { headers: H }); if (sr.ok) { const j = await sr.json(); if (Array.isArray(j)) sends = j; } } catch (e) {}
   try { const rr = await fetch(SB_URL + "/rest/v1/odo_reactions?recipient_email=eq." + encodeURIComponent(email) + "&select=emotion,created_at&order=created_at.desc&limit=500", { headers: H }); if (rr.ok) { const j = await rr.json(); if (Array.isArray(j)) reactions = j; } } catch (e) {}
 
-  // 반응: KST 날짜별 감정 모음 (하루 한 통이므로 날짜로 편지에 매칭)
+  // 반응: KST 날짜별 감정 (하루 한 통이므로 날짜로 편지에 매칭)
   const rByDay = {};
   reactions.forEach(r => { if (!r) return; const k = kstKey(r.created_at); (rByDay[k] = rByDay[k] || []); if (r.emotion && rByDay[k].indexOf(r.emotion) === -1) rByDay[k].push(r.emotion); });
 
   const name = (sends.find(s => s.recipient_name && s.recipient_name.trim()) || {}).recipient_name || "";
   const nameTitle = name ? (esc(name) + "\uB2D8\uC774 \uBC1B\uC740 \uD3B8\uC9C0") : "\uBC1B\uC740 \uD3B8\uC9C0 \uBAA8\uC544\uBCF4\uAE30";
 
+  // 보낸이(대개 한 명) → 헤더에 한 번만
+  const senders = Array.from(new Set(sends.map(s => (s.sender_name || "").trim()).filter(Boolean)));
+  const oneSender = senders.length === 1 ? senders[0] : "";
+
   if (!sends.length) {
-    return res.status(200).send(boxPage(`<div class="bx-empty">\uC544\uC9C1 \uB3C4\uCC29\uD55C \uD3B8\uC9C0\uAC00 \uC5C6\uC5B4\uC694.<br>\uACE7 \uCCAB \uD3B8\uC9C0\uAC00 \uB3C4\uCC29\uD560 \uAC70\uC608\uC694 :)</div>`, nameTitle, 0));
+    return res.status(200).send(boxPage(`<div class="bx-empty">\uC544\uC9C1 \uB3C4\uCC29\uD55C \uD3B8\uC9C0\uAC00 \uC5C6\uC5B4\uC694.<br>\uACE7 \uCCAB \uD3B8\uC9C0\uAC00 \uB3C4\uCC29\uD560 \uAC70\uC608\uC694 :)</div>`, nameTitle, ""));
   }
 
+  const sub = oneSender
+    ? (`<b>${esc(oneSender)}</b>\uB2D8\uC5D0\uAC8C\uC11C \xB7 \uC9C0\uAE08\uAE4C\uC9C0 <b>${sends.length}</b>\uD1B5`)
+    : (`<b>${senders.length}</b>\uBA85\uC5D0\uAC8C\uC11C \xB7 \uC9C0\uAE08\uAE4C\uC9C0 <b>${sends.length}</b>\uD1B5`);
+
+  // 월별로 묶어 렌더
   const usedDays = {};
-  const cards = sends.map(s => {
-    const day = kstKey(s.created_at);
+  let listHtml = "", lastYM = "";
+  sends.forEach(s => {
+    const p = kstParts(s.created_at);
+    const ym = p.y + "-" + p.m;
+    if (ym !== lastYM) {
+      lastYM = ym;
+      const mlabel = (p.y === thisYear) ? (p.m + "\uC6D4") : (p.y + "\uB144 " + p.m + "\uC6D4");
+      listHtml += `<div class="bx-month">${mlabel}</div>`;
+    }
+    const dayKey = p.y + "-" + p.m + "-" + p.d;
     let reactLine = "";
-    if (!usedDays[day] && rByDay[day] && rByDay[day].length) {
-      usedDays[day] = true;
-      reactLine = `<div class="bx-react">\u2661 \uB0B4\uAC00 \uB0A8\uAE34 \uB9C8\uC74C \xB7 ${rByDay[day].map(esc).join(" \xB7 ")}</div>`;
+    if (!usedDays[dayKey] && rByDay[dayKey] && rByDay[dayKey].length) {
+      usedDays[dayKey] = true;
+      reactLine = `<div class="bx-react"><span class="h">\u2661</span>\uB0B4\uAC00 \uB0A8\uae34 \uB9C8\uC74C \xB7 ${rByDay[dayKey].map(esc).join(" \xB7 ")}</div>`;
     }
     const q = (s.content_quote || "").trim();
     let body;
@@ -317,11 +337,12 @@ async function renderBox(req, res, env) {
       const label = q.replace("[\uCD95\uD558]", "").trim();
       body = `<div class="bx-celebrate">\uD83C\uDF89 ${esc(label)} \uCD95\uD558 \uD3B8\uC9C0</div>`;
     } else {
-      body = `<div class="bx-quote">"${esc(q)}"</div>`;
+      body = `<div class="bx-quote">${esc(q)}</div>`;
     }
-    const from = (s.sender_name && s.sender_name.trim()) ? (esc(s.sender_name) + "\uB2D8") : "\uC624\uB298\uB3C4";
-    return `<div class="bx-card"><div class="bx-card-top"><span class="bx-date">${kstFmt(s.created_at)}</span><span class="bx-from">${from}</span></div>${body}${reactLine}</div>`;
-  }).join("");
+    const senderTag = (!oneSender && s.sender_name && s.sender_name.trim())
+      ? `<span class="bx-from">${esc(s.sender_name.trim())}\uB2D8</span>` : "";
+    listHtml += `<div class="bx-card"><div class="bx-day"><span>${p.m}\uC6D4 ${p.d}\uC77C</span>${senderTag}</div>${body}${reactLine}</div>`;
+  });
 
-  return res.status(200).send(boxPage(`<div class="bx-list">${cards}</div>`, nameTitle, sends.length));
+  return res.status(200).send(boxPage(`<div class="bx-body">${listHtml}</div>`, nameTitle, sub));
 }
