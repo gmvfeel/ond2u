@@ -487,6 +487,27 @@
   .sp-result.ok { color:#2f8f5b; }
   .sp-result.err { color:#c0392b; }
   .sp-result.wait { color:var(--ink-soft); }
+  .sched-panel .sp-btn { background:var(--plum-soft); color:var(--plum-deep); border-color:var(--plum-line); margin-top:6px; }
+  .sched-form { margin-top:14px; display:flex; flex-direction:column; gap:10px; }
+  .sched-input, .sched-date { font-family:inherit; font-size:14px; color:var(--ink); background:var(--paper); border:1px solid var(--line-strong); border-radius:12px; padding:11px 13px; outline:none; width:100%; }
+  .sched-input::placeholder { color:var(--ink-faint); }
+  textarea.sched-input { resize:vertical; line-height:1.7; min-height:110px; }
+  .sched-datelbl { font-size:13px; color:var(--ink-soft); display:flex; align-items:center; gap:10px; }
+  .sched-date { width:auto; flex:1; }
+  .sched-actions { display:flex; gap:8px; justify-content:flex-end; }
+  .sched-cancel { font-family:inherit; font-size:13px; color:var(--ink-soft); background:transparent; border:1px solid var(--line-strong); border-radius:20px; padding:9px 16px; cursor:pointer; }
+  .sched-save { font-family:inherit; font-size:13.5px; font-weight:600; color:#fff; background:var(--plum); border:none; border-radius:20px; padding:9px 20px; cursor:pointer; }
+  .sched-save:disabled { opacity:.55; cursor:default; }
+  .sched-msg { font-size:12.5px; line-height:1.5; }
+  .sched-msg.ok { color:#2f8f5b; } .sched-msg.err { color:#c0392b; }
+  .sched-list { margin-top:14px; display:flex; flex-direction:column; gap:9px; }
+  .sched-item { background:var(--cream); border:1px solid var(--line-strong); border-radius:13px; padding:13px 15px; }
+  .sched-item-top { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:6px; }
+  .sched-item-to { font-size:13.5px; font-weight:700; color:var(--plum-deep); }
+  .sched-item-date { font-size:12px; color:var(--rose-deep); font-weight:600; }
+  .sched-item-body { font-size:13px; color:var(--ink-soft); line-height:1.6; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .sched-item-cancel { margin-top:8px; font-size:12px; color:var(--ink-faint); background:transparent; border:none; cursor:pointer; text-decoration:underline; padding:0; }
+  .sched-empty { font-size:13px; color:var(--ink-faint); text-align:center; padding:8px 0; }
   /* 오늘의 추천 (WXN 서비스) */
   .daily-pick { margin-top:22px; background:var(--white); border:1px solid var(--rose); border-radius:14px; padding:16px 16px 15px; box-shadow:0 3px 12px rgba(217,124,147,.12); }
   .dp-badge { display:inline-block; font-size:10px; font-weight:700; letter-spacing:0.02em; color:#fff; background:var(--rose); border-radius:12px; padding:3px 10px; margin-bottom:11px; }
@@ -1687,6 +1708,23 @@
         <button class="sp-btn sp-all" id="sendAllBtn">명단 전체 지금 발송</button>
       </div>
       <div class="sp-result" id="sendResult"></div>
+    </div>
+
+    <div class="send-panel sched-panel">
+      <div class="sp-title">✉️ 예약 편지</div>
+      <div class="sp-desc">직접 쓴 편지를 원하는 날짜에 배달해요. 그날은 평소 편지 대신 이 편지가 전해져요.</div>
+      <button class="sp-btn sp-all" id="schWriteBtn" onclick="openSchedule()">＋ 예약 편지 쓰기</button>
+      <div class="sched-form" id="schForm" style="display:none;">
+        <select id="schRecip" class="sched-input"></select>
+        <textarea id="schBody" class="sched-input" rows="5" placeholder="전하고 싶은 마음을 적어보세요…" maxlength="1500"></textarea>
+        <label class="sched-datelbl">배달 날짜 <input type="date" id="schDate" class="sched-date"></label>
+        <div class="sched-actions">
+          <button class="sched-cancel" onclick="closeSchedule()">취소</button>
+          <button class="sched-save" id="schSaveBtn" onclick="saveSchedule()">예약하기</button>
+        </div>
+        <div class="sched-msg" id="schMsg"></div>
+      </div>
+      <div class="sched-list" id="schList"></div>
     </div></div>
     <div class="ops-panel" id="ops-admin">
     <div class="admin-banner">⚙ 운영자 전용 화면이에요. 실제 서비스에선 파트너님만 볼 수 있게 숨겨둡니다.</div>
@@ -3174,8 +3212,89 @@
       } catch(e){}
       renderRecipients();
       updateHomeHello();
+      loadSchedule();
     } catch(e){ console.log("수신자 불러오기 오류:", e); }
   }
+
+  // ===== 예약 편지 =====
+  window.openSchedule = function(){
+    if (!loggedIn || !currentUser){ alert("로그인이 필요해요."); return; }
+    if (!recipients.length){ alert("먼저 '받는 사람'을 명단에 추가해 주세요."); return; }
+    const sel = $("schRecip");
+    sel.innerHTML = recipients.map(function(r){
+      const nm = String(r.name||r.email||"").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      return '<option value="'+encodeURIComponent(r.email)+'">'+nm+'</option>';
+    }).join("");
+    const t = new Date(Date.now() + 9*3600*1000 + 24*3600*1000); // 내일(KST)
+    const min = t.getUTCFullYear()+"-"+String(t.getUTCMonth()+1).padStart(2,"0")+"-"+String(t.getUTCDate()).padStart(2,"0");
+    const d = $("schDate"); d.min = min; d.value = min;
+    $("schBody").value = "";
+    const m=$("schMsg"); m.textContent=""; m.className="sched-msg";
+    $("schForm").style.display = "flex";
+    $("schWriteBtn").style.display = "none";
+  };
+  window.closeSchedule = function(){
+    $("schForm").style.display = "none";
+    $("schWriteBtn").style.display = "";
+  };
+  window.saveSchedule = async function(){
+    const email = decodeURIComponent($("schRecip").value||"");
+    const body = ($("schBody").value||"").trim();
+    const date = $("schDate").value;
+    const msg = $("schMsg");
+    if (!email){ msg.className="sched-msg err"; msg.textContent="받는 사람을 선택해 주세요."; return; }
+    if (!body){ msg.className="sched-msg err"; msg.textContent="편지 내용을 적어주세요."; return; }
+    if (!date){ msg.className="sched-msg err"; msg.textContent="배달 날짜를 골라주세요."; return; }
+    const today = new Date(Date.now()+9*3600*1000);
+    const todayStr = today.getUTCFullYear()+"-"+String(today.getUTCMonth()+1).padStart(2,"0")+"-"+String(today.getUTCDate()).padStart(2,"0");
+    if (date <= todayStr){ msg.className="sched-msg err"; msg.textContent="배달 날짜는 내일 이후로 골라주세요."; return; }
+    const rec = recipients.find(function(r){ return r.email===email; });
+    const btn = $("schSaveBtn"); btn.disabled=true; btn.textContent="저장 중…";
+    try {
+      const { error } = await odoDB.from("odo_scheduled").insert({ sender_id: currentUser.id, recipient_email: email, recipient_name: (rec&&rec.name)||"", body: body, deliver_date: date });
+      if (error) throw error;
+      msg.className="sched-msg ok"; msg.textContent="예약됐어요! 그날 아침에 배달돼요.";
+      closeSchedule();
+      loadSchedule();
+    } catch(e){
+      console.log("예약 편지 저장 오류:", e);
+      msg.className="sched-msg err"; msg.textContent="저장에 실패했어요. 잠시 후 다시 시도해 주세요.";
+    } finally { btn.disabled=false; btn.textContent="예약하기"; }
+  };
+  async function loadSchedule(){
+    const box = $("schList"); if(!box) return;
+    if (!loggedIn || !currentUser){ box.innerHTML=""; return; }
+    try {
+      const { data, error } = await odoDB.from("odo_scheduled").select("id,recipient_name,recipient_email,body,deliver_date,sent").eq("sent", false).order("deliver_date", { ascending:true });
+      if (error) throw error;
+      renderSchedule(data||[]);
+    } catch(e){ console.log("예약 편지 목록 오류:", e); box.innerHTML=""; }
+  }
+  function fmtSchedDate(d){
+    if(!d) return "";
+    const p = String(d).split("-"); if(p.length<3) return d;
+    return parseInt(p[1],10)+"월 "+parseInt(p[2],10)+"일";
+  }
+  function renderSchedule(list){
+    const box = $("schList"); if(!box) return;
+    const esc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    if (!list.length){ box.innerHTML = '<div class="sched-empty">아직 예약한 편지가 없어요.</div>'; return; }
+    box.innerHTML = list.map(function(s){
+      const nm = esc(s.recipient_name || (s.recipient_email||"").split("@")[0] || "받는 분");
+      const id = esc(String(s.id)).replace(/'/g,"&#39;");
+      return '<div class="sched-item"><div class="sched-item-top"><span class="sched-item-to">'+nm+'님</span><span class="sched-item-date">📮 '+fmtSchedDate(s.deliver_date)+'</span></div>'+
+             '<div class="sched-item-body">'+esc(s.body)+'</div>'+
+             '<button class="sched-item-cancel" onclick="cancelSchedule(\''+id+'\')">예약 취소</button></div>';
+    }).join("");
+  }
+  window.cancelSchedule = async function(id){
+    if(!confirm("이 예약 편지를 취소할까요?")) return;
+    try {
+      const { error } = await odoDB.from("odo_scheduled").delete().eq("id", id);
+      if (error) throw error;
+      loadSchedule();
+    } catch(e){ console.log("예약 취소 오류:", e); alert("취소에 실패했어요. 잠시 후 다시 시도해 주세요."); }
+  };
 
   function fmtSpecial(md){
     if(!md) return "";
