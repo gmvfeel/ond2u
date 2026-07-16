@@ -457,6 +457,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
   const rParam = encodeURIComponent(recipientEmail || "");
   const unsubTok = secret ? crypto.createHmac("sha256", secret).update(recipientEmail || "").digest("hex").slice(0, 32) : "";
   const unsubUrl = "https://www.ond2u.com/api/unsubscribe?e=" + rParam + "&t=" + unsubTok;
+  const boxUrl = "https://www.ond2u.com/api/letter?box=1&e=" + rParam + "&t=" + unsubTok;
   const sParam = encodeURIComponent(senderId || "");
   const qParam = encodeURIComponent(nl(normal.quote).replace(/\n/g, " ").slice(0, 60));
   const reactUrl = em => "https://www.ond2u.com/api/letter?e=" + encodeURIComponent(em) + "&r=" + rParam + "&s=" + sParam + "&q=" + qParam;
@@ -648,6 +649,7 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
     // 푸터
     '<tr><td bgcolor="#f3f1ef" style="padding:22px 28px; border-top:1px solid #eae7e3; text-align:center;">' +
       '<div style="font-size:12px; color:#7a7580; line-height:1.7;"><b style="color:' + PLUM_DEEP + ';">' + fromName + '</b>\uB2D8\uC774 ' + (toName ? toName + "\uB97C" : "\uB2F9\uC2E0\uC744") + ' \uC0DD\uAC01\uD558\uBA70 \uBCF4\uB0B4\uB294 \uD3B8\uC9C0\uC608\uC694.</div>' +
+      '<div style="margin-top:14px;"><a href="' + boxUrl + '" style="display:inline-block; font-size:12.5px; font-weight:600; color:' + PLUM_DEEP + '; background:#ffffff; border:1px solid #d8d0e4; border-radius:20px; padding:9px 18px; text-decoration:none;">\uD83D\uDCEE \uB0B4\uAC00 \uBC1B\uC740 \uD3B8\uC9C0 \uBAA8\uC544\uBCF4\uAE30</a></div>' +
       '<div style="font-size:11px; color:#b0aab6; margin-top:10px;">\uC774\uC81C \uADF8\uB9CC \uBC1B\uACE0 \uC2F6\uC73C\uC2DC\uBA74 <a href="' + unsubUrl + '" style="color:#b0aab6;">\uC5EC\uAE30</a>\uB97C \uB20C\uB7EC\uC8FC\uC138\uC694. \uC5B8\uC81C\uB4E0 \uAD1C\uCC2E\uC544\uC694.</div>' +
     '</td></tr>' +
 

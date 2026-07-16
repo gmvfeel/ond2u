@@ -2,6 +2,7 @@
 // 편지 속 반응 버튼 → /api/letter?e=<반응>&r=<받는사람이메일>&s=<보낸사람id>&q=<글>
 //  - GET: 반응을 기록하고(새로고침 중복 방지), 예쁜 페이지 + 답장칸을 보여줌
 //  - POST {id, reply}: 그 반응에 답장을 저장 → 보낸 사람의 '받은 반응'에 표시
+import crypto from "crypto";
 export const config = { maxDuration: 30 };
 
 const esc = s => String(s == null ? "" : s)
@@ -82,6 +83,11 @@ export default async function handler(req, res) {
 
   if (!SB_URL || !SB_SERVICE) {
     return res.status(200).send(page(`<div class="heart">\uD83D\uDC8C</div><h1>\uC7A0\uC2DC \uBB38\uC81C\uAC00 \uC788\uC5B4\uC694</h1><p>\uC7A0\uC2DC \uD6C4 \uB2E4\uC2DC \uC2DC\uB3C4\uD574 \uC8FC\uC138\uC694.</p>`));
+  }
+
+  // ── 받은 편지 보관함 (box=1) ──
+  if (req.query.box === "1") {
+    return await renderBox(req, res, { SB_URL, SB_SERVICE, H });
   }
 
   // 보낸 사람 이름
@@ -238,4 +244,84 @@ function buildReplyNotifyEmail({ senderName, who, emotion, reply, quote }) {
     '</td></tr>' +
   '</table>' +
 '</td></tr></table></body></html>';
+}
+
+// ===== 받은 편지 보관함 =====
+// /api/letter?box=1&e=<이메일>&t=<토큰>  (토큰 = 이메일 HMAC, 구독취소 링크와 동일)
+async function renderBox(req, res, env) {
+  const { SB_URL, SB_SERVICE, H } = env;
+  const email = (req.query.e || "").toString().trim();
+  const token = (req.query.t || "").toString().trim();
+  const SECRET = process.env.CRON_SECRET;
+  const expect = (SECRET && email) ? crypto.createHmac("sha256", SECRET).update(email).digest("hex").slice(0, 32) : "";
+
+  const kstKey = iso => { const d = new Date(new Date(iso).getTime() + 9 * 3600 * 1000); return d.getUTCFullYear() + "-" + (d.getUTCMonth() + 1) + "-" + d.getUTCDate(); };
+  const kstFmt = iso => { const d = new Date(new Date(iso).getTime() + 9 * 3600 * 1000); return d.getUTCFullYear() + ". " + (d.getUTCMonth() + 1) + ". " + d.getUTCDate(); };
+
+  const boxPage = (inner, title, count) => `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>\uBC1B\uC740 \uD3B8\uC9C0 \xB7 \uC624\uB298\uB3C4</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  *{box-sizing:border-box;} body{margin:0;background:#f3f1ef;color:#2b2730;font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;line-height:1.6;}
+  .bx-wrap{max-width:520px;margin:0 auto;padding:0 0 48px;}
+  .bx-head{background:#423458;color:#fff;padding:38px 24px 30px;text-align:center;border-radius:0 0 24px 24px;}
+  .bx-logo{font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.72);margin-bottom:12px;}
+  .bx-title{font-size:22px;font-weight:800;letter-spacing:-.02em;}
+  .bx-sub{font-size:13px;color:rgba(255,255,255,.82);margin-top:8px;} .bx-sub b{color:#fff;}
+  .bx-list{padding:22px 16px 0;}
+  .bx-card{background:#fdfbf5;border:1px solid #efe8dd;border-radius:16px;padding:18px 18px 16px;margin-bottom:12px;box-shadow:0 4px 14px rgba(80,60,70,.05);}
+  .bx-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .bx-date{font-size:12px;color:#a8a2af;font-weight:600;}
+  .bx-from{font-size:12px;color:#423458;font-weight:700;}
+  .bx-quote{font-size:15.5px;color:#2b2730;line-height:1.7;font-weight:500;}
+  .bx-celebrate{font-size:15.5px;color:#c56179;font-weight:700;}
+  .bx-react{margin-top:12px;padding-top:11px;border-top:1px solid #efe8dd;font-size:12.5px;color:#c56179;font-weight:600;}
+  .bx-empty{margin:60px 20px;text-align:center;color:#7a7580;font-size:15px;line-height:1.9;}
+  .bx-foot{margin-top:26px;text-align:center;}
+  .bx-foot a{font-size:13px;color:#7a7580;text-decoration:none;border:1px solid #d8d0e4;border-radius:22px;padding:11px 22px;display:inline-block;}
+</style></head><body><div class="bx-wrap">
+  <div class="bx-head"><div class="bx-logo">\uC624\uB298\uB3C4 \xB7 OND2U</div><div class="bx-title">${title || "\uBC1B\uC740 \uD3B8\uC9C0"}</div>${count != null ? `<div class="bx-sub">\uC9C0\uAE08\uAE4C\uC9C0 <b>${count}</b>\uD1B5\uC758 \uB9C8\uC74C\uC774 \uB3C4\uCC29\uD588\uC5B4\uC694</div>` : ""}</div>
+  ${inner}
+  <div class="bx-foot"><a href="https://www.ond2u.com/app.html">\uC624\uB298\uB3C4\uB780? \uB098\uB3C4 \uBC1B\uC544\uBCF4\uAE30 \u2192</a></div>
+</div></body></html>`;
+
+  if (!email || !token || !expect || token !== expect) {
+    return res.status(200).send(boxPage(`<div class="bx-empty">\uB9C1\uD06C\uAC00 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694.<br>\uD3B8\uC9C0 \uc18d <b>'\uB0B4\uAC00 \uBC1B\uC740 \uD3B8\uC9C0 \uBAA8\uC544\uBCF4\uAE30'</b> \uB9C1\uD06C\uB85C \uB2E4\uC2DC \uB4E4\uC5B4\uC640 \uC8FC\uC138\uC694.</div>`, "\uD3B8\uC9C0\uD568"));
+  }
+
+  let sends = [], reactions = [];
+  try { const sr = await fetch(SB_URL + "/rest/v1/odo_sends?recipient_email=eq." + encodeURIComponent(email) + "&status=eq.success&select=content_quote,sender_name,recipient_name,created_at&order=created_at.desc&limit=300", { headers: H }); if (sr.ok) { const j = await sr.json(); if (Array.isArray(j)) sends = j; } } catch (e) {}
+  try { const rr = await fetch(SB_URL + "/rest/v1/odo_reactions?recipient_email=eq." + encodeURIComponent(email) + "&select=emotion,created_at&order=created_at.desc&limit=500", { headers: H }); if (rr.ok) { const j = await rr.json(); if (Array.isArray(j)) reactions = j; } } catch (e) {}
+
+  // 반응: KST 날짜별 감정 모음 (하루 한 통이므로 날짜로 편지에 매칭)
+  const rByDay = {};
+  reactions.forEach(r => { if (!r) return; const k = kstKey(r.created_at); (rByDay[k] = rByDay[k] || []); if (r.emotion && rByDay[k].indexOf(r.emotion) === -1) rByDay[k].push(r.emotion); });
+
+  const name = (sends.find(s => s.recipient_name && s.recipient_name.trim()) || {}).recipient_name || "";
+  const nameTitle = name ? (esc(name) + "\uB2D8\uC774 \uBC1B\uC740 \uD3B8\uC9C0") : "\uBC1B\uC740 \uD3B8\uC9C0 \uBAA8\uC544\uBCF4\uAE30";
+
+  if (!sends.length) {
+    return res.status(200).send(boxPage(`<div class="bx-empty">\uC544\uC9C1 \uB3C4\uCC29\uD55C \uD3B8\uC9C0\uAC00 \uC5C6\uC5B4\uC694.<br>\uACE7 \uCCAB \uD3B8\uC9C0\uAC00 \uB3C4\uCC29\uD560 \uAC70\uC608\uC694 :)</div>`, nameTitle, 0));
+  }
+
+  const usedDays = {};
+  const cards = sends.map(s => {
+    const day = kstKey(s.created_at);
+    let reactLine = "";
+    if (!usedDays[day] && rByDay[day] && rByDay[day].length) {
+      usedDays[day] = true;
+      reactLine = `<div class="bx-react">\u2661 \uB0B4\uAC00 \uB0A8\uAE34 \uB9C8\uC74C \xB7 ${rByDay[day].map(esc).join(" \xB7 ")}</div>`;
+    }
+    const q = (s.content_quote || "").trim();
+    let body;
+    if (q.indexOf("[\uCD95\uD558]") === 0) {
+      const label = q.replace("[\uCD95\uD558]", "").trim();
+      body = `<div class="bx-celebrate">\uD83C\uDF89 ${esc(label)} \uCD95\uD558 \uD3B8\uC9C0</div>`;
+    } else {
+      body = `<div class="bx-quote">"${esc(q)}"</div>`;
+    }
+    const from = (s.sender_name && s.sender_name.trim()) ? (esc(s.sender_name) + "\uB2D8") : "\uC624\uB298\uB3C4";
+    return `<div class="bx-card"><div class="bx-card-top"><span class="bx-date">${kstFmt(s.created_at)}</span><span class="bx-from">${from}</span></div>${body}${reactLine}</div>`;
+  }).join("");
+
+  return res.status(200).send(boxPage(`<div class="bx-list">${cards}</div>`, nameTitle, sends.length));
 }
