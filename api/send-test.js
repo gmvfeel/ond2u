@@ -59,6 +59,11 @@ export default async function handler(req, res) {
     return await runMonthlyRecap(req, res, { SB_URL, SB_SERVICE, RESEND_KEY, FROM, SECRET });
   }
 
+  // ── 반응 요약 알림 (digest=1) ── 하루 1회, 보내는 분에게 그날 받은 마음을 요약해 보냄
+  if (req.query.digest === "1") {
+    return await runReactionDigest(req, res, { SB_URL, SB_SERVICE, RESEND_KEY, FROM, SECRET });
+  }
+
   const fromName = req.query.from_name || "윤기";
   const all = isCron || req.query.all === "1";   // cron 호출이거나 all=1 이면 수신자 전체 발송
 
@@ -820,4 +825,111 @@ async function runWelcome(req, res, { SB_URL, SB_SERVICE }) {
   } catch (e) {
     return res.status(200).json({ ok: false, error: String(e && e.message || e) });
   }
+}
+
+// ── 하루 반응 요약 알림 ─────────────────────────────────────────────
+// 그날(KST) 받은 반응을 보낸이(회원)별로 모아, 각자에게 요약 메일 1통.
+// 호출: 크론 /api/send-test?digest=1  (수동 테스트: ?digest=1&key=SECRET&only=<이메일>&date=YYYY-MM-DD)
+async function runReactionDigest(req, res, env) {
+  const { SB_URL, SB_SERVICE, RESEND_KEY, FROM, SECRET } = env;
+  const H = { "apikey": SB_SERVICE, "Authorization": "Bearer " + SB_SERVICE, "Content-Type": "application/json" };
+
+  // 오늘(KST) 범위 → UTC. ?date=YYYY-MM-DD 로 특정 날짜 테스트 가능
+  const nowKst = new Date(Date.now() + 9 * 3600 * 1000);
+  let y = nowKst.getUTCFullYear(), m = nowKst.getUTCMonth(), d = nowKst.getUTCDate();
+  if (req.query.date) { const p = String(req.query.date).split("-"); if (p.length === 3) { y = parseInt(p[0], 10); m = parseInt(p[1], 10) - 1; d = parseInt(p[2], 10); } }
+  const dayStartKstMs = Date.UTC(y, m, d, 0, 0, 0);
+  const startUtc = new Date(dayStartKstMs - 9 * 3600 * 1000).toISOString();
+  const endUtc = new Date(dayStartKstMs + 24 * 3600 * 1000 - 9 * 3600 * 1000).toISOString();
+  const onlyEmail = (req.query.only || "").trim().toLowerCase();
+
+  async function getAll(path) {
+    try { const r = await fetch(SB_URL + "/rest/v1/" + path, { headers: H }); const j = await r.json(); return Array.isArray(j) ? j : []; }
+    catch (e) { return []; }
+  }
+  const [users, recipients, reactions] = await Promise.all([
+    getAll("odo_users?select=id,email,display_name"),
+    getAll("odo_recipients?select=name,email,sender_id"),
+    getAll("odo_reactions?select=sender_id,recipient_email,emotion,created_at&created_at=gte." + encodeURIComponent(startUtc) + "&created_at=lt." + encodeURIComponent(endUtc) + "&order=created_at.asc")
+  ]);
+
+  // 받는 사람 이름 매핑: sender_id|email → name
+  const nameMap = {};
+  recipients.forEach(rc => { if (rc && rc.email) nameMap[(rc.sender_id || "") + "|" + String(rc.email).toLowerCase()] = rc.name || ""; });
+  const nameOf = (senderId, email) => nameMap[(senderId || "") + "|" + String(email || "").toLowerCase()] || (String(email || "").split("@")[0]) || "받는 분";
+
+  // 보낸이별 그룹: sender_id → { byRecip:{email:{name,emos[]}}, total }
+  const bySender = {};
+  reactions.forEach(r => {
+    if (!r || !r.sender_id) return;
+    const s = bySender[r.sender_id] = bySender[r.sender_id] || { byRecip: {}, total: 0 };
+    const em = String(r.recipient_email || "").toLowerCase();
+    const rec = s.byRecip[em] = s.byRecip[em] || { name: nameOf(r.sender_id, r.recipient_email), emos: [] };
+    if (r.emotion && rec.emos.indexOf(r.emotion) === -1) rec.emos.push(r.emotion);
+    s.total++;
+  });
+
+  const userById = {};
+  users.forEach(u => { if (u && u.id) userById[u.id] = u; });
+
+  let sent = 0, skipped = 0, failed = 0; const results = [];
+  for (const senderId of Object.keys(bySender)) {
+    const u = userById[senderId];
+    if (!u || !u.email) { skipped++; continue; }
+    if (onlyEmail && String(u.email).toLowerCase() !== onlyEmail) continue;
+    const recips = Object.values(bySender[senderId].byRecip);
+    if (recips.length === 0) { skipped++; continue; }
+    const name = (u.display_name && u.display_name.trim()) || "당신";
+    const html = buildDigestEmail({ name, recips, peopleN: recips.length });
+    const subject = recips.length === 1 ? (recips[0].name + "님이 마음을 남겼어요") : ("오늘 " + recips.length + "명이 마음을 남겼어요");
+    try {
+      const r = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({ from: "오늘도 <" + FROM + ">", to: [u.email], subject, html })
+      });
+      if (r.ok) { sent++; results.push({ email: u.email, ok: true, people: recips.length }); }
+      else { failed++; const t = await r.text().catch(() => ""); results.push({ email: u.email, ok: false, error: t.slice(0, 120) }); }
+    } catch (e) { failed++; results.push({ email: u.email, ok: false, error: String(e && e.message || e) }); }
+  }
+  return res.status(200).json({ ok: true, sent, skipped, failed, results });
+}
+
+function buildDigestEmail({ name, recips, peopleN }) {
+  const PLUM = "#423458", PLUM_DEEP = "#2f2440", ROSE_DEEP = "#c56179";
+  const font = "'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif";
+  const spacer = h => '<div style="height:' + h + 'px; line-height:' + h + 'px; font-size:0;">&nbsp;</div>';
+  const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const chip = t => '<span style="display:inline-block; background:#fdeef2; color:' + ROSE_DEEP + '; font-size:13px; font-weight:600; border-radius:12px; padding:4px 11px; margin:3px 4px 3px 0;">' + esc(t) + '</span>';
+  const row = rc => '<tr><td style="padding:14px 0; border-bottom:1px solid #f0edea;">' +
+      '<div style="font-size:15px; font-weight:700; color:' + PLUM_DEEP + '; margin-bottom:6px;">' + esc(rc.name) + '<span style="font-weight:500; color:#7a7580;">님</span></div>' +
+      '<div>' + (rc.emos.length ? rc.emos.map(chip).join("") : '<span style="color:#7a7580; font-size:13px;">마음을 남겼어요</span>') + '</div>' +
+    '</td></tr>';
+  const rowsHtml = recips.map(row).join("");
+  const headline = peopleN === 1 ? '오늘 한 분이 마음을 남겼어요' : ('오늘 ' + peopleN + '명이 마음을 남겼어요');
+  return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+'<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"></head>' +
+'<body style="margin:0; padding:0; background:#f3f1ef; font-family:' + font + ';">' +
+'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f3f1ef" style="background:#f3f1ef;"><tr>' +
+'<td align="center" style="padding:36px 12px 56px; font-family:' + font + '; word-break:keep-all;">' +
+  '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px; background:#ffffff; border-radius:16px; overflow:hidden; border:1px solid #eee;">' +
+    '<tr><td bgcolor="' + PLUM + '" style="background:' + PLUM + '; padding:32px 28px; text-align:center;">' +
+      '<div style="font-size:11px; letter-spacing:0.18em; color:rgba(255,255,255,.72); margin-bottom:10px;">오늘도 · 주고받은 마음</div>' +
+      '<div style="font-size:24px; font-weight:800; color:#ffffff; letter-spacing:-0.03em;">' + headline + '</div>' +
+    '</td></tr>' +
+    '<tr><td bgcolor="#ffffff" style="padding:30px 30px 8px;">' +
+      '<div style="font-size:15px; color:#3a3540; margin-bottom:6px;"><b>' + esc(name) + '</b>님, 오늘 전한 마음에 이렇게 답이 왔어요.</div>' +
+      spacer(10) +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">' + rowsHtml + '</table>' +
+      spacer(26) +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
+        '<a href="https://www.ond2u.com/app.html" style="display:inline-block; background:' + PLUM + '; color:#ffffff; text-decoration:none; font-size:14px; font-weight:700; border-radius:12px; padding:13px 26px;">오늘도에서 답신 보내기</a>' +
+      '</td></tr></table>' +
+      spacer(28) +
+    '</td></tr>' +
+    '<tr><td bgcolor="#ffffff" style="padding:0 30px 30px; text-align:center;">' +
+      '<div style="font-size:11px; color:#b0aab6;">오늘 하루, 오늘도에 도착한 마음을 모아 전해드렸어요.</div>' +
+    '</td></tr>' +
+  '</table>' +
+'</td></tr></table></body></html>';
 }
