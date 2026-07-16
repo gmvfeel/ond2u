@@ -1534,6 +1534,23 @@
 
       <div class="list-label" id="listLabel" style="display:none"><div class="list-label-row"><span>받는 사람 <b id="rCount">0</b>명</span><select id="recipSort" class="recip-sort" onchange="setRecipSort(this.value)"><option value="added">추가순</option><option value="name">이름순</option><option value="recent">최근 반응순</option><option value="quiet">잠잠한 순</option></select></div></div>
       <div id="recipientList"><div class="empty-state"><div class="es-ic"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="M4 7l8 6 8-6"/></svg></div><div class="es-t">아끼는 사람을 초대해보세요</div><div class="es-d">위에서 한 명 추가하면,<br>매일 그 사람에게 편지가 전해져요.</div></div></div>
+
+      <div class="send-panel sched-panel">
+        <div class="sp-title">✉️ 예약 편지</div>
+        <div class="sp-desc">직접 쓴 편지를 원하는 날짜에 배달해요. 그날은 평소 편지 대신 이 편지가 전해져요.</div>
+        <button class="sp-btn sp-all" id="schWriteBtn" onclick="openSchedule()">＋ 예약 편지 쓰기</button>
+        <div class="sched-form" id="schForm" style="display:none;">
+          <select id="schRecip" class="sched-input"></select>
+          <textarea id="schBody" class="sched-input" rows="5" placeholder="전하고 싶은 마음을 적어보세요…" maxlength="1500"></textarea>
+          <label class="sched-datelbl">배달 날짜 <input type="date" id="schDate" class="sched-date"></label>
+          <div class="sched-actions">
+            <button class="sched-cancel" onclick="closeSchedule()">취소</button>
+            <button class="sched-save" id="schSaveBtn" onclick="saveSchedule()">예약하기</button>
+          </div>
+          <div class="sched-msg" id="schMsg"></div>
+        </div>
+        <div class="sched-list" id="schList"></div>
+      </div>
     </div>
   </div>
 
@@ -1708,23 +1725,6 @@
         <button class="sp-btn sp-all" id="sendAllBtn">명단 전체 지금 발송</button>
       </div>
       <div class="sp-result" id="sendResult"></div>
-    </div>
-
-    <div class="send-panel sched-panel">
-      <div class="sp-title">✉️ 예약 편지</div>
-      <div class="sp-desc">직접 쓴 편지를 원하는 날짜에 배달해요. 그날은 평소 편지 대신 이 편지가 전해져요.</div>
-      <button class="sp-btn sp-all" id="schWriteBtn" onclick="openSchedule()">＋ 예약 편지 쓰기</button>
-      <div class="sched-form" id="schForm" style="display:none;">
-        <select id="schRecip" class="sched-input"></select>
-        <textarea id="schBody" class="sched-input" rows="5" placeholder="전하고 싶은 마음을 적어보세요…" maxlength="1500"></textarea>
-        <label class="sched-datelbl">배달 날짜 <input type="date" id="schDate" class="sched-date"></label>
-        <div class="sched-actions">
-          <button class="sched-cancel" onclick="closeSchedule()">취소</button>
-          <button class="sched-save" id="schSaveBtn" onclick="saveSchedule()">예약하기</button>
-        </div>
-        <div class="sched-msg" id="schMsg"></div>
-      </div>
-      <div class="sched-list" id="schList"></div>
     </div></div>
     <div class="ops-panel" id="ops-admin">
     <div class="admin-banner">⚙ 운영자 전용 화면이에요. 실제 서비스에선 파트너님만 볼 수 있게 숨겨둡니다.</div>
