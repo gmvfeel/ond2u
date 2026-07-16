@@ -99,6 +99,9 @@ export default async function handler(req, res) {
       // 오늘(KST) 월-일 — 특별한 날(생일·기념일) 판별용. ?date=MM-DD 로 테스트 가능.
       let todayMD = (function(){ const k = new Date(Date.now() + 9 * 3600 * 1000); return String(k.getUTCMonth()+1).padStart(2,"0") + "-" + String(k.getUTCDate()).padStart(2,"0"); })();
       if (req.query.date) todayMD = req.query.date;
+      // 오늘(KST) 전체 날짜 YYYY-MM-DD — 예약 편지 배달일 비교용 (?sdate=YYYY-MM-DD 로 테스트 가능)
+      let todayDate = (function(){ const k = new Date(Date.now() + 9 * 3600 * 1000); return k.getUTCFullYear() + "-" + String(k.getUTCMonth()+1).padStart(2,"0") + "-" + String(k.getUTCDate()).padStart(2,"0"); })();
+      if (req.query.sdate) todayDate = req.query.sdate;
       let skipped = 0;
       if (slotMode) {
         const before = recipients.length;
@@ -111,9 +114,35 @@ export default async function handler(req, res) {
       // 각 수신자를 등록한 사람(sender)의 '보내는 이름'을 조회해 둠
       const sendersById = await fetchSenders(SB_URL, SB_SERVICE);
 
+      // ── 오늘 배달할 예약 편지 먼저 발송 (회원이 직접 쓴 편지) ──
+      // 배달된 수신자는 그날 평소(랜덤) 편지를 건너뜀 → 한 아침에 두 통 안 감.
+      const scheduledEmails = new Set();
+      try {
+        const SBH = { apikey: SB_SERVICE, Authorization: "Bearer " + SB_SERVICE };
+        const schUrl = SB_URL + "/rest/v1/odo_scheduled?select=id,sender_id,recipient_email,recipient_name,body&sent=eq.false&deliver_date=lte." + encodeURIComponent(todayDate);
+        const schRes = await fetch(schUrl, { headers: SBH });
+        if (schRes.ok) {
+          const list = await schRes.json();
+          for (const sc of (Array.isArray(list) ? list : [])) {
+            if (!sc.recipient_email || !sc.body) continue;
+            const su = sendersById[sc.sender_id] || {};
+            const perFromName = (su.display_name && su.display_name.trim()) || (su.email ? su.email.split("@")[0] : "") || cfg.fromName;
+            try {
+              await sendOne({ ...cfg, fromName: perFromName, to: sc.recipient_email, toName: sc.recipient_name || "", senderId: sc.sender_id, customBody: sc.body });
+              scheduledEmails.add(String(sc.recipient_email).toLowerCase());
+            } catch (e) {}
+            try {
+              await fetch(SB_URL + "/rest/v1/odo_scheduled?id=eq." + encodeURIComponent(sc.id), { method: "PATCH", headers: { ...SBH, "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ sent: true }) });
+            } catch (e) {}
+            await sleep(400);
+          }
+        }
+      } catch (e) { /* 테이블 없거나 오류여도 평소 발송은 계속 */ }
+
       const results = [];
       let _idx = 0;
       for (const rc of recipients) {
+        if (scheduledEmails.has(String(rc.email || "").toLowerCase())) { skipped++; continue; } // 오늘 예약 편지가 이미 나감 → 평소 편지 생략
         if (_idx++ > 0) await sleep(600);
         try {
           const su = sendersById[rc.sender_id] || {};
@@ -147,9 +176,14 @@ export default async function handler(req, res) {
 // tone(결)이 있으면: 그 결에 맞는 콘텐츠 + 결 없는(공통) 콘텐츠 중에서만 뽑음.
 //  - 그 결에 해당하는 게 하나도 없으면 전체에서 뽑음(폴백) → 편지가 안 나가는 일은 없음.
 // special(특별한 날 이름표)이 있으면: 평소 편지 대신 축하 편지를 보냄.
-async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, foodPool, to, toName, wantBible, senderId, tone, special, personalNote, welcome, preview, SB_URL, SB_SERVICE, SECRET }) {
+async function sendOne({ RESEND_KEY, FROM, fromName, normalPool, biblePool, foodPool, to, toName, wantBible, senderId, tone, special, personalNote, welcome, preview, customBody, SB_URL, SB_SERVICE, SECRET }) {
   let html, quote, subject;
-  if (special) {
+  if (customBody) {
+    html = buildScheduledEmail({ fromName, toName, body: customBody, recipientEmail: to, senderId, secret: SECRET });
+    quote = String(customBody).replace(/\r?\n/g, " ").slice(0, 80);
+    const rcpName = (toName && toName !== "나에게") ? toName : "";
+    subject = rcpName ? (rcpName + "\uB2D8, " + fromName + "\uB2D8\uC758 \uD3B8\uC9C0\uAC00 \uB3C4\uCC29\uD588\uC5B4\uC694") : (fromName + "\uB2D8\uC758 \uD3B8\uC9C0\uAC00 \uB3C4\uCC29\uD588\uC5B4\uC694");
+  } else if (special) {
     html = buildSpecialEmail({ fromName, toName, label: special, recipientEmail: to, senderId, secret: SECRET });
     quote = "[축하] " + special;
     subject = fromName + "님이 보내는 축하 편지 \uD83C\uDF89";
@@ -931,6 +965,51 @@ function buildDigestEmail({ name, recips, peopleN }) {
     '</td></tr>' +
     '<tr><td bgcolor="#ffffff" style="padding:0 30px 30px; text-align:center;">' +
       '<div style="font-size:11px; color:#b0aab6;">오늘 하루, 오늘도에 도착한 마음을 모아 전해드렸어요.</div>' +
+    '</td></tr>' +
+  '</table>' +
+'</td></tr></table></body></html>';
+}
+
+// 예약 편지(회원이 직접 쓴 편지) 이메일 HTML
+function buildScheduledEmail({ fromName, toName, body, recipientEmail, senderId, secret }) {
+  const PLUM = "#423458", PLUM_DEEP = "#2f2440", ROSE = "#c56179", CREAM = "#fdfbf5";
+  const font = "'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif";
+  const spacer = h => '<div style="height:' + h + 'px; line-height:' + h + 'px; font-size:0;">&nbsp;</div>';
+  const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const rParam = encodeURIComponent(recipientEmail || "");
+  const unsubTok = secret ? crypto.createHmac("sha256", secret).update(recipientEmail || "").digest("hex").slice(0, 32) : "";
+  const unsubUrl = "https://www.ond2u.com/api/unsubscribe?e=" + rParam + "&t=" + unsubTok;
+  const boxUrl = "https://www.ond2u.com/api/letter?box=1&e=" + rParam + "&t=" + unsubTok;
+  const who = (toName && toName !== "나에게") ? toName : "당신";
+  const bodyHtml = esc(body).replace(/\r?\n/g, "<br>");
+  return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+'<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"></head>' +
+'<body style="margin:0; padding:0; background:#f3f1ef; font-family:' + font + ';">' +
+'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f3f1ef" style="background:#f3f1ef;"><tr>' +
+'<td align="center" style="padding:36px 12px 56px; font-family:' + font + '; word-break:keep-all;">' +
+  '<table role="presentation" width="620" cellpadding="0" cellspacing="0" border="0" style="width:620px; max-width:620px; background:#ffffff; border-radius:16px; overflow:hidden; border:1px solid #eee;">' +
+    '<tr><td bgcolor="#ffffff" style="padding:18px 26px; border-bottom:1px solid #eee;">' +
+      '<div style="font-size:13px; color:#b0aab6;"><b style="color:' + PLUM_DEEP + ';">' + esc(fromName) + '</b>\uB2D8\uC774 ' + esc(who) + '\uB2D8\uC5D0\uAC8C \uBBF8\uB9AC \uB0A8\uACA8\uB454 \uD3B8\uC9C0\uC608\uC694</div>' +
+    '</td></tr>' +
+    '<tr><td bgcolor="' + PLUM + '" style="background:' + PLUM + '; padding:34px 28px; text-align:center;">' +
+      '<div style="font-size:34px; line-height:1; margin-bottom:12px;">\uD83D\uDC8C</div>' +
+      '<div style="font-size:22px; font-weight:800; color:#ffffff; letter-spacing:-0.02em;">' + esc(who) + '\uB2D8\uAED8 \uB9C8\uC74C\uC744 \uC804\uD574\uC694</div>' +
+    '</td></tr>' +
+    '<tr><td bgcolor="#ffffff" style="padding:34px 30px 14px;">' +
+      '<div style="background:' + CREAM + '; border:1px solid #efe8dd; border-radius:16px; padding:26px 26px;">' +
+        '<div style="font-size:16px; line-height:2.0; color:#33303a; word-break:keep-all;">' + bodyHtml + '</div>' +
+        spacer(20) +
+        '<div style="text-align:right; font-size:14px; font-weight:600; color:' + ROSE + ';">\u2014 ' + esc(fromName) + ' \uB4DC\uB9BC</div>' +
+      '</div>' +
+      spacer(26) +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">' +
+        '<a href="' + boxUrl + '" style="display:inline-block; font-size:14px; font-weight:600; color:#ffffff; background:' + PLUM + '; text-decoration:none; padding:13px 28px; border-radius:30px;">\uB0B4\uAC00 \uBC1B\uC740 \uD3B8\uC9C0 \uBAA8\uC544\uBCF4\uAE30</a>' +
+      '</td></tr></table>' +
+      spacer(18) +
+    '</td></tr>' +
+    '<tr><td bgcolor="#f3f1ef" style="padding:22px 28px; border-top:1px solid #eae7e3; text-align:center;">' +
+      '<div style="font-size:12px; color:#7a7580;">\uC624\uB298\uB3C4 \xB7 OND2U</div>' +
+      '<div style="font-size:11px; color:#b0aab6; margin-top:8px;">\uC774\uC81C \uADF8\uB9CC \uBC1B\uACE0 \uC2F6\uC73C\uC2DC\uBA74 <a href="' + unsubUrl + '" style="color:#b0aab6;">\uC5EC\uAE30</a>\uB97C \uB20C\uB7EC\uC8FC\uC138\uC694.</div>' +
     '</td></tr>' +
   '</table>' +
 '</td></tr></table></body></html>';
