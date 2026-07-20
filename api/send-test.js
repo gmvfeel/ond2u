@@ -10,6 +10,28 @@ import crypto from "crypto";
 export const config = { maxDuration: 60 };
 const sleep = ms => new Promise(res => setTimeout(res, ms));
 
+// 편지에 실을 유튜브 영상 풀 — 매일(KST 날짜 기준) 순환하며 다른 영상을 보여줌.
+// 새 영상을 넣고 싶으면 이 목록에 유튜브 영상 ID만 추가하면 돼요.
+const VIDEO_POOL = [
+  "1vNLQZJUAaQ", "ZmSANyx4Ryw", "aYcAWiUxXNc", "H3urFo3u-lo", "XQFarmiBbv8",
+  "fr1zOGn0hmE", "-2iH-7amMhE", "GspP2h8Gh_U", "fYmDt5bWDxg", "CfyA2B9eQKk",
+  "arvo9lT-G0I", "xr-yaWUJp3o", "bp7r9XVS5QY", "xxGoi_CTKLo", "3_NOolGYK8E",
+  "msWsJpnXkWQ", "YFl1_E5bros", "laRCjrj2wmM", "K-Iopi6E1IY", "faYx48IkNvY",
+  "_HvIkyzos3Y", "ZgR4pGSybaw", "IwM5AWJqfQs", "734_xx5LbOM", "D2WezFoeswI",
+  "Px4h6z_PhVo", "zSUHxG9TGeQ", "HhwYJkEPOmw", "pFJqfRnb7SI",
+  "GIRn8zXpwwc", "7mPMXHiZWrI", "wyxEBRo-2dw", "8XkPQaLIDgc", "kPgTeqJRxbM",
+  "dlmArqfx2IQ",
+  "cWCiRk0u2Wg", "Ytova1-RSeg", "w5wNoY2WP5o", "_7fmrZyRXx8", "jgeUbhquA3g",
+  "qHkJxddNQlE", "VbKLJRHcCM4", "Py3IKxJcbAA", "aT402L0eBas", "qmnzV7wOyxI",
+  "C2ufAL3j10A"
+];
+function pickDailyVideo() {
+  if (!VIDEO_POOL.length) return "";
+  const k = new Date(Date.now() + 9 * 3600 * 1000); // KST
+  const doy = Math.floor((Date.UTC(k.getUTCFullYear(), k.getUTCMonth(), k.getUTCDate()) - Date.UTC(k.getUTCFullYear(), 0, 0)) / 86400000);
+  return VIDEO_POOL[doy % VIDEO_POOL.length];
+}
+
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -477,6 +499,7 @@ function pickWeekdayGreeting() {
 
 function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId, secret, foodPool, personalNote, welcome }) {
   const nl = s => (s || "").replace(/\\n/g, "\n");
+  const _vid = pickDailyVideo(); // 영상 풀에서 매일 다른 영상
   const escHtml = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   // 한마디가 여러 줄이면 날마다 번갈아 하나만 실어요
   const _notes = String(personalNote || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
@@ -631,18 +654,18 @@ function buildEmail({ fromName, toName, normal, bible, recipientEmail, senderId,
       foodBlock +
 
       // 영상
-      (normal.video_id ?
+      (_vid ?
       spacer(32) +
       '<div style="font-size:10px; letter-spacing:0.16em; color:#b0aab6; margin-bottom:12px;">\uC624\uB298\uC758 \uC601\uC0C1</div>' +
       '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #eae7e3; border-radius:12px; overflow:hidden;">' +
         '<tr><td style="padding:0; font-size:0; line-height:0;">' +
-          '<a href="https://www.youtube.com/watch?v=' + normal.video_id + '" style="display:block; text-decoration:none;">' +
-            '<img src="https://img.youtube.com/vi/' + normal.video_id + '/hqdefault.jpg" width="624" style="display:block; width:100%; max-width:100%; height:auto; border:0;" alt="">' +
+          '<a href="https://www.youtube.com/watch?v=' + _vid + '" style="display:block; text-decoration:none;">' +
+            '<img src="https://img.youtube.com/vi/' + _vid + '/hqdefault.jpg" width="624" style="display:block; width:100%; max-width:100%; height:auto; border:0;" alt="">' +
           '</a>' +
         '</td></tr>' +
         '<tr><td bgcolor="#ffffff" style="background:#ffffff; padding:13px 16px;">' +
-          '<a href="https://www.youtube.com/watch?v=' + normal.video_id + '" style="text-decoration:none;">' +
-            '<div style="font-size:14px; font-weight:600; color:#2b2730;">' + (normal.video_title || "\uC624\uB298\uC758 \uC601\uC0C1") + '</div>' +
+          '<a href="https://www.youtube.com/watch?v=' + _vid + '" style="text-decoration:none;">' +
+            '<div style="font-size:14px; font-weight:600; color:#2b2730;">\uC7A0\uC2DC \uC26C\uC5B4\uAC00\uB294 \uD55C \uACE1</div>' +
             '<div style="font-size:12px; color:#b0aab6; margin-top:3px;">\uB20C\uB7EC\uC11C \uC7AC\uC0DD</div>' +
           '</a>' +
         '</td></tr>' +
