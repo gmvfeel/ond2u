@@ -2001,6 +2001,14 @@
   const MOOD_CHIPS = ["지침","번아웃","불안","초조","막막","슬픔","외로움","화남","미룸","의욕","설렘","평온","감사","시작"];
   const LEVELS = ["살짝","보통","많이"];
   const REACTIONS = ["위로됐어요 ♡","힘이 나요","고마워요","뭉클해요","오늘 딱 맞아요"];
+  // 오늘 탭 영상 풀 — 매일(KST) 순환. 이메일(send-test.js)의 VIDEO_POOL과 동일하게 유지.
+  const VIDEO_POOL = ["1vNLQZJUAaQ","ZmSANyx4Ryw","aYcAWiUxXNc","H3urFo3u-lo","XQFarmiBbv8","fr1zOGn0hmE","-2iH-7amMhE","GspP2h8Gh_U","fYmDt5bWDxg","CfyA2B9eQKk","arvo9lT-G0I","xr-yaWUJp3o","bp7r9XVS5QY","xxGoi_CTKLo","3_NOolGYK8E","msWsJpnXkWQ","YFl1_E5bros","laRCjrj2wmM","K-Iopi6E1IY","faYx48IkNvY","_HvIkyzos3Y","ZgR4pGSybaw","IwM5AWJqfQs","734_xx5LbOM","D2WezFoeswI","Px4h6z_PhVo","zSUHxG9TGeQ","HhwYJkEPOmw","pFJqfRnb7SI","GIRn8zXpwwc","7mPMXHiZWrI","wyxEBRo-2dw","8XkPQaLIDgc","kPgTeqJRxbM","dlmArqfx2IQ","cWCiRk0u2Wg","Ytova1-RSeg","w5wNoY2WP5o","_7fmrZyRXx8","jgeUbhquA3g","qHkJxddNQlE","VbKLJRHcCM4","Py3IKxJcbAA","aT402L0eBas","qmnzV7wOyxI","C2ufAL3j10A"];
+  function pickDailyVideo(){
+    if(!VIDEO_POOL.length) return "";
+    const k = new Date(Date.now() + 9*3600*1000);
+    const doy = Math.floor((Date.UTC(k.getUTCFullYear(),k.getUTCMonth(),k.getUTCDate()) - Date.UTC(k.getUTCFullYear(),0,0)) / 86400000);
+    return VIDEO_POOL[doy % VIDEO_POOL.length];
+  }
   const MOOD_MAP = { "지침":["지침","번아웃","포기"],"번아웃":["번아웃","지침"],"불안":["불안","초조","막막"],
     "초조":["초조","불안"],"막막":["막막","불안","시작"],"슬픔":["슬픔","외로움","지침"],"외로움":["외로움","슬픔"],
     "화남":["막막","지침"],"미룸":["시작","초조"],"의욕":["의욕","시작"],"설렘":["설렘","감사","평온"],
@@ -2325,7 +2333,7 @@
       $("careTitle").textContent=p.careTitle||"";
       $("careBody").textContent=p.careBody||"";
       renderFood();
-      loadVideo(p.videoId);
+      loadVideo(pickDailyVideo() || p.videoId);
       $("content").classList.remove("fade"); $("content2").classList.remove("fade");
     },450);
   }
